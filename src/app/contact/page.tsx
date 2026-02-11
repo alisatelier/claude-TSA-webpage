@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCheck } from "@fortawesome/free-solid-svg-icons";
 
 const subjects = ["General Inquiry", "Order Question", "Service Inquiry", "Partnership", "Other"];
 
@@ -30,9 +32,7 @@ export default function ContactPage() {
               {submitted ? (
                 <div className="bg-cream rounded-xl p-12 text-center">
                   <div className="w-16 h-16 bg-green-100 rounded-full mx-auto mb-4 flex items-center justify-center">
-                    <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
+                    <FontAwesomeIcon icon={faCheck} className="w-8 h-8 text-green-600" />
                   </div>
                   <h2 className="font-heading text-3xl text-navy mb-4">Message Sent</h2>
                   <p className="text-navy/70 mb-6">We will respond within 24-48 hours.</p>

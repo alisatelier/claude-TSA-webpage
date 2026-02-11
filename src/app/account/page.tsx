@@ -1,6 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faStar, faClipboardList, faHeart, faGift, faGear } from "@fortawesome/free-solid-svg-icons";
+import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 
 export default function AccountPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -8,6 +12,13 @@ export default function AccountPage() {
   const [formData, setFormData] = useState({ email: "", password: "", name: "" });
 
   if (loggedIn) {
+    const dashboardItems: { title: string; desc: string; icon: IconDefinition; href: string }[] = [
+      { title: "My Orders", desc: "View order history and tracking", icon: faClipboardList, href: "" },
+      { title: "My Wishlist", desc: "Items you have saved for later", icon: faHeart, href: "/wishlist" },
+      { title: "Rewards", desc: "View Ritual Credits and earn more", icon: faGift, href: "/loyalty" },
+      { title: "Settings", desc: "Update your profile and preferences", icon: faGear, href: "" },
+    ];
+
     return (
       <>
         <section className="bg-navy py-16 px-4">
@@ -21,25 +32,21 @@ export default function AccountPage() {
               <h2 className="font-heading text-3xl text-navy mb-2">Hello, {formData.name || "Seeker"}</h2>
               <p className="text-mauve font-accent italic">For You, On Your Journey</p>
               <div className="mt-4 inline-flex items-center gap-2 bg-navy/10 px-4 py-2 rounded-full">
-                <svg className="w-5 h-5 text-blush" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                <span className="text-sm font-medium text-navy">50 Points</span>
+                <FontAwesomeIcon icon={faStar} className="w-5 h-5 text-blush" />
+                <span className="text-sm font-medium text-navy">50 Ritual Credits</span>
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[
-                { title: "My Orders", desc: "View order history and tracking", icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" },
-                { title: "My Wishlist", desc: "Items you have saved for later", icon: "M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" },
-                { title: "Rewards", desc: "View points balance and earn more", icon: "M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" },
-                { title: "Settings", desc: "Update your profile and preferences", icon: "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" },
-              ].map((item) => (
-                <div key={item.title} className="bg-white rounded-xl p-6 shadow-[0_4px_12px_rgba(83,91,115,0.08)] hover:shadow-[0_8px_24px_rgba(83,91,115,0.15)] transition-all duration-300 cursor-pointer">
-                  <svg className="w-8 h-8 text-navy mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={item.icon} />
-                  </svg>
-                  <h3 className="font-heading text-lg text-navy mb-1">{item.title}</h3>
-                  <p className="text-sm text-mauve">{item.desc}</p>
-                </div>
-              ))}
+              {dashboardItems.map((item) => {
+                const card = (
+                  <div key={item.title} className="bg-white rounded-xl p-6 shadow-[0_4px_12px_rgba(83,91,115,0.08)] hover:shadow-[0_8px_24px_rgba(83,91,115,0.15)] transition-all duration-300 cursor-pointer">
+                    <FontAwesomeIcon icon={item.icon} className="w-8 h-8 text-navy mb-4" />
+                    <h3 className="font-heading text-lg text-navy mb-1">{item.title}</h3>
+                    <p className="text-sm text-mauve">{item.desc}</p>
+                  </div>
+                );
+                return item.href ? <Link key={item.title} href={item.href}>{card}</Link> : card;
+              })}
             </div>
             <div className="mt-8 text-center">
               <button onClick={() => setLoggedIn(false)} className="text-sm text-mauve hover:text-navy transition-colors">Sign Out</button>
@@ -87,7 +94,7 @@ export default function AccountPage() {
                 {isLogin ? "Sign In" : "Create Account"}
               </button>
             </form>
-            {!isLogin && <p className="text-xs text-mauve text-center mt-4">Earn 50 points just for creating an account!</p>}
+            {!isLogin && <p className="text-xs text-mauve text-center mt-4">Earn 50 Ritual Credits just for creating an account!</p>}
           </div>
         </div>
       </section>

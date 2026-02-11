@@ -8,6 +8,9 @@ import { useCart } from "@/lib/CartContext";
 import { StarRating } from "@/components/ProductCard";
 import ProductCard from "@/components/ProductCard";
 import ImageCarousel from "@/components/ImageCarousel";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faHeart, faChevronDown } from "@fortawesome/free-solid-svg-icons";
+import { faHeart as faHeartRegular } from "@fortawesome/free-regular-svg-icons";
 
 export default function ProductPage() {
   const params = useParams();
@@ -21,13 +24,23 @@ export default function ProductPage() {
   const [activeTab, setActiveTab] = useState("description"); // For desktop tabs
   const [addedToCart, setAddedToCart] = useState(false);
 
-  // Get all images from all variations for auto-scroll
+  // Includes images for specific products (shown on product page only)
+  const includesImage = useMemo(() => {
+    if (!product) return null;
+    if (product.id === "norse-runes") return "/images/products/Rune Set - Includes.jpg";
+    if (product.id === "norse-runes-cloth") return "/images/products/Rune Cloth - Includes.jpg";
+    return null;
+  }, [product]);
+
+  // Get all images from all variations for auto-scroll (excluding Imperfect)
   const allImages = useMemo(() => {
     if (!product) return [];
     const images: string[] = [];
     const seen = new Set<string>();
-    
-    Object.values(product.variationImages).forEach((varImages) => {
+
+    Object.entries(product.variationImages).forEach(([key, varImages]) => {
+      // Skip Imperfect images in the main carousel
+      if (key === "Imperfect") return;
       varImages.forEach((img) => {
         if (!seen.has(img)) {
           seen.add(img);
@@ -35,24 +48,44 @@ export default function ProductPage() {
         }
       });
     });
-    
+
     // Fallback to product.images if no variation images
     if (images.length === 0) {
-      return product.images;
+      return includesImage ? [...product.images, includesImage] : product.images;
     }
+
+    // Add includes image at the end for product page carousel
+    if (includesImage) {
+      images.push(includesImage);
+    }
+
     return images;
-  }, [product]);
+  }, [product, includesImage]);
 
   // Get current variation images
   const currentImages = useMemo(() => {
     if (!product) return [];
+
+    // If Imperfect is selected, show both Imperfect image and selected variant image
+    if (isImperfect && selectedVariation) {
+      const imperfectImages = product.variationImages["Imperfect"] || [];
+      const variantImages = product.variationImages[selectedVariation] || [];
+      const images = [...imperfectImages, ...variantImages];
+      if (includesImage) images.push(includesImage);
+      return images;
+    }
+
     const key = selectedVariation || "_default";
     const varImages = product.variationImages[key];
-    if (varImages && varImages.length > 0) return varImages;
+    if (varImages && varImages.length > 0) {
+      return includesImage ? [...varImages, includesImage] : varImages;
+    }
     const defaultImages = product.variationImages["_default"];
-    if (defaultImages && defaultImages.length > 0) return defaultImages;
-    return product.images;
-  }, [product, selectedVariation]);
+    if (defaultImages && defaultImages.length > 0) {
+      return includesImage ? [...defaultImages, includesImage] : defaultImages;
+    }
+    return includesImage ? [...product.images, includesImage] : product.images;
+  }, [product, selectedVariation, isImperfect, includesImage]);
 
   const handleVariationSelect = (variation: string) => {
     setSelectedVariation(variation);
@@ -76,7 +109,7 @@ export default function ProductPage() {
 
   // Special pricing for "Imperfect" variation
   const displayPrice = isImperfect ? 33 : product.price;
-  
+
   // Get color variations (excluding Imperfect)
   const colorVariations = product.variations.filter(v => v !== "Imperfect");
   const hasImperfectOption = product.variations.includes("Imperfect");
@@ -113,8 +146,8 @@ export default function ProductPage() {
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             <div>
-              <ImageCarousel 
-                images={currentImages} 
+              <ImageCarousel
+                images={currentImages}
                 allImages={allImages}
                 alt={product.name}
                 variationSelected={variationSelected}
@@ -164,7 +197,7 @@ export default function ProductPage() {
                   {/* Imperfect Toggle */}
                   {hasImperfectOption && (
                     <div className="mb-4">
-                      <button 
+                      <button
                         onClick={() => setIsImperfect(!isImperfect)}
                         className={`px-4 py-2 rounded-lg text-sm border-2 border-dashed transition-colors ${isImperfect ? "border-blush bg-blush/20 text-navy" : "border-blush/50 text-mauve hover:border-blush hover:bg-blush/10"}`}
                       >
@@ -172,7 +205,7 @@ export default function ProductPage() {
                       </button>
                     </div>
                   )}
-                  
+
                   {/* Color Selection */}
                   <h4 className="text-sm font-semibold text-navy mb-3 uppercase tracking-wider">
                     {isImperfect ? "Select Your Colour" : "Variation"}
@@ -184,12 +217,12 @@ export default function ProductPage() {
                       >{v}</button>
                     ))}
                   </div>
-                  
+
                   {/* Imperfect Disclaimer */}
                   {isImperfect && (
                     <div className="mt-4 p-4 bg-blush/10 border border-blush/30 rounded-lg">
                         <p className="text-sm text-navy/80 leading-relaxed">
-                        <span className="font-semibold text-navy">About Imperfect Sets:</span> 
+                        <span className="font-semibold text-navy">About Imperfect Sets:</span>
                         <br />
                         These pieces may bear small aesthetic irregularities, yet remain fully functional and thoughtfully made.
                         <br />
@@ -216,9 +249,10 @@ export default function ProductPage() {
               </div>
 
               <button onClick={() => toggleWishlist(product.id)} className="flex items-center gap-2 text-sm text-navy hover:text-mauve transition-colors mb-8">
-                <svg className={`w-5 h-5 ${isWishlisted ? "text-blush fill-blush" : ""}`} fill={isWishlisted ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
+                <FontAwesomeIcon
+                  icon={isWishlisted ? faHeart : faHeartRegular}
+                  className={`w-5 h-5 ${isWishlisted ? "text-blush" : ""}`}
+                />
                 {isWishlisted ? "In Wishlist" : "Add to Wishlist"}
               </button>
             </div>
@@ -248,11 +282,11 @@ export default function ProductPage() {
               </div>
             )}
           </div>
-          
+
           {/* Mobile Accordion */}
           <div className="md:hidden space-y-3">
-            {tabs.map((tab, index) => (
-              <div 
+            {tabs.map((tab) => (
+              <div
                 key={tab.key}
                 id={`accordion-${tab.key}`}
                 className="bg-white rounded-xl overflow-hidden"
@@ -274,14 +308,10 @@ export default function ProductPage() {
                   <span className={`text-sm font-medium tracking-wider uppercase ${openTabs.has(tab.key) ? "text-navy" : "text-mauve"}`}>
                     {tab.label}
                   </span>
-                  <svg
-                    className={`w-5 h-5 ${openTabs.has(tab.key) ? "rotate-180 text-navy" : "text-mauve"}`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
+                  <FontAwesomeIcon
+                    icon={faChevronDown}
+                    className={`w-5 h-5 transition-transform ${openTabs.has(tab.key) ? "rotate-180 text-navy" : "text-mauve"}`}
+                  />
                 </button>
                 {openTabs.has(tab.key) && (
                   <div className="px-5 pb-2 pt-4 border-t border-cream">
@@ -299,13 +329,13 @@ export default function ProductPage() {
                     <button
                       onClick={() => {
                         const header = document.getElementById(`accordion-${tab.key}`);
-                        
+
                         setOpenTabs(prev => {
                           const newSet = new Set(prev);
                           newSet.delete(tab.key);
                           return newSet;
                         });
-                        
+
                         // After close, scroll header to top of viewport
                         requestAnimationFrame(() => {
                           if (header) {
@@ -318,9 +348,7 @@ export default function ProductPage() {
                       }}
                       className="w-full mt-4 py-3 flex justify-center items-center text-mauve hover:text-navy transition-colors"
                     >
-                      <svg className="w-5 h-5 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
+                      <FontAwesomeIcon icon={faChevronDown} className="w-5 h-5 rotate-180" />
                     </button>
                   </div>
                 )}

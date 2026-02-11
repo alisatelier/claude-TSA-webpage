@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
 import { Poppins, Lora } from "next/font/google";
+import "@fortawesome/fontawesome-svg-core/styles.css";
+import "@/lib/fontawesome";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import AnnouncementBar from "@/components/AnnouncementBar";
+import ToastNotification from "@/components/ToastNotification";
 import { CartProvider } from "@/lib/CartContext";
 
 const poppins = Poppins({
@@ -40,8 +44,10 @@ export default function RootLayout({
       <body className={`${poppins.variable} ${lora.variable} antialiased`}>
         <CartProvider>
           <Header />
+          <AnnouncementBar />
           <main className="min-h-screen">{children}</main>
           <Footer />
+          <ToastNotification />
         </CartProvider>
       </body>
     </html>

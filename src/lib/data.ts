@@ -488,11 +488,11 @@ export const faqCategories = [
     questions: [
       {
         q: "How does the rewards program work?",
-        a: "Earn points with every purchase ($1 = 1 point), plus bonus points for creating an account, writing reviews, referrals, and on your birthday. Redeem 100 points for $5 off your order.",
+        a: "Earn Ritual Credits with every purchase ($1 = 1 Credit), plus bonus credits for creating an account (50), writing reviews (100), referrals (200 + 200), and on your birthday (75). Redeem 250 Credits for $10 off or 500 Credits for $20 off your order.",
       },
       {
-        q: "Do my points expire?",
-        a: "Points do not currently expire. Your balance is always visible in your customer portal dashboard.",
+        q: "Do my Ritual Credits expire?",
+        a: "Ritual Credits do not currently expire. Your balance is always visible in your customer portal dashboard.",
       },
     ],
   },

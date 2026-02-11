@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { faqCategories } from "@/lib/data";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faChevronDown } from "@fortawesome/free-solid-svg-icons";
 
 export default function FAQPage() {
   const [openItems, setOpenItems] = useState<string[]>([]);
@@ -47,9 +49,7 @@ export default function FAQPage() {
                     <div key={id} className="border border-navy/10 rounded-lg overflow-hidden">
                       <button onClick={() => toggle(id)} className="w-full flex items-center justify-between px-5 py-4 text-left bg-white hover:bg-cream/50 transition-colors">
                         <span className="text-sm font-medium text-navy pr-4">{item.q}</span>
-                        <svg className={`w-4 h-4 text-mauve flex-shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
+                        <FontAwesomeIcon icon={faChevronDown} className={`w-4 h-4 text-mauve flex-shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} />
                       </button>
                       {isOpen && (
                         <div className="px-5 py-4 bg-cream/30 border-t border-navy/10">

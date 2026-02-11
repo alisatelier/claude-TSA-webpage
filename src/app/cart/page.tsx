@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useCart } from "@/lib/CartContext";
 import { useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faBagShopping, faXmark } from "@fortawesome/free-solid-svg-icons";
 
 export default function CartPage() {
   const { items, updateQuantity, removeFromCart, cartTotal, clearCart } = useCart();
@@ -20,9 +22,7 @@ export default function CartPage() {
         <section className="py-20 px-4">
           <div className="max-w-lg mx-auto text-center">
             <div className="w-20 h-20 bg-cream rounded-full mx-auto mb-6 flex items-center justify-center">
-              <svg className="w-8 h-8 text-mauve" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-              </svg>
+              <FontAwesomeIcon icon={faBagShopping} className="w-8 h-8 text-mauve" />
             </div>
             <h2 className="font-heading text-3xl text-navy mb-4">Your cart is empty</h2>
             <p className="text-mauve mb-8 font-accent italic">Begin your journey by exploring our collection.</p>
@@ -60,9 +60,7 @@ export default function CartPage() {
                         {item.variation && <p className="text-sm text-mauve">{item.variation}</p>}
                       </div>
                       <button onClick={() => removeFromCart(item.productId)} className="text-mauve hover:text-navy transition-colors p-1" aria-label="Remove">
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                        <FontAwesomeIcon icon={faXmark} className="w-5 h-5" />
                       </button>
                     </div>
                     <div className="flex items-center justify-between mt-3">

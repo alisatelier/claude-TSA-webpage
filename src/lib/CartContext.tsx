@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useRef } from "react";
 
 export interface CartItem {
   productId: string;
@@ -9,6 +9,11 @@ export interface CartItem {
   quantity: number;
   variation?: string;
   image: string;
+}
+
+export interface Toast {
+  message: string;
+  link: { href: string; label: string };
 }
 
 interface CartContextType {
@@ -22,6 +27,8 @@ interface CartContextType {
   wishlistCount: number;
   cartTotal: number;
   clearCart: () => void;
+  toast: Toast | null;
+  dismissToast: () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -29,6 +36,27 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [wishlist, setWishlist] = useState<string[]>([]);
+  const [toast, setToast] = useState<Toast | null>(null);
+  const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const dismissToast = useCallback(() => {
+    setToast(null);
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current);
+      toastTimeoutRef.current = null;
+    }
+  }, []);
+
+  const showToast = useCallback((t: Toast) => {
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current);
+    }
+    setToast(t);
+    toastTimeoutRef.current = setTimeout(() => {
+      setToast(null);
+      toastTimeoutRef.current = null;
+    }, 30000);
+  }, []);
 
   const addToCart = useCallback((item: CartItem) => {
     setItems((prev) => {
@@ -59,12 +87,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const toggleWishlist = useCallback((productId: string) => {
-    setWishlist((prev) =>
-      prev.includes(productId)
+    setWishlist((prev) => {
+      const isRemoving = prev.includes(productId);
+      if (!isRemoving) {
+        showToast({
+          message: "Earn Ritual Credits with every purchase",
+          link: { href: "/loyalty", label: "Join the Loyalty Program" },
+        });
+      }
+      return isRemoving
         ? prev.filter((id) => id !== productId)
-        : [...prev, productId]
-    );
-  }, []);
+        : [...prev, productId];
+    });
+  }, [showToast]);
 
   const clearCart = useCallback(() => setItems([]), []);
 
@@ -85,6 +120,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         wishlistCount,
         cartTotal,
         clearCart,
+        toast,
+        dismissToast,
       }}
     >
       {children}

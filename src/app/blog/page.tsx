@@ -1,5 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import { blogPosts } from "@/lib/data";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faImage, faArrowRight } from "@fortawesome/free-solid-svg-icons";
 
 export default function BlogPage() {
   const featured = blogPosts.find((p) => p.featured);
@@ -30,9 +34,7 @@ export default function BlogPage() {
             <div className="bg-gradient-to-br from-cream to-light-blush rounded-xl overflow-hidden">
               <div className="grid grid-cols-1 md:grid-cols-2">
                 <div className="aspect-[4/3] bg-gradient-to-br from-navy/5 to-blush/20 flex items-center justify-center">
-                  <svg className="w-16 h-16 text-mauve/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
+                  <FontAwesomeIcon icon={faImage} className="w-16 h-16 text-mauve/20" />
                 </div>
                 <div className="p-8 md:p-12 flex flex-col justify-center">
                   <span className="text-xs font-medium text-blush uppercase tracking-wider mb-3">Featured</span>
@@ -41,7 +43,7 @@ export default function BlogPage() {
                   <p className="text-navy/70 text-sm leading-relaxed mb-6">{featured.excerpt}</p>
                   <Link href={`/blog/${featured.id}`} className="text-navy font-medium text-sm tracking-wider uppercase hover:text-mauve transition-colors inline-flex items-center gap-2">
                     Read More
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                    <FontAwesomeIcon icon={faArrowRight} className="w-4 h-4" />
                   </Link>
                 </div>
               </div>
@@ -56,9 +58,7 @@ export default function BlogPage() {
             {rest.map((post) => (
               <article key={post.id} className="bg-white rounded-xl overflow-hidden shadow-[0_4px_12px_rgba(83,91,115,0.08)] hover:shadow-[0_8px_24px_rgba(83,91,115,0.15)] transition-all duration-300">
                 <div className="aspect-[16/10] bg-gradient-to-br from-cream to-light-blush flex items-center justify-center">
-                  <svg className="w-12 h-12 text-mauve/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
+                  <FontAwesomeIcon icon={faImage} className="w-12 h-12 text-mauve/20" />
                 </div>
                 <div className="p-6">
                   <span className="px-3 py-1 bg-cream text-navy text-xs font-medium tracking-wider uppercase rounded-full">{post.category}</span>
@@ -66,7 +66,7 @@ export default function BlogPage() {
                   <p className="text-navy/70 text-sm leading-relaxed mb-4 line-clamp-3">{post.excerpt}</p>
                   <Link href={`/blog/${post.id}`} className="text-navy font-medium text-sm tracking-wider uppercase hover:text-mauve transition-colors inline-flex items-center gap-2">
                     Read More
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                    <FontAwesomeIcon icon={faArrowRight} className="w-4 h-4" />
                   </Link>
                 </div>
               </article>

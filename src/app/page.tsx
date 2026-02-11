@@ -5,6 +5,8 @@ import Image from "next/image";
 import { useState } from "react";
 import ProductCard from "@/components/ProductCard";
 import { products, services, reviews } from "@/lib/data";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faArrowDown, faStar, faImage, faArrowRight, faLayerGroup, faCubes, faBookOpen } from "@fortawesome/free-solid-svg-icons";
 
 export default function HomePage() {
   const [newsletterEmail, setNewsletterEmail] = useState("");
@@ -12,6 +14,12 @@ export default function HomePage() {
 
   const featuredProducts = products.slice(0, 4);
   const featuredReviews = reviews.slice(0, 3);
+
+  const serviceIconMap: Record<string, typeof faLayerGroup> = {
+    tarot: faLayerGroup,
+    runes: faCubes,
+    mentorship: faBookOpen,
+  };
 
   return (
     <>
@@ -37,7 +45,7 @@ export default function HomePage() {
             priority
           />
           <h1 className="font-heading text-5xl md:text-7xl text-white mb-4 leading-tight">
-            THE SPIIT ATELIE
+            THE SPIIT ATELIE
           </h1>
           <p className="font-accent italic text-white/80 text-xl md:text-2xl mb-10">
             May You Find Spirit Here
@@ -59,9 +67,7 @@ export default function HomePage() {
         </div>
         {/* Scroll indicator */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-          <svg className="w-6 h-6 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-          </svg>
+          <FontAwesomeIcon icon={faArrowDown} className="w-6 h-6 text-white/50" />
         </div>
       </section>
 
@@ -91,14 +97,16 @@ export default function HomePage() {
       {/* About Snippet */}
       <section className="py-20 bg-cream">
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="font-heading text-4xl md:text-5xl text-navy mb-6">The Spirit Atelier</h2>
+          <h2 className="font-heading text-4xl md:text-5xl text-navy mb-6">
+            THE SPIIT ATELIE
+            </h2>
           <p className="font-accent italic text-mauve text-lg mb-4">
             Where craft meets ceremony
           </p>
           <p className="text-navy/80 leading-relaxed mb-8 max-w-2xl mx-auto">
             We create handcrafted spiritual tools designed to support your journey with clarity,
             beauty, and intention. Each piece in our collection is made to be returned to —
-            a companion in your practice, not a spectacle. Whether you are beginning to explore
+            a companion in your practice. Whether you are beginning to explore
             or deepening an established path, our tools meet you where you are.
           </p>
           <Link
@@ -124,25 +132,11 @@ export default function HomePage() {
                 className="bg-white rounded-xl p-8 shadow-[0_4px_12px_rgba(83,91,115,0.08)] hover:shadow-[0_8px_24px_rgba(83,91,115,0.15)] transition-all duration-300 text-center"
               >
                 <div className="w-16 h-16 bg-cream rounded-full mx-auto mb-6 flex items-center justify-center">
-                  {service.icon === "tarot" && (
-                    <svg className="w-7 h-7 text-navy" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                    </svg>
-                  )}
-                  {service.icon === "runes" && (
-                    <svg className="w-7 h-7 text-navy" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                    </svg>
-                  )}
-                  {service.icon === "mentorship" && (
-                    <svg className="w-7 h-7 text-navy" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                    </svg>
-                  )}
+                  <FontAwesomeIcon icon={serviceIconMap[service.icon] || faLayerGroup} className="w-7 h-7 text-navy" />
                 </div>
                 <h3 className="font-heading text-2xl text-navy mb-2">{service.name}</h3>
                 <p className="text-mauve text-sm mb-1">{service.duration}</p>
-                <p className="text-navy font-semibold text-lg mb-4">From ${service.startingPrice}</p>
+                <p className="text-navy font-semibold text-lg mb-4">${service.startingPrice}</p>
                 <p className="text-navy/70 text-sm mb-6 leading-relaxed line-clamp-3">{service.description}</p>
                 <Link
                   href={`/services#${service.id}`}
@@ -167,14 +161,11 @@ export default function HomePage() {
               <div key={review.id} className="bg-white rounded-xl p-8 shadow-[0_4px_12px_rgba(83,91,115,0.08)]">
                 <div className="flex items-center gap-0.5 mb-4">
                   {[1, 2, 3, 4, 5].map((star) => (
-                    <svg
+                    <FontAwesomeIcon
                       key={star}
+                      icon={faStar}
                       className={`w-4 h-4 ${star <= review.rating ? "text-blush" : "text-mauve/30"}`}
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
+                    />
                   ))}
                 </div>
                 <p className="font-accent italic text-navy/80 text-sm leading-relaxed mb-4">
@@ -245,9 +236,7 @@ export default function HomePage() {
                 className="aspect-square rounded-lg overflow-hidden bg-gradient-to-br from-cream to-light-blush hover:opacity-80 transition-opacity cursor-pointer"
               >
                 <div className="w-full h-full flex items-center justify-center">
-                  <svg className="w-8 h-8 text-mauve/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
+                  <FontAwesomeIcon icon={faImage} className="w-8 h-8 text-mauve/30" />
                 </div>
               </div>
             ))}
@@ -257,9 +246,7 @@ export default function HomePage() {
             className="inline-flex items-center gap-2 mt-8 text-navy font-medium hover:text-mauve transition-colors text-sm tracking-wider uppercase"
           >
             Follow Us on Instagram
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-            </svg>
+            <FontAwesomeIcon icon={faArrowRight} className="w-4 h-4" />
           </a>
         </div>
       </section>

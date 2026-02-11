@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faChevronLeft, faChevronRight } from "@fortawesome/free-solid-svg-icons";
 
 interface ImageCarouselProps {
   images: string[];
@@ -11,22 +13,22 @@ interface ImageCarouselProps {
   variationSelected?: boolean;
 }
 
-export default function ImageCarousel({ 
-  images, 
-  allImages, 
-  alt, 
+export default function ImageCarousel({
+  images,
+  allImages,
+  alt,
   autoScrollInterval = 4000,
-  variationSelected = false 
+  variationSelected = false
 }: ImageCarouselProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isAutoScrolling, setIsAutoScrolling] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set([0]));
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   // Use allImages unless a variation has been explicitly selected
-  const displayImages = variationSelected 
-    ? images 
+  const displayImages = variationSelected
+    ? images
     : (allImages && allImages.length > 0 ? allImages : images);
 
   // Mark image as loaded
@@ -42,13 +44,18 @@ export default function ImageCarousel({
     setLoadedImages((prev) => new Set([...prev, nextIndex, prevIndex]));
   }, [activeIndex, displayImages.length]);
 
-  // Reset to first image when variation changes
+  // Track the first image to detect when images array actually changes
+  const firstImageRef = useRef<string | null>(null);
+
+  // Reset to first image when the actual images change
   useEffect(() => {
-    if (variationSelected) {
+    const firstImage = images[0] || null;
+    if (variationSelected && firstImage !== firstImageRef.current) {
+      firstImageRef.current = firstImage;
       setActiveIndex(0);
       setIsAutoScrolling(false);
-      // Reset loaded images for new variation
-      setLoadedImages(new Set([0]));
+      // Clear loaded images - the new images will need to load fresh
+      setLoadedImages(new Set());
     }
   }, [variationSelected, images]);
 
@@ -97,17 +104,20 @@ export default function ImageCarousel({
         <div className="absolute inset-0 bg-gradient-to-br from-cream to-light-blush flex items-center justify-center z-0">
           <span className="font-heading text-6xl text-navy/10">{alt.charAt(0)}</span>
         </div>
-        
+
         {displayImages.map((img, i) => {
           // Only render images that are loaded or should be preloaded
           const shouldRender = loadedImages.has(i) || i === activeIndex || i === 0;
           if (!shouldRender) return null;
-          
+
+          // Show the active image immediately, even if not yet marked as loaded
+          const isVisible = i === activeIndex;
+
           return (
             <div
               key={`${img}-${i}`}
               className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
-                i === activeIndex && loadedImages.has(i) ? "opacity-100 z-10" : "opacity-0 z-0"
+                isVisible ? "opacity-100 z-10" : "opacity-0 z-0"
               }`}
             >
               <Image
@@ -132,18 +142,14 @@ export default function ImageCarousel({
               className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 hover:bg-white rounded-full flex items-center justify-center shadow-md transition-colors z-20"
               aria-label="Previous image"
             >
-              <svg className="w-5 h-5 text-navy" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
+              <FontAwesomeIcon icon={faChevronLeft} className="w-5 h-5 text-navy" />
             </button>
             <button
               onClick={() => handleUserInteraction(goToNext)}
               className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 hover:bg-white rounded-full flex items-center justify-center shadow-md transition-colors z-20"
               aria-label="Next image"
             >
-              <svg className="w-5 h-5 text-navy" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
+              <FontAwesomeIcon icon={faChevronRight} className="w-5 h-5 text-navy" />
             </button>
           </>
         )}

@@ -2,8 +2,13 @@
 
 import { useState } from "react";
 import { services } from "@/lib/data";
+import { useCart } from "@/lib/CartContext";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faHeart, faCheck, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { faHeart as faHeartRegular } from "@fortawesome/free-regular-svg-icons";
 
 export default function ServicesPage() {
+  const { toggleWishlist, wishlist } = useCart();
   const [bookingService, setBookingService] = useState<string | null>(null);
   const [bookingStep, setBookingStep] = useState(0);
   const [selectedDate, setSelectedDate] = useState("");
@@ -51,7 +56,19 @@ export default function ServicesPage() {
             <div key={service.id} id={service.id} className="bg-white rounded-xl p-8 md:p-12 shadow-[0_4px_12px_rgba(83,91,115,0.08)] scroll-mt-24">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div className="md:col-span-2">
-                  <h3 className="font-heading text-3xl text-navy mb-2">{service.name}</h3>
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <h3 className="font-heading text-3xl text-navy">{service.name}</h3>
+                    <button
+                      onClick={() => toggleWishlist(service.id)}
+                      className="flex-shrink-0 p-1 hover:scale-110 transition-transform mt-1"
+                      aria-label={wishlist.includes(service.id) ? "Remove from wishlist" : "Add to wishlist"}
+                    >
+                      <FontAwesomeIcon
+                        icon={wishlist.includes(service.id) ? faHeart : faHeartRegular}
+                        className={`w-5 h-5 ${wishlist.includes(service.id) ? "text-blush" : "text-mauve"}`}
+                      />
+                    </button>
+                  </div>
                   <div className="flex items-center gap-4 text-sm text-mauve mb-4">
                     <span>{service.duration}</span>
                     <span className="text-mauve/30">|</span>
@@ -62,9 +79,7 @@ export default function ServicesPage() {
                   <ul className="space-y-2 mb-6">
                     {service.includes.map((item, i) => (
                       <li key={i} className="flex items-start gap-2 text-sm text-navy/80">
-                        <svg className="w-4 h-4 text-blush mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
+                        <FontAwesomeIcon icon={faCheck} className="w-4 h-4 text-blush mt-0.5 flex-shrink-0" />
                         {item}
                       </li>
                     ))}
@@ -96,18 +111,14 @@ export default function ServicesPage() {
                 {booked ? "Booking Confirmed" : `Book ${services.find(s => s.id === bookingService)?.name}`}
               </h3>
               <button onClick={() => { setBookingService(null); setBookingStep(0); }} className="text-mauve hover:text-navy">
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <FontAwesomeIcon icon={faXmark} className="w-6 h-6" />
               </button>
             </div>
 
             {booked ? (
               <div className="text-center py-8">
                 <div className="w-16 h-16 bg-green-100 rounded-full mx-auto mb-4 flex items-center justify-center">
-                  <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
+                  <FontAwesomeIcon icon={faCheck} className="w-8 h-8 text-green-600" />
                 </div>
                 <p className="text-navy font-medium mb-2">Your session has been booked.</p>
                 <p className="text-mauve text-sm">A confirmation email will be sent shortly.</p>

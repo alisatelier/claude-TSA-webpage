@@ -2,41 +2,90 @@
 
 import Link from "next/link";
 import { useCart } from "@/lib/CartContext";
-import { products } from "@/lib/data";
+import { products, services } from "@/lib/data";
 import ProductCard from "@/components/ProductCard";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faHeart } from "@fortawesome/free-solid-svg-icons";
+import { faHeart as faHeartRegular } from "@fortawesome/free-regular-svg-icons";
 
 export default function WishlistPage() {
-  const { wishlist } = useCart();
+  const { wishlist, toggleWishlist } = useCart();
+
   const wishlistProducts = products.filter((p) => wishlist.includes(p.id));
+  const wishlistServices = services.filter((s) => wishlist.includes(s.id));
+  const totalItems = wishlistProducts.length + wishlistServices.length;
 
   return (
     <>
       <section className="bg-navy py-16 px-4">
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="font-heading text-5xl md:text-6xl text-white mb-3">Wishlist</h1>
-          <p className="font-accent italic text-white/70 text-lg">{wishlistProducts.length} {wishlistProducts.length === 1 ? "item" : "items"} saved</p>
+          <p className="font-accent italic text-white/70 text-lg">{totalItems} {totalItems === 1 ? "item" : "items"} saved</p>
         </div>
       </section>
 
       <section className="py-16 px-4">
         <div className="max-w-7xl mx-auto">
-          {wishlistProducts.length === 0 ? (
+          {totalItems === 0 ? (
             <div className="text-center py-20">
               <div className="w-20 h-20 bg-cream rounded-full mx-auto mb-6 flex items-center justify-center">
-                <svg className="w-8 h-8 text-mauve" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
+                <FontAwesomeIcon icon={faHeartRegular} className="w-8 h-8 text-mauve" />
               </div>
               <h2 className="font-heading text-3xl text-navy mb-4">Your wishlist is empty</h2>
               <p className="text-mauve mb-8 font-accent italic">Save items you love for later.</p>
               <Link href="/shop" className="inline-block px-8 py-3.5 bg-navy text-white font-medium rounded-lg hover:bg-navy/90 transition-colors text-sm tracking-wider uppercase">
-                Browse Products
+                Browse Products & Services
               </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {wishlistProducts.map((product) => (<ProductCard key={product.id} product={product} />))}
-            </div>
+            <>
+              {wishlistProducts.length > 0 && (
+                <div className="mb-12">
+                  {wishlistServices.length > 0 && (
+                    <h2 className="font-heading text-2xl text-navy mb-6">Saved Products</h2>
+                  )}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {wishlistProducts.map((product) => (<ProductCard key={product.id} product={product} />))}
+                  </div>
+                </div>
+              )}
+
+              {wishlistServices.length > 0 && (
+                <div>
+                  {wishlistProducts.length > 0 && (
+                    <h2 className="font-heading text-2xl text-navy mb-6">Saved Services</h2>
+                  )}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {wishlistServices.map((service) => (
+                      <div key={service.id} className="bg-white rounded-xl p-6 shadow-[0_4px_12px_rgba(83,91,115,0.08)]">
+                        <div className="flex items-start justify-between gap-2 mb-3">
+                          <h3 className="font-heading text-xl text-navy">{service.name}</h3>
+                          <button
+                            onClick={() => toggleWishlist(service.id)}
+                            className="flex-shrink-0 p-1 hover:scale-110 transition-transform"
+                            aria-label="Remove from wishlist"
+                          >
+                            <FontAwesomeIcon icon={faHeart} className="w-5 h-5 text-blush" />
+                          </button>
+                        </div>
+                        <div className="flex items-center gap-3 text-sm text-mauve mb-3">
+                          <span>{service.duration}</span>
+                          <span className="text-mauve/30">|</span>
+                          <span className="font-semibold text-navy">From ${service.startingPrice}</span>
+                        </div>
+                        <p className="text-sm text-navy/70 leading-relaxed mb-4 line-clamp-3">{service.description}</p>
+                        <Link
+                          href={`/services#${service.id}`}
+                          className="text-sm text-navy underline underline-offset-2 decoration-mauve/40 hover:decoration-navy transition-colors font-medium"
+                        >
+                          View Service
+                        </Link>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </section>

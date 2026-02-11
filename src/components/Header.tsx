@@ -4,6 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
 import { useCart } from "@/lib/CartContext";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faMagnifyingGlass, faUser, faHeart, faBagShopping, faBars, faXmark } from "@fortawesome/free-solid-svg-icons";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -31,10 +33,10 @@ export default function Header() {
   const { cartCount, wishlistCount } = useCart();
 
   return (
-    <header className="sticky top-0 z-50 bg-navy">
+    <header className="sticky top-0 z-5 bg-navy w-full">
       {/* Glowing bottom divider */}
       <div className="absolute bottom-0 left-0 right-0 h-px bg-white/20 shadow-[0_0_8px_2px_rgba(255,255,255,0.15)]" />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           {/* Logo + Title (left) */}
           <Link href="/" className="flex items-center gap-3 flex-shrink-0">
@@ -70,7 +72,7 @@ export default function Header() {
                   >
                     <Link
                       href={link.href}
-                      className="font-heading text-white text-sm tracking-wide hover:text-light-blush transition-colors"
+                      className="font-heading text-white text-base tracking-wide hover:text-light-blush transition-colors"
                     >
                       {link.label}
                     </Link>
@@ -94,7 +96,7 @@ export default function Header() {
                   <Link
                     key={link.label}
                     href={link.href}
-                    className="font-heading text-white text-sm tracking-wide hover:text-light-blush transition-colors"
+                    className="font-heading text-white text-base tracking-wide hover:text-light-blush transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -105,19 +107,13 @@ export default function Header() {
             {/* Icons */}
             <div className="flex items-center gap-3 ml-4 border-l border-white/20 pl-4">
               <button className="p-2 text-white hover:text-light-blush transition-colors" aria-label="Search">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+                <FontAwesomeIcon icon={faMagnifyingGlass} className="w-5 h-5" />
               </button>
               <Link href="/account" className="p-2 text-white hover:text-light-blush transition-colors" aria-label="Account">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
+                <FontAwesomeIcon icon={faUser} className="w-5 h-5" />
               </Link>
-              <Link href="/wishlist" className="p-2 text-white hover:text-light-blush transition-colors relative" aria-label="Wishlist">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
+              <Link href="/loyalty" className="p-2 text-white hover:text-light-blush transition-colors relative" aria-label="Wishlist">
+                <FontAwesomeIcon icon={faHeart} className="w-5 h-5" />
                 {wishlistCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-blush text-navy text-xs w-5 h-5 rounded-full flex items-center justify-center font-medium">
                     {wishlistCount}
@@ -125,9 +121,7 @@ export default function Header() {
                 )}
               </Link>
               <Link href="/cart" className="p-2 text-white hover:text-light-blush transition-colors relative" aria-label="Cart">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                </svg>
+                <FontAwesomeIcon icon={faBagShopping} className="w-5 h-5" />
                 {cartCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-blush text-navy text-xs w-5 h-5 rounded-full flex items-center justify-center font-medium">
                     {cartCount}
@@ -140,9 +134,7 @@ export default function Header() {
           {/* Mobile: hamburger + cart */}
           <div className="flex items-center gap-2 lg:hidden">
             <Link href="/cart" className="p-2 text-white hover:text-light-blush transition-colors relative" aria-label="Cart">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-              </svg>
+              <FontAwesomeIcon icon={faBagShopping} className="w-5 h-5" />
               {cartCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-blush text-navy text-xs w-5 h-5 rounded-full flex items-center justify-center font-medium">
                   {cartCount}
@@ -154,15 +146,7 @@ export default function Header() {
               onClick={() => setMobileOpen(!mobileOpen)}
               aria-label="Toggle menu"
             >
-              {mobileOpen ? (
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              ) : (
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              )}
+              <FontAwesomeIcon icon={mobileOpen ? faXmark : faBars} className="w-6 h-6" />
             </button>
           </div>
         </div>
