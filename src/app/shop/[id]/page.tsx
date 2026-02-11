@@ -2,20 +2,62 @@
 
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { products, reviews } from "@/lib/data";
 import { useCart } from "@/lib/CartContext";
 import { StarRating } from "@/components/ProductCard";
 import ProductCard from "@/components/ProductCard";
+import ImageCarousel from "@/components/ImageCarousel";
 
 export default function ProductPage() {
   const params = useParams();
   const product = products.find((p) => p.id === params.id);
   const { addToCart, toggleWishlist, wishlist } = useCart();
   const [quantity, setQuantity] = useState(1);
-  const [selectedVariation, setSelectedVariation] = useState(product?.variations[0] || "");
-  const [activeTab, setActiveTab] = useState("description");
+  const [selectedVariation, setSelectedVariation] = useState(product?.variations.filter(v => v !== "Imperfect")[0] || "");
+  const [isImperfect, setIsImperfect] = useState(false);
+  const [variationSelected, setVariationSelected] = useState(false);
+  const [openTabs, setOpenTabs] = useState<Set<string>>(new Set());
+  const [activeTab, setActiveTab] = useState("description"); // For desktop tabs
   const [addedToCart, setAddedToCart] = useState(false);
+
+  // Get all images from all variations for auto-scroll
+  const allImages = useMemo(() => {
+    if (!product) return [];
+    const images: string[] = [];
+    const seen = new Set<string>();
+    
+    Object.values(product.variationImages).forEach((varImages) => {
+      varImages.forEach((img) => {
+        if (!seen.has(img)) {
+          seen.add(img);
+          images.push(img);
+        }
+      });
+    });
+    
+    // Fallback to product.images if no variation images
+    if (images.length === 0) {
+      return product.images;
+    }
+    return images;
+  }, [product]);
+
+  // Get current variation images
+  const currentImages = useMemo(() => {
+    if (!product) return [];
+    const key = selectedVariation || "_default";
+    const varImages = product.variationImages[key];
+    if (varImages && varImages.length > 0) return varImages;
+    const defaultImages = product.variationImages["_default"];
+    if (defaultImages && defaultImages.length > 0) return defaultImages;
+    return product.images;
+  }, [product, selectedVariation]);
+
+  const handleVariationSelect = (variation: string) => {
+    setSelectedVariation(variation);
+    setVariationSelected(true);
+  };
 
   if (!product) {
     return (
@@ -32,8 +74,18 @@ export default function ProductPage() {
   const isWishlisted = wishlist.includes(product.id);
   const relatedProducts = products.filter((p) => p.id !== product.id).slice(0, 4);
 
+  // Special pricing for "Imperfect" variation
+  const displayPrice = isImperfect ? 33 : product.price;
+  
+  // Get color variations (excluding Imperfect)
+  const colorVariations = product.variations.filter(v => v !== "Imperfect");
+  const hasImperfectOption = product.variations.includes("Imperfect");
+
+  // Full variation string for cart
+  const fullVariation = isImperfect ? `Imperfect - ${selectedVariation}` : selectedVariation;
+
   const handleAddToCart = () => {
-    addToCart({ productId: product.id, name: product.name, price: product.price, quantity, variation: selectedVariation, image: product.images[0] });
+    addToCart({ productId: product.id, name: product.name, price: displayPrice, quantity, variation: fullVariation, image: currentImages[0] || product.images[0] });
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2000);
   };
@@ -61,9 +113,12 @@ export default function ProductPage() {
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             <div>
-              <div className="aspect-square rounded-xl overflow-hidden bg-gradient-to-br from-cream to-light-blush flex items-center justify-center">
-                <span className="font-heading text-8xl text-navy/10">{product.name.charAt(0)}</span>
-              </div>
+              <ImageCarousel 
+                images={currentImages} 
+                allImages={allImages}
+                alt={product.name}
+                variationSelected={variationSelected}
+              />
             </div>
 
             <div>
@@ -72,7 +127,7 @@ export default function ProductPage() {
                   <span key={cat} className="px-3 py-1 bg-navy/10 text-navy text-xs font-medium tracking-wider uppercase rounded-full">{cat}</span>
                 ))}
                 {product.badges.map((badge) => (
-                  <span key={badge} className="px-3 py-1 bg-blush/30 text-navy text-xs font-medium tracking-wider uppercase rounded-full">{badge}</span>
+                  <span key={badge} className="px-3 py-1 bg-mauve/40 text-navy text-xs font-medium tracking-wider uppercase rounded-full">{badge}</span>
                 ))}
               </div>
 
@@ -84,7 +139,17 @@ export default function ProductPage() {
                 <span className="text-sm text-mauve">({product.reviewCount} reviews)</span>
               </div>
 
-              <p className="text-3xl font-semibold text-navy mb-6">${product.price}</p>
+              <div className="flex items-center gap-3 mb-6">
+                {isImperfect ? (
+                  <>
+                    <p className="text-3xl font-semibold text-navy">${displayPrice}</p>
+                    <p className="text-xl text-mauve/60 line-through">${product.price}</p>
+                    <span className="px-2 py-1 bg-blush/40 text-navy text-xs font-medium rounded-full">40% OFF</span>
+                  </>
+                ) : (
+                  <p className="text-3xl font-semibold text-navy">${product.price}</p>
+                )}
+              </div>
 
               {product.stock <= 2 && product.stock > 0 && (
                 <p className="text-sm text-blush font-medium mb-4">Only {product.stock} left in stock!</p>
@@ -96,14 +161,46 @@ export default function ProductPage() {
 
               {product.variations.length > 0 && (
                 <div className="mb-6">
-                  <h4 className="text-sm font-semibold text-navy mb-3 uppercase tracking-wider">Variation</h4>
+                  {/* Imperfect Toggle */}
+                  {hasImperfectOption && (
+                    <div className="mb-4">
+                      <button 
+                        onClick={() => setIsImperfect(!isImperfect)}
+                        className={`px-4 py-2 rounded-lg text-sm border-2 border-dashed transition-colors ${isImperfect ? "border-blush bg-blush/20 text-navy" : "border-blush/50 text-mauve hover:border-blush hover:bg-blush/10"}`}
+                      >
+                        {isImperfect ? "✓ " : ""}Imperfect Set <span className="text-xs opacity-70">— 40% off</span>
+                      </button>
+                    </div>
+                  )}
+                  
+                  {/* Color Selection */}
+                  <h4 className="text-sm font-semibold text-navy mb-3 uppercase tracking-wider">
+                    {isImperfect ? "Select Your Colour" : "Variation"}
+                  </h4>
                   <div className="flex flex-wrap gap-2">
-                    {product.variations.map((v) => (
-                      <button key={v} onClick={() => setSelectedVariation(v)}
+                    {colorVariations.map((v) => (
+                      <button key={v} onClick={() => handleVariationSelect(v)}
                         className={`px-4 py-2 rounded-lg text-sm border transition-colors ${selectedVariation === v ? "border-navy bg-navy text-white" : "border-navy/20 text-navy hover:border-navy"}`}
                       >{v}</button>
                     ))}
                   </div>
+                  
+                  {/* Imperfect Disclaimer */}
+                  {isImperfect && (
+                    <div className="mt-4 p-4 bg-blush/10 border border-blush/30 rounded-lg">
+                        <p className="text-sm text-navy/80 leading-relaxed">
+                        <span className="font-semibold text-navy">About Imperfect Sets:</span> 
+                        <br />
+                        These pieces may bear small aesthetic irregularities, yet remain fully functional and thoughtfully made.
+                        <br />
+                        <br />
+                        Imperfections may include separation, bubbles, fluffs, and other marks.
+                        <br />
+                        <br />
+                        Each set is still worthy of a place in a cherished collection and is offered at a gentle price in reflection of its imperfections.
+                        </p>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -131,14 +228,15 @@ export default function ProductPage() {
 
       <section className="py-12 px-4 bg-cream">
         <div className="max-w-4xl mx-auto">
-          <div className="flex overflow-x-auto gap-1 mb-8 border-b border-mauve/20">
+          {/* Desktop Tabs */}
+          <div className="hidden md:flex gap-1 mb-8 border-b border-mauve/20">
             {tabs.map((tab) => (
               <button key={tab.key} onClick={() => setActiveTab(tab.key)}
                 className={`px-6 py-3 text-sm font-medium tracking-wider uppercase whitespace-nowrap transition-colors border-b-2 ${activeTab === tab.key ? "border-navy text-navy" : "border-transparent text-mauve hover:text-navy"}`}
               >{tab.label}</button>
             ))}
           </div>
-          <div className="bg-white rounded-xl p-8">
+          <div className="hidden md:block bg-white rounded-xl p-8">
             {activeTab === "description" && product.description.split("\n\n").map((p, i) => (<p key={i} className="text-navy/80 leading-relaxed mb-4">{p}</p>))}
             {activeTab === "howto" && product.howToWork.split("\n\n").map((p, i) => (<p key={i} className="text-navy/80 leading-relaxed mb-4">{p}</p>))}
             {activeTab === "ritual" && product.ritual.split("\n\n").map((p, i) => (<p key={i} className="text-navy/80 leading-relaxed mb-4">{p}</p>))}
@@ -149,6 +247,85 @@ export default function ProductPage() {
                 <p>All orders are carefully packaged with the same intention with which they were made.</p>
               </div>
             )}
+          </div>
+          
+          {/* Mobile Accordion */}
+          <div className="md:hidden space-y-3">
+            {tabs.map((tab, index) => (
+              <div 
+                key={tab.key}
+                id={`accordion-${tab.key}`}
+                className="bg-white rounded-xl overflow-hidden"
+              >
+                <button
+                  onClick={() => {
+                    setOpenTabs(prev => {
+                      const newSet = new Set(prev);
+                      if (newSet.has(tab.key)) {
+                        newSet.delete(tab.key);
+                      } else {
+                        newSet.add(tab.key);
+                      }
+                      return newSet;
+                    });
+                  }}
+                  className="w-full px-5 py-4 flex items-center justify-between text-left"
+                >
+                  <span className={`text-sm font-medium tracking-wider uppercase ${openTabs.has(tab.key) ? "text-navy" : "text-mauve"}`}>
+                    {tab.label}
+                  </span>
+                  <svg
+                    className={`w-5 h-5 ${openTabs.has(tab.key) ? "rotate-180 text-navy" : "text-mauve"}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {openTabs.has(tab.key) && (
+                  <div className="px-5 pb-2 pt-4 border-t border-cream">
+                    {tab.key === "description" && product.description.split("\n\n").map((p, i) => (<p key={i} className="text-navy/80 leading-relaxed mb-4 text-sm last:mb-0">{p}</p>))}
+                    {tab.key === "howto" && product.howToWork.split("\n\n").map((p, i) => (<p key={i} className="text-navy/80 leading-relaxed mb-4 text-sm last:mb-0">{p}</p>))}
+                    {tab.key === "ritual" && product.ritual.split("\n\n").map((p, i) => (<p key={i} className="text-navy/80 leading-relaxed mb-4 text-sm last:mb-0">{p}</p>))}
+                    {tab.key === "shipping" && (
+                      <div className="text-navy/80 leading-relaxed space-y-4 text-sm">
+                        <p>Domestic orders typically ship within 2-3 business days and arrive within 5-7 business days.</p>
+                        <p>International shipping is available to most countries. Delivery times vary by location and may take 2-4 weeks.</p>
+                        <p>All orders are carefully packaged with the same intention with which they were made.</p>
+                      </div>
+                    )}
+                    {/* Close bar */}
+                    <button
+                      onClick={() => {
+                        const header = document.getElementById(`accordion-${tab.key}`);
+                        
+                        setOpenTabs(prev => {
+                          const newSet = new Set(prev);
+                          newSet.delete(tab.key);
+                          return newSet;
+                        });
+                        
+                        // After close, scroll header to top of viewport
+                        requestAnimationFrame(() => {
+                          if (header) {
+                            const headerOffset = 80;
+                            const headerPosition = header.getBoundingClientRect().top;
+                            const scrollTarget = window.pageYOffset + headerPosition - headerOffset;
+                            window.scrollTo({ top: scrollTarget, behavior: 'instant' });
+                          }
+                        });
+                      }}
+                      className="w-full mt-4 py-3 flex justify-center items-center text-mauve hover:text-navy transition-colors"
+                    >
+                      <svg className="w-5 h-5 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       </section>

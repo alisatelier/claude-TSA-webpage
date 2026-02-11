@@ -17,12 +17,16 @@ export default function HomePage() {
     <>
       {/* Hero Section */}
       <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-navy via-navy/95 to-navy/80" />
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-blush rounded-full blur-3xl" />
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-mauve rounded-full blur-3xl" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-light-blush rounded-full blur-3xl" />
-        </div>
+        {/* Background Image */}
+        <Image
+          src="/images/products/Rune Set - Includes.jpg"
+          alt="Rune Set"
+          fill
+          priority
+          className="object-cover"
+        />
+        {/* Dark overlay for text readability */}
+        <div className="absolute inset-0 bg-navy/60" />
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
           <Image
             src="/images/logo-white.png"
@@ -33,10 +37,10 @@ export default function HomePage() {
             priority
           />
           <h1 className="font-heading text-5xl md:text-7xl text-white mb-4 leading-tight">
-            May you Find Spirit Here
+            THE SPIIT ATELIE
           </h1>
           <p className="font-accent italic text-white/80 text-xl md:text-2xl mb-10">
-            For You, On Your Journey
+            May You Find Spirit Here
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
