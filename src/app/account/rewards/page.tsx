@@ -102,7 +102,7 @@ export default function RewardsPage() {
 
   const handleSubmitReview = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!reviewProduct || reviewText.length < 100) return;
+    if (!reviewProduct) return;
     const success = submitReview(reviewProduct, reviewRating, reviewText);
     if (success) {
       setReviewSubmitted(true);
@@ -317,21 +317,16 @@ export default function RewardsPage() {
                     ))}
                   </div>
 
-                  <div>
-                    <textarea
-                      value={reviewText}
-                      onChange={(e) => setReviewText(e.target.value)}
-                      placeholder="Share your experience (minimum 100 characters)..."
-                      className="w-full px-4 py-3 border border-navy/20 rounded-lg text-navy text-sm placeholder:text-mauve focus:outline-none focus:border-navy resize-none h-24"
-                    />
-                    <p className={`text-xs mt-1 ${reviewText.length >= 100 ? "text-teal-400" : "text-mauve"}`}>
-                      {reviewText.length}/100 characters {reviewText.length < 100 ? `(${100 - reviewText.length} more needed)` : "— minimum met"}
-                    </p>
-                  </div>
+                  <textarea
+                    value={reviewText}
+                    onChange={(e) => setReviewText(e.target.value)}
+                    placeholder="Share your experience..."
+                    className="w-full px-4 py-3 border border-navy/20 rounded-lg text-navy text-sm placeholder:text-mauve focus:outline-none focus:border-navy resize-none h-24"
+                  />
 
                   <button
                     type="submit"
-                    disabled={!reviewProduct || reviewText.length < 100}
+                    disabled={!reviewProduct}
                     className="px-6 py-2.5 bg-navy text-white text-sm font-medium rounded-lg hover:bg-navy/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Submit Review (+100 Credits)
@@ -458,7 +453,7 @@ export default function RewardsPage() {
                     Claim 150 Birthday Credits
                   </button>
                   {birthdayClaimed && (
-                    <p className="text-sm text-green-600 font-medium mt-2">
+                    <p className="text-sm text-teal-400 font-medium mt-2">
                       Birthday credits claimed!
                     </p>
                   )}
