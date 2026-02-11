@@ -25,6 +25,7 @@ export interface Service {
   startingPrice: number;
   description: string;
   includes: string[];
+  addOn?: { name: string; price: number };
   icon: string;
 }
 
@@ -246,48 +247,53 @@ export const products: Product[] = [
 export const services: Service[] = [
   {
     id: "tarot-reading",
-    name: "Intuitive Tarot Reading",
-    duration: "45-60 minutes",
-    startingPrice: 75,
+    name: "Tarot Reading",
+    duration: "60 Minutes",
+    startingPrice: 60,
     description:
-      "A personalized tarot reading session designed to bring clarity and insight to the questions that weigh most on your heart. Using the Whims & Whispers Tarot, we explore the energies surrounding your inquiry with care, intention, and honesty.",
+      "A personalized tarot reading session designed to bring clarity and insight to the questions that weigh most on your heart. Using the Whims & Whispers Tarot, we gently explore the energies surrounding your inquiry with care, intention, and honesty.",
     includes: [
-      "Pre-session intention setting",
-      "45-60 minute virtual or in-person reading",
-      "Digital summary of your spread and key insights",
-      "Post-session integration guidance",
+      "Coming into Ceremony",
+      "Unlimited Questions",
+      "Virtual Video Call",
+      "Integration Guidance",
     ],
+    addOn: { name: "Digital Summary of Your Spread, With Key Insights", price: 15 },
     icon: "tarot",
   },
   {
-    id: "rune-casting",
-    name: "Rune Casting & Forecast",
-    duration: "60-90 minutes",
-    startingPrice: 95,
+    id: "rune-reading",
+    name: "Norse Rune Reading",
+    duration: "30 Minutes",
+    startingPrice: 40,
     description:
-      "An in-depth Elder Futhark rune casting using the Whims & Whispers casting cloth system. This session provides a structured forecast over your chosen timeline, mapping the forces at work across key areas of your life.",
+      "A focused Elder Futhark rune casting offering direct, grounded insight into the patterns shaping your present path. The runes speak plainly — illuminating themes, cycles, and forces at work beneath the surface of your current season.",
     includes: [
-      "Timeline and intention discussion",
-      "60-90 minute casting session",
-      "Detailed written forecast report",
-      "Follow-up email for questions",
+      "Coming Into Ceremony",
+      "Timeline & Theme Discussion",
+      "Virtual Video Call",
+      "Integration Guidance",
     ],
+    addOn: { name: "Digital Summary of Your Cast, With Key Insights", price: 15 },
     icon: "runes",
   },
   {
-    id: "spiritual-mentorship",
-    name: "Spiritual Mentorship Session",
-    duration: "60 minutes",
-    startingPrice: 120,
+    id: "tarot-rune-reading",
+    name: "Tarot & Norse Rune Reading",
+    duration: "60 Minutes",
+    startingPrice: 80,
     description:
-      "A one-on-one mentorship session for those seeking guidance in developing or deepening their spiritual practice. Whether you are beginning your journey or refining an established one, this session meets you where you are.",
+      "For those who want both the map and the medicine.\n\nThis combined session offers the grounded clarity of the Norse runes alongside the layered narrative of tarot. The runes reveal the structural forces and timeline at play; the tarot brings emotional nuance, relational insight, and spiritual guidance. Together, they create a full-spectrum reading — practical, intuitive, and deeply integrative.",
     includes: [
-      "Pre-session questionnaire",
-      "60 minute guided conversation",
-      "Personalized practice recommendations",
-      "Resource list and next steps",
+      "Coming Into Ceremony",
+      "20-Minute Norse Rune Reading",
+      "40-Minute Tarot Reading",
+      "Unlimited Questions",
+      "Virtual Video Call",
+      "Integration Guidance",
     ],
-    icon: "mentorship",
+    addOn: { name: "Digital Summary of Your Cast & Spread, With Key Insights", price: 30 },
+    icon: "combined",
   },
 ];
 

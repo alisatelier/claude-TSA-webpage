@@ -69,6 +69,12 @@ export default function ServicesPage() {
                       </li>
                     ))}
                   </ul>
+                  {service.addOn && (
+                    <div className="mb-6">
+                      <h4 className="text-sm font-semibold text-navy mb-3 uppercase tracking-wider">Add On</h4>
+                      <p className="text-sm text-navy/80">{service.addOn.name} · <span className="font-semibold text-navy">${service.addOn.price}</span></p>
+                    </div>
+                  )}
                 </div>
                 <div className="flex flex-col items-center justify-center">
                   <button onClick={() => { setBookingService(service.id); setBookingStep(1); }}
