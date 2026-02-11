@@ -8,6 +8,7 @@ import Footer from "@/components/Footer";
 import AnnouncementBar from "@/components/AnnouncementBar";
 import ToastNotification from "@/components/ToastNotification";
 import { CartProvider } from "@/lib/CartContext";
+import { AuthProvider } from "@/lib/AuthContext";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -42,13 +43,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${poppins.variable} ${lora.variable} antialiased`}>
-        <CartProvider>
-          <Header />
-          <AnnouncementBar />
-          <main className="min-h-screen">{children}</main>
-          <Footer />
-          <ToastNotification />
-        </CartProvider>
+        <AuthProvider>
+          <CartProvider>
+            <Header />
+            <AnnouncementBar />
+            <main className="min-h-screen">{children}</main>
+            <Footer />
+            <ToastNotification />
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );

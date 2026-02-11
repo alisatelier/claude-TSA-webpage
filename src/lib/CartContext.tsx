@@ -1,6 +1,9 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, useRef } from "react";
+import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from "react";
+import { useAuth } from "./AuthContext";
+
+const CART_STORAGE_KEY = "spirit-atelier-cart";
 
 export interface CartItem {
   productId: string;
@@ -20,8 +23,8 @@ interface CartContextType {
   items: CartItem[];
   wishlist: string[];
   addToCart: (item: CartItem) => void;
-  removeFromCart: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  removeFromCart: (productId: string, variation?: string) => void;
+  updateQuantity: (productId: string, quantity: number, variation?: string) => void;
   toggleWishlist: (productId: string) => void;
   cartCount: number;
   wishlistCount: number;
@@ -29,15 +32,51 @@ interface CartContextType {
   clearCart: () => void;
   toast: Toast | null;
   dismissToast: () => void;
+  appliedCredits: number;
+  creditDiscount: number;
+  applyCredits: (amount: number) => void;
+  removeCredits: () => void;
+  checkout: () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+function loadCartFromStorage(): { items: CartItem[]; wishlist: string[] } {
+  if (typeof window === "undefined") return { items: [], wishlist: [] };
+  try {
+    const raw = localStorage.getItem(CART_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return { items: parsed.items || [], wishlist: parsed.wishlist || [] };
+    }
+  } catch {
+    // ignore
+  }
+  return { items: [], wishlist: [] };
+}
+
 export function CartProvider({ children }: { children: React.ReactNode }) {
+  const { isLoggedIn, recordPurchase, deductCredits, user } = useAuth();
   const [items, setItems] = useState<CartItem[]>([]);
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [toast, setToast] = useState<Toast | null>(null);
+  const [appliedCredits, setAppliedCredits] = useState(0);
+  const [mounted, setMounted] = useState(false);
   const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Hydrate from localStorage
+  useEffect(() => {
+    const stored = loadCartFromStorage();
+    setItems(stored.items);
+    setWishlist(stored.wishlist);
+    setMounted(true);
+  }, []);
+
+  // Sync to localStorage
+  useEffect(() => {
+    if (!mounted) return;
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify({ items, wishlist }));
+  }, [items, wishlist, mounted]);
 
   const dismissToast = useCallback(() => {
     setToast(null);
@@ -55,7 +94,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     toastTimeoutRef.current = setTimeout(() => {
       setToast(null);
       toastTimeoutRef.current = null;
-    }, 30000);
+    }, 80000);
   }, []);
 
   const addToCart = useCallback((item: CartItem) => {
@@ -72,17 +111,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  const removeFromCart = useCallback((productId: string) => {
-    setItems((prev) => prev.filter((i) => i.productId !== productId));
+  const removeFromCart = useCallback((productId: string, variation?: string) => {
+    setItems((prev) => prev.filter((i) => !(i.productId === productId && i.variation === variation)));
   }, []);
 
-  const updateQuantity = useCallback((productId: string, quantity: number) => {
+  const updateQuantity = useCallback((productId: string, quantity: number, variation?: string) => {
     if (quantity <= 0) {
-      setItems((prev) => prev.filter((i) => i.productId !== productId));
+      setItems((prev) => prev.filter((i) => !(i.productId === productId && i.variation === variation)));
       return;
     }
     setItems((prev) =>
-      prev.map((i) => (i.productId === productId ? { ...i, quantity } : i))
+      prev.map((i) => (i.productId === productId && i.variation === variation ? { ...i, quantity } : i))
     );
   }, []);
 
@@ -90,18 +129,70 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setWishlist((prev) => {
       const isRemoving = prev.includes(productId);
       if (!isRemoving) {
-        showToast({
-          message: "Earn Ritual Credits with every purchase",
-          link: { href: "/loyalty", label: "Join the Loyalty Program" },
-        });
+        if (isLoggedIn) {
+          showToast({
+            message: "Added to your Wishlist",
+            link: { href: "/wishlist", label: "View Wishlist" },
+          });
+        } else {
+          showToast({
+            message: "Earn Ritual Credits with every purchase",
+            link: { href: "/loyalty", label: "Join the Loyalty Program" },
+          });
+        }
       }
       return isRemoving
         ? prev.filter((id) => id !== productId)
         : [...prev, productId];
     });
-  }, [showToast]);
+  }, [showToast, isLoggedIn]);
 
-  const clearCart = useCallback(() => setItems([]), []);
+  const clearCart = useCallback(() => {
+    setItems([]);
+    setAppliedCredits(0);
+  }, []);
+
+  const creditDiscount = appliedCredits === 500 ? 20 : appliedCredits === 250 ? 10 : 0;
+
+  const applyCredits = useCallback((amount: number) => {
+    if (amount !== 250 && amount !== 500) return;
+    // Re-check current balance from user state
+    if (!user || user.loyalty.currentCredits < amount) return;
+    setAppliedCredits(amount);
+  }, [user]);
+
+  const removeCredits = useCallback(() => {
+    setAppliedCredits(0);
+  }, []);
+
+  const checkout = useCallback(() => {
+    if (items.length === 0) return;
+    const productIds = items.map((i) => i.productId);
+    const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+
+    // Re-validate credits before deducting (prevents stale state / multi-tab)
+    let validCredits = appliedCredits;
+    if (validCredits > 0) {
+      if (!user || user.loyalty.currentCredits < validCredits) {
+        validCredits = 0;
+      }
+    }
+
+    const discount = validCredits === 500 ? 20 : validCredits === 250 ? 10 : 0;
+    if (discount > subtotal) {
+      validCredits = 0;
+    }
+    const actualDiscount = validCredits === 500 ? 20 : validCredits === 250 ? 10 : 0;
+    const finalTotal = Math.max(0, subtotal - actualDiscount);
+
+    if (validCredits > 0) {
+      deductCredits(validCredits, `Redeemed ${validCredits} credits ($${actualDiscount} off)`);
+    }
+
+    recordPurchase(productIds, finalTotal);
+    setItems([]);
+    setAppliedCredits(0);
+  }, [items, appliedCredits, deductCredits, recordPurchase, user]);
 
   const cartCount = items.reduce((sum, i) => sum + i.quantity, 0);
   const wishlistCount = wishlist.length;
@@ -122,6 +213,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         clearCart,
         toast,
         dismissToast,
+        appliedCredits,
+        creditDiscount,
+        applyCredits,
+        removeCredits,
+        checkout,
       }}
     >
       {children}

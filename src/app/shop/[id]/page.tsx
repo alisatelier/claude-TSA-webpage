@@ -2,9 +2,10 @@
 
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { products, reviews } from "@/lib/data";
 import { useCart } from "@/lib/CartContext";
+import { useAuth, getUserReviews, type UserReview } from "@/lib/AuthContext";
 import { StarRating } from "@/components/ProductCard";
 import ProductCard from "@/components/ProductCard";
 import ImageCarousel from "@/components/ImageCarousel";
@@ -16,6 +17,7 @@ export default function ProductPage() {
   const params = useParams();
   const product = products.find((p) => p.id === params.id);
   const { addToCart, toggleWishlist, wishlist } = useCart();
+  const { user, isLoggedIn } = useAuth();
   const [quantity, setQuantity] = useState(1);
   const [selectedVariation, setSelectedVariation] = useState(product?.variations.filter(v => v !== "Imperfect")[0] || "");
   const [isImperfect, setIsImperfect] = useState(false);
@@ -23,6 +25,14 @@ export default function ProductPage() {
   const [openTabs, setOpenTabs] = useState<Set<string>>(new Set(["description"]));
   const [activeTab, setActiveTab] = useState("description"); // For desktop tabs
   const [addedToCart, setAddedToCart] = useState(false);
+  const [clientUserReviews, setClientUserReviews] = useState<UserReview[]>([]);
+
+  // Load user reviews client-side only to avoid hydration mismatch
+  useEffect(() => {
+    if (product) {
+      setClientUserReviews(getUserReviews(product.id));
+    }
+  }, [product]);
 
   // Includes images for specific products (shown on product page only)
   const includesImage = useMemo(() => {
@@ -103,7 +113,27 @@ export default function ProductPage() {
     );
   }
 
-  const productReviews = reviews.filter((r) => r.productId === product.id);
+  const staticReviews = reviews.filter((r) => r.productId === product.id);
+  const userReviews = clientUserReviews;
+  const productReviews = [
+    ...staticReviews.map((r) => ({
+      id: r.id,
+      reviewer: r.reviewer,
+      rating: r.rating,
+      text: r.text,
+      verified: r.verified,
+      isUserReview: false,
+    })),
+    ...userReviews.map((r) => ({
+      id: r.id,
+      reviewer: r.userName,
+      rating: r.rating,
+      text: r.text,
+      verified: true,
+      isUserReview: true,
+    })),
+  ];
+  const totalReviewCount = product.reviewCount + userReviews.length;
   const isWishlisted = wishlist.includes(product.id);
   const relatedProducts = products.filter((p) => p.id !== product.id).slice(0, 4);
 
@@ -169,7 +199,7 @@ export default function ProductPage() {
 
               <div className="flex items-center gap-2 mb-4">
                 <StarRating rating={product.rating} size="md" />
-                <span className="text-sm text-mauve">({product.reviewCount} reviews)</span>
+                <span className="text-sm text-mauve">({totalReviewCount} reviews)</span>
               </div>
 
               <div className="flex items-center gap-3 mb-6">
@@ -183,6 +213,8 @@ export default function ProductPage() {
                   <p className="text-3xl font-semibold text-navy">${product.price}</p>
                 )}
               </div>
+
+            
 
               {product.stock <= 2 && product.stock > 0 && (
                 <p className="text-sm text-blush font-medium mb-4">Only {product.stock} left in stock!</p>
@@ -244,17 +276,45 @@ export default function ProductPage() {
                   <button onClick={() => setQuantity(quantity + 1)} className="px-4 py-3 text-navy hover:bg-cream transition-colors">+</button>
                 </div>
                 <button onClick={handleAddToCart} disabled={product.stock === 0}
-                  className={`flex-1 py-3.5 font-medium rounded-lg text-sm tracking-wider uppercase transition-colors ${addedToCart ? "bg-green-600 text-white" : product.stock === 0 ? "bg-mauve/30 text-mauve cursor-not-allowed" : "bg-navy text-white hover:bg-navy/90"}`}
+                  className={`flex-1 py-3.5 font-medium rounded-lg text-sm tracking-wider uppercase transition-colors ${addedToCart ? "bg-[#A69FA5] text-white" : product.stock === 0 ? "bg-mauve/30 text-mauve cursor-not-allowed" : "bg-navy text-white hover:bg-navy/90"}`}
                 >{addedToCart ? "Added!" : product.stock === 0 ? "Out of Stock" : "Add to Cart"}</button>
               </div>
 
-              <button onClick={() => toggleWishlist(product.id)} className="flex items-center gap-2 text-sm text-navy hover:text-mauve transition-colors mb-8">
-                <FontAwesomeIcon
-                  icon={isWishlisted ? faHeart : faHeartRegular}
-                  className={`w-5 h-5 ${isWishlisted ? "text-blush" : ""}`}
-                />
-                {isWishlisted ? "In Wishlist" : "Add to Wishlist"}
-              </button>
+              <div className="flex items-center justify-between gap-4 mb-8">
+
+  {/* Wishlist */}
+  <button
+    onClick={() => toggleWishlist(product.id)}
+    className="flex items-center gap-2 text-sm text-navy hover:text-mauve transition-colors"
+  >
+    <FontAwesomeIcon
+      icon={isWishlisted ? faHeart : faHeartRegular}
+      className={`w-5 h-5 ${isWishlisted ? "text-blush" : ""}`}
+    />
+    {isWishlisted ? "In Wishlist" : "Add to Wishlist"}
+  </button>
+
+  {/* Loyalty Indicator */}
+  {isLoggedIn && user && (
+    <>
+      {user.loyalty.currentCredits >= 250 ? (
+        <div className="text-right">
+          <p className="text-sm font-medium text-navy">
+            ✨ $10 Off Available
+          </p>
+          <p className="text-xs text-mauve">
+            Redeem 250 Ritual Credits at checkout
+          </p>
+        </div>
+      ) : user.loyalty.currentCredits > 0 ? (
+        <p className="text-xs text-mauve text-right">
+          {user.loyalty.currentCredits} Ritual Credits
+        </p>
+      ) : null}
+    </>
+  )}
+
+</div>
             </div>
           </div>
         </div>
@@ -368,7 +428,8 @@ export default function ProductPage() {
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <span className="font-medium text-navy">{review.reviewer}</span>
-                      {review.verified && <span className="px-2 py-0.5 bg-navy/10 text-navy text-[10px] font-medium tracking-wider uppercase rounded-full">Verified</span>}
+                      {review.isUserReview && <span className="px-2 py-0.5 bg-teal-400/20 text-teal-700 text-[10px] font-medium tracking-wider uppercase rounded-full">Verified Purchase</span>}
+                      {!review.isUserReview && review.verified && <span className="px-2 py-0.5 bg-navy/10 text-navy text-[10px] font-medium tracking-wider uppercase rounded-full">Verified</span>}
                     </div>
                     <StarRating rating={review.rating} />
                   </div>

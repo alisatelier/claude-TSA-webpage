@@ -31,6 +31,10 @@ export default function ImageCarousel({
     ? images
     : (allImages && allImages.length > 0 ? allImages : images);
 
+  // Clamp activeIndex to valid range synchronously during render
+  // This prevents the stale-index bug when switching from allImages to variation images
+  const safeActiveIndex = activeIndex >= displayImages.length ? 0 : activeIndex;
+
   // Mark image as loaded
   const handleImageLoad = useCallback((index: number) => {
     setLoadedImages((prev) => new Set([...prev, index]));
@@ -39,10 +43,10 @@ export default function ImageCarousel({
   // Preload next image
   useEffect(() => {
     if (displayImages.length <= 1) return;
-    const nextIndex = activeIndex === displayImages.length - 1 ? 0 : activeIndex + 1;
-    const prevIndex = activeIndex === 0 ? displayImages.length - 1 : activeIndex - 1;
+    const nextIndex = safeActiveIndex === displayImages.length - 1 ? 0 : safeActiveIndex + 1;
+    const prevIndex = safeActiveIndex === 0 ? displayImages.length - 1 : safeActiveIndex - 1;
     setLoadedImages((prev) => new Set([...prev, nextIndex, prevIndex]));
-  }, [activeIndex, displayImages.length]);
+  }, [safeActiveIndex, displayImages.length]);
 
   // Track the first image to detect when images array actually changes
   const firstImageRef = useRef<string | null>(null);
@@ -54,20 +58,25 @@ export default function ImageCarousel({
       firstImageRef.current = firstImage;
       setActiveIndex(0);
       setIsAutoScrolling(false);
-      // Clear loaded images - the new images will need to load fresh
-      setLoadedImages(new Set());
+      setLoadedImages(new Set([0]));
     }
   }, [variationSelected, images]);
 
   const goToNext = useCallback(() => {
     setIsTransitioning(true);
-    setActiveIndex((prev) => (prev === displayImages.length - 1 ? 0 : prev + 1));
+    setActiveIndex((prev) => {
+      const safe = prev >= displayImages.length ? 0 : prev;
+      return safe === displayImages.length - 1 ? 0 : safe + 1;
+    });
     setTimeout(() => setIsTransitioning(false), 700);
   }, [displayImages.length]);
 
   const goToPrev = useCallback(() => {
     setIsTransitioning(true);
-    setActiveIndex((prev) => (prev === 0 ? displayImages.length - 1 : prev - 1));
+    setActiveIndex((prev) => {
+      const safe = prev >= displayImages.length ? 0 : prev;
+      return safe === 0 ? displayImages.length - 1 : safe - 1;
+    });
     setTimeout(() => setIsTransitioning(false), 700);
   }, [displayImages.length]);
 
@@ -107,11 +116,11 @@ export default function ImageCarousel({
 
         {displayImages.map((img, i) => {
           // Only render images that are loaded or should be preloaded
-          const shouldRender = loadedImages.has(i) || i === activeIndex || i === 0;
+          const shouldRender = loadedImages.has(i) || i === safeActiveIndex || i === 0;
           if (!shouldRender) return null;
 
           // Show the active image immediately, even if not yet marked as loaded
-          const isVisible = i === activeIndex;
+          const isVisible = i === safeActiveIndex;
 
           return (
             <div
@@ -165,7 +174,7 @@ export default function ImageCarousel({
                   setTimeout(() => setIsTransitioning(false), 700);
                 })}
                 className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                  i === activeIndex ? "bg-navy w-4" : "bg-white/70 hover:bg-white"
+                  i === safeActiveIndex ? "bg-navy w-4" : "bg-white/70 hover:bg-white"
                 }`}
                 aria-label={`Go to image ${i + 1}`}
               />
@@ -186,7 +195,7 @@ export default function ImageCarousel({
                 setTimeout(() => setIsTransitioning(false), 700);
               })}
               className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors ${
-                i === activeIndex ? "border-navy" : "border-transparent hover:border-mauve/40"
+                i === safeActiveIndex ? "border-navy" : "border-transparent hover:border-mauve/40"
               }`}
             >
               <Image

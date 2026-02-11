@@ -58,10 +58,10 @@ export const products: Product[] = [
     categories: ["Ritual Tools"],
     badges: ["Locally Printed"],
     includes: '5x8", 250 Page Journal.',
-    variations: ["Ash", "Blush"],
+    variations: ["Grey", "Pink"],
     variationImages: {
-      "Ash": ["/images/products/Journal - Grey - 1pg.jpg", "/images/products/Journal - Grey - 2pg.jpg"],
-      "Blush": ["/images/products/Journal - Pink - 1pg.jpg", "/images/products/Journal - Pink - 2pg.jpg"],
+      "Grey": ["/images/products/Journal - Grey - 1pg.jpg", "/images/products/Journal - Grey - 2pg.jpg"],
+      "Pink": ["/images/products/Journal - Pink - 1pg.jpg", "/images/products/Journal - Pink - 2pg.jpg"],
     },
     description:
       "The Whims & Whispers Journal was created as a semi-structured companion for intentional reflection. Its design moves in two-page pairs — the first guiding you through daily planning, gratitude, and mood awareness, and the second offering a lined, open space for free-flow thought.\n\nThis balance between structure and openness is deliberate. The prompts provide orientation without rigidity, while the blank page invites honesty without expectation. The journal is intended to sit alongside tarot practice, offering a dedicated space to record your readings and integrate their insight into your lived day.\n\nBy placing reflection and divination within the same pages, the practice becomes cohesive rather than scattered. Its intention is not to produce perfect entries, but to cultivate continuity and a steady return to self, page after page.",
@@ -84,10 +84,10 @@ export const products: Product[] = [
     categories: ["Ritual Tools", "Divination Tools"],
     badges: ["Locally Printed", "Handcrafted"],
     includes: "62 Card Deck, Guidebook, Drawstring Bag",
-    variations: ["Ash", "Blush"],
+    variations: ["Grey", "Pink"],
     variationImages: {
-      "Ash": ["/images/products/Tarot - Grey - Major Arcana.jpg", "/images/products/Tarot - Grey - Minor Arcana.jpg"],
-      "Blush": ["/images/products/Tarot - Pink - Major Arcana.jpg", "/images/products/Tarot - Pink - Minor Arcana.jpg"],
+      "Grey": ["/images/products/Tarot - Grey - Major Arcana.jpg", "/images/products/Tarot - Grey - Minor Arcana.jpg"],
+      "Pink": ["/images/products/Tarot - Pink - Major Arcana.jpg", "/images/products/Tarot - Pink - Minor Arcana.jpg"],
     },
     description:
       "The Whims & Whispers Tarot is a non-traditional, Marseille-style quick read deck designed to simplify interpretation without diminishing depth. This 62-card system retains the foundational archetypes of tarot while refining its structure.\n\nThe Major Arcana remain rooted in their original framework, yet are renamed and symbolically reinterpreted to reflect a softened but resonant evolution of meaning. The Beloved echoes The Lovers. The Pearl carries the contemplative solitude of The Hermit. The archetype remains intact — the symbolism shifts, allowing meaning to be inferred rather than memorized.\n\nThe Minor Arcana follow a Marseille tradition: pips without narrative imagery. Sparks, Tears, Soil, and Whispers represent Fire, Water, Earth, and Air. Their meaning is elemental and direct. There are no court cards, and no visual storytelling within the pips — only structure, suit, and number. The court cards have been omitted from this deck intentionally. The Whims & Whispers Tarot was created to remove excess without removing substance. Its intention is clarity.",

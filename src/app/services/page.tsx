@@ -118,7 +118,7 @@ export default function ServicesPage() {
             {booked ? (
               <div className="text-center py-8">
                 <div className="w-16 h-16 bg-green-100 rounded-full mx-auto mb-4 flex items-center justify-center">
-                  <FontAwesomeIcon icon={faCheck} className="w-8 h-8 text-green-600" />
+                  <FontAwesomeIcon icon={faCheck} className="w-8 h-8 text-[#A69FA5]" />
                 </div>
                 <p className="text-navy font-medium mb-2">Your session has been booked.</p>
                 <p className="text-mauve text-sm">A confirmation email will be sent shortly.</p>

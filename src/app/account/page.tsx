@@ -5,17 +5,42 @@ import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faStar, faClipboardList, faHeart, faGift, faGear } from "@fortawesome/free-solid-svg-icons";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
+import { useAuth } from "@/lib/AuthContext";
 
 export default function AccountPage() {
+  const { user, isLoggedIn, tier, login, register, logout } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [formData, setFormData] = useState({ email: "", password: "", name: "" });
+  const [formData, setFormData] = useState({ email: "", password: "", name: "", referralCode: "", birthdayMonth: 0 });
+  const [error, setError] = useState("");
 
-  if (loggedIn) {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    if (isLogin) {
+      const success = login(formData.email, formData.password);
+      if (!success) {
+        setError("No account found with that email. Please register first.");
+      }
+    } else {
+      const success = register(
+        formData.name,
+        formData.email,
+        formData.password,
+        formData.referralCode || undefined,
+        formData.birthdayMonth || undefined
+      );
+      if (!success) {
+        setError("An account with that email already exists. Try signing in.");
+      }
+    }
+  };
+
+  if (isLoggedIn && user) {
     const dashboardItems: { title: string; desc: string; icon: IconDefinition; href: string }[] = [
       { title: "My Orders", desc: "View order history and tracking", icon: faClipboardList, href: "" },
       { title: "My Wishlist", desc: "Items you have saved for later", icon: faHeart, href: "/wishlist" },
-      { title: "Rewards", desc: "View Ritual Credits and earn more", icon: faGift, href: "/loyalty" },
+      { title: "Rewards", desc: "View Ritual Credits and earn more", icon: faGift, href: "/account/rewards" },
       { title: "Settings", desc: "Update your profile and preferences", icon: faGear, href: "" },
     ];
 
@@ -29,11 +54,15 @@ export default function AccountPage() {
         <section className="py-16 px-4">
           <div className="max-w-5xl mx-auto">
             <div className="bg-cream rounded-xl p-8 mb-8 text-center">
-              <h2 className="font-heading text-3xl text-navy mb-2">Hello, {formData.name || "Seeker"}</h2>
+              <h2 className="font-heading text-3xl text-navy mb-2">Hello, {user.name || "Seeker"}</h2>
               <p className="text-mauve font-accent italic">For You, On Your Journey</p>
-              <div className="mt-4 inline-flex items-center gap-2 bg-navy/10 px-4 py-2 rounded-full">
-                <FontAwesomeIcon icon={faStar} className="w-5 h-5 text-blush" />
-                <span className="text-sm font-medium text-navy">50 Ritual Credits</span>
+              <div className="mt-4 flex items-center justify-center gap-3">
+                <div className="inline-flex items-center gap-2 bg-navy/10 px-4 py-2 rounded-full">
+                  <span className="text-sm font-medium text-navy">✨{user.loyalty.currentCredits} Ritual Credits</span>
+                </div>
+                <span className="px-3 py-1 bg-navy text-white text-xs font-medium tracking-wider uppercase rounded-full">
+                  {tier}
+                </span>
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -49,7 +78,7 @@ export default function AccountPage() {
               })}
             </div>
             <div className="mt-8 text-center">
-              <button onClick={() => setLoggedIn(false)} className="text-sm text-mauve hover:text-navy transition-colors">Sign Out</button>
+              <button onClick={logout} className="text-sm text-mauve hover:text-navy transition-colors">Sign Out</button>
             </div>
           </div>
         </section>
@@ -70,11 +99,17 @@ export default function AccountPage() {
         <div className="max-w-md mx-auto">
           <div className="bg-white rounded-xl p-8 shadow-[0_4px_12px_rgba(83,91,115,0.08)]">
             <div className="flex mb-8 border-b border-cream">
-              <button onClick={() => setIsLogin(true)} className={`flex-1 pb-3 text-sm font-medium tracking-wider uppercase transition-colors border-b-2 ${isLogin ? "border-navy text-navy" : "border-transparent text-mauve"}`}>Sign In</button>
-              <button onClick={() => setIsLogin(false)} className={`flex-1 pb-3 text-sm font-medium tracking-wider uppercase transition-colors border-b-2 ${!isLogin ? "border-navy text-navy" : "border-transparent text-mauve"}`}>Register</button>
+              <button onClick={() => { setIsLogin(true); setError(""); }} className={`flex-1 pb-3 text-sm font-medium tracking-wider uppercase transition-colors border-b-2 ${isLogin ? "border-navy text-navy" : "border-transparent text-mauve"}`}>Sign In</button>
+              <button onClick={() => { setIsLogin(false); setError(""); }} className={`flex-1 pb-3 text-sm font-medium tracking-wider uppercase transition-colors border-b-2 ${!isLogin ? "border-navy text-navy" : "border-transparent text-mauve"}`}>Register</button>
             </div>
 
-            <form onSubmit={(e) => { e.preventDefault(); setLoggedIn(true); }} className="space-y-4">
+            {error && (
+              <div className="mb-4 p-3 bg-blush/10 border border-blush/30 rounded-lg text-sm text-navy">
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4">
               {!isLogin && (
                 <div>
                   <label className="block text-sm font-semibold text-navy mb-2 uppercase tracking-wider">Name</label>
@@ -89,6 +124,27 @@ export default function AccountPage() {
                 <label className="block text-sm font-semibold text-navy mb-2 uppercase tracking-wider">Password</label>
                 <input type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className="w-full px-4 py-3 border border-navy/20 rounded-lg text-navy placeholder:text-mauve focus:outline-none focus:border-navy transition-colors" placeholder="Your password" required />
               </div>
+              {!isLogin && (
+                <div>
+                  <label className="block text-sm font-semibold text-navy mb-2 uppercase tracking-wider">Referral Code <span className="text-mauve font-normal normal-case">(optional)</span></label>
+                  <input type="text" value={formData.referralCode} onChange={(e) => setFormData({ ...formData, referralCode: e.target.value })} className="w-full px-4 py-3 border border-navy/20 rounded-lg text-navy placeholder:text-mauve focus:outline-none focus:border-navy transition-colors" placeholder="e.g. REF-LUNA-A3B2" />
+                </div>
+              )}
+              {!isLogin && (
+                <div>
+                  <label className="block text-sm font-semibold text-navy mb-2 uppercase tracking-wider">Birthday Month <span className="text-mauve font-normal normal-case">(optional)</span></label>
+                  <select
+                    value={formData.birthdayMonth}
+                    onChange={(e) => setFormData({ ...formData, birthdayMonth: Number(e.target.value) })}
+                    className="w-full px-4 py-3 border border-navy/20 rounded-lg text-navy focus:outline-none focus:border-navy transition-colors"
+                  >
+                    <option value={0}>Select your birthday month...</option>
+                    {["January","February","March","April","May","June","July","August","September","October","November","December"].map((month, i) => (
+                      <option key={month} value={i + 1}>{month}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
               {isLogin && <div className="text-right"><button type="button" className="text-sm text-mauve hover:text-navy transition-colors">Forgot password?</button></div>}
               <button type="submit" className="w-full py-3.5 bg-navy text-white font-medium rounded-lg hover:bg-navy/90 transition-colors text-sm tracking-wider uppercase">
                 {isLogin ? "Sign In" : "Create Account"}

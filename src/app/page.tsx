@@ -6,7 +6,15 @@ import { useState } from "react";
 import ProductCard from "@/components/ProductCard";
 import { products, services, reviews } from "@/lib/data";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowDown, faStar, faImage, faArrowRight, faLayerGroup, faCubes, faBookOpen } from "@fortawesome/free-solid-svg-icons";
+import {
+  faArrowDown,
+  faStar,
+  faImage,
+  faArrowRight,
+  faLayerGroup,
+  faCubes,
+  faBookOpen,
+} from "@fortawesome/free-solid-svg-icons";
 
 export default function HomePage() {
   const [newsletterEmail, setNewsletterEmail] = useState("");
@@ -45,7 +53,7 @@ export default function HomePage() {
             priority
           />
           <h1 className="font-heading text-5xl md:text-7xl text-white mb-4 leading-tight">
-            THE SPIIT ATELIE
+            THE SPIIT ATELIE
           </h1>
           <p className="font-accent italic text-white/80 text-xl md:text-2xl mb-10">
             May You Find Spirit Here
@@ -67,7 +75,10 @@ export default function HomePage() {
         </div>
         {/* Scroll indicator */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-          <FontAwesomeIcon icon={faArrowDown} className="w-6 h-6 text-white/50" />
+          <FontAwesomeIcon
+            icon={faArrowDown}
+            className="w-6 h-6 text-white/50"
+          />
         </div>
       </section>
 
@@ -75,8 +86,12 @@ export default function HomePage() {
       <section className="py-20 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="font-heading text-4xl md:text-5xl text-navy mb-3">Our Collection</h2>
-            <p className="font-accent italic text-mauve text-lg">Tools crafted with intention, for your practice</p>
+            <h2 className="font-heading text-4xl md:text-5xl text-navy mb-3">
+              Our Collection
+            </h2>
+            <p className="font-accent italic text-mauve text-lg">
+              Tools crafted with intention, for your practice
+            </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {featuredProducts.map((product) => (
@@ -98,16 +113,17 @@ export default function HomePage() {
       <section className="py-20 bg-cream">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h2 className="font-heading text-4xl md:text-5xl text-navy mb-6">
-            THE SPIIT ATELIE
-            </h2>
+            THE SPIIT ATELIE
+          </h2>
           <p className="font-accent italic text-mauve text-lg mb-4">
             Where craft meets ceremony
           </p>
           <p className="text-navy/80 leading-relaxed mb-8 max-w-2xl mx-auto">
-            We create handcrafted spiritual tools designed to support your journey with clarity,
-            beauty, and intention. Each piece in our collection is made to be returned to —
-            a companion in your practice. Whether you are beginning to explore
-            or deepening an established path, our tools meet you where you are.
+            We create handcrafted spiritual tools designed to support your
+            journey with clarity, beauty, and intention. Each piece in our
+            collection is made to be returned to — a companion in your practice.
+            Whether you are beginning to explore or deepening an established
+            path, our tools meet you where you are.
           </p>
           <Link
             href="/about"
@@ -122,8 +138,12 @@ export default function HomePage() {
       <section className="py-20 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="font-heading text-4xl md:text-5xl text-navy mb-3">Our Services</h2>
-            <p className="font-accent italic text-mauve text-lg">Guidance for your path</p>
+            <h2 className="font-heading text-4xl md:text-5xl text-navy mb-3">
+              Our Services
+            </h2>
+            <p className="font-accent italic text-mauve text-lg">
+              Guidance for your path
+            </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {services.map((service) => (
@@ -131,16 +151,29 @@ export default function HomePage() {
                 key={service.id}
                 className="bg-white rounded-xl p-8 shadow-[0_4px_12px_rgba(83,91,115,0.08)] hover:shadow-[0_8px_24px_rgba(83,91,115,0.15)] transition-all duration-300 text-center"
               >
-                <div className="w-16 h-16 bg-cream rounded-full mx-auto mb-6 flex items-center justify-center">
-                  <FontAwesomeIcon icon={serviceIconMap[service.icon] || faLayerGroup} className="w-7 h-7 text-navy" />
+                <div className="w-16 h-16 bg-navy rounded-full mx-auto mb-6 flex items-center justify-center shadow-[0_4px_10px_rgba(83,91,115,0.15)]">
+                  <Image
+                    src="/images/logo-white.png"
+                    alt="Spirit Atelier Logo"
+                    width={28}
+                    height={28}
+                    className="object-contain"
+                  />
                 </div>
-                <h3 className="font-heading text-2xl text-navy mb-2">{service.name}</h3>
+
+                <h3 className="font-heading text-2xl text-navy mb-2">
+                  {service.name}
+                </h3>
                 <p className="text-mauve text-sm mb-1">{service.duration}</p>
-                <p className="text-navy font-semibold text-lg mb-4">${service.startingPrice}</p>
-                <p className="text-navy/70 text-sm mb-6 leading-relaxed line-clamp-3">{service.description}</p>
+                <p className="text-navy font-semibold text-lg mb-4">
+                  ${service.startingPrice}
+                </p>
+                <p className="text-navy/70 text-sm mb-6 leading-relaxed line-clamp-3">
+                  {service.description}
+                </p>
                 <Link
                   href={`/services#${service.id}`}
-                  className="inline-block px-6 py-2.5 bg-blush text-navy font-medium rounded-lg hover:bg-light-blush transition-colors text-sm tracking-wider uppercase"
+                  className="inline-block px-6 py-2.5 bg-blush/30 text-navy font-medium rounded-lg hover:bg-light-blush transition-colors text-sm tracking-wider uppercase"
                 >
                   Book Now
                 </Link>
@@ -154,11 +187,16 @@ export default function HomePage() {
       <section className="py-20 bg-cream">
         <div className="max-w-5xl mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="font-heading text-4xl md:text-5xl text-navy mb-3">Voices from the Journey</h2>
+            <h2 className="font-heading text-4xl md:text-5xl text-navy mb-3">
+              Voices from the Journey
+            </h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {featuredReviews.map((review) => (
-              <div key={review.id} className="bg-white rounded-xl p-8 shadow-[0_4px_12px_rgba(83,91,115,0.08)]">
+              <div
+                key={review.id}
+                className="bg-white rounded-xl p-8 shadow-[0_4px_12px_rgba(83,91,115,0.08)]"
+              >
                 <div className="flex items-center gap-0.5 mb-4">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <FontAwesomeIcon
@@ -172,9 +210,13 @@ export default function HomePage() {
                   &ldquo;{review.text}&rdquo;
                 </p>
                 <div className="flex items-center gap-2">
-                  <span className="text-navy font-medium text-sm">{review.reviewer}</span>
+                  <span className="text-navy font-medium text-sm">
+                    {review.reviewer}
+                  </span>
                   {review.verified && (
-                    <span className="text-[10px] text-mauve font-medium uppercase tracking-wider">Verified</span>
+                    <span className="text-[10px] text-mauve font-medium uppercase tracking-wider">
+                      Verified
+                    </span>
                   )}
                 </div>
               </div>
@@ -186,7 +228,9 @@ export default function HomePage() {
       {/* Newsletter Signup */}
       <section className="py-20 bg-gradient-to-br from-light-blush via-blush/30 to-cream">
         <div className="max-w-2xl mx-auto px-4 text-center">
-          <h2 className="font-heading text-4xl md:text-5xl text-navy mb-3">Stay on the Path</h2>
+          <h2 className="font-heading text-4xl md:text-5xl text-navy mb-3">
+            Stay on the Path
+          </h2>
           <p className="font-accent italic text-navy/70 text-lg mb-8">
             Join our journey — receive spiritual insights and exclusive offers
           </p>
@@ -220,15 +264,21 @@ export default function HomePage() {
               </button>
             </form>
           )}
-          <p className="text-xs text-navy/50 mt-4">Get 10% off your first order when you subscribe</p>
+          <p className="text-xs text-navy/50 mt-4">
+            Get 10% off your first order when you subscribe
+          </p>
         </div>
       </section>
 
       {/* Instagram / Social Feed Preview */}
       <section className="py-20 px-4">
         <div className="max-w-7xl mx-auto text-center">
-          <h2 className="font-heading text-4xl md:text-5xl text-navy mb-3">Follow the Journey</h2>
-          <p className="font-accent italic text-mauve text-lg mb-10">@thespiritatelier</p>
+          <h2 className="font-heading text-4xl md:text-5xl text-navy mb-3">
+            Follow the Journey
+          </h2>
+          <p className="font-accent italic text-mauve text-lg mb-10">
+            @thespiritatelier
+          </p>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div
@@ -236,7 +286,10 @@ export default function HomePage() {
                 className="aspect-square rounded-lg overflow-hidden bg-gradient-to-br from-cream to-light-blush hover:opacity-80 transition-opacity cursor-pointer"
               >
                 <div className="w-full h-full flex items-center justify-center">
-                  <FontAwesomeIcon icon={faImage} className="w-8 h-8 text-mauve/30" />
+                  <FontAwesomeIcon
+                    icon={faImage}
+                    className="w-8 h-8 text-mauve/30"
+                  />
                 </div>
               </div>
             ))}

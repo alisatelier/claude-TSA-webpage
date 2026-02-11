@@ -9,19 +9,18 @@ export default function AnnouncementBar() {
   if (!visible) return null;
 
   return (
-    <div className="relative border-b border-mauve/20 overflow-hidden">
-      
-      {/* Luminous Background */}
-      <div className="absolute inset-0 bg-gradient-to-r from-[#A69FA5] via-[#F2E9E9] to-[#A69FA5]" />
+    <div className="relative border-b border-cream/40 overflow-hidden">
+      {/* Base Gradient (matching button style) */}
+      <div className="absolute inset-0 bg-gradient-to-r from-[#FEDDE8]/50 via-[#F2E9E9] to-[#FEDDE8]/50" />
 
-      {/* Soft shimmer sweep */}
+      {/* Champagne Sweep */}
       <div
-        className="absolute inset-0 bg-[linear-gradient(110deg,transparent,rgba(255,255,255,0.4),transparent)]
-        animate-[shimmer_8s_linear_infinite] opacity-40 pointer-events-none"
-      />
+  className="absolute top-0 left-0 h-full w-[220%] pointer-events-none champagne-sweep
+  bg-[linear-gradient(110deg,transparent,rgba(242,201,210,0.0),rgba(242,201,210,0.35),rgba(242,201,210,0.6),rgba(242,201,210,0.35),rgba(242,201,210,0.0),transparent)]"
+/>
 
-      <div className="relative max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-center text-center sm:text-left py-3 px-6 gap-1 sm:gap-3 text-xs sm:text-sm tracking-wide">
-        
+
+      <div className="relative max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-center text-center sm:text-left py-3 px-6 gap-1 sm:gap-4 text-xs sm:text-sm tracking-wide">
         <span className="font-accent italic text-navy/80">
           ✨ Earn Ritual Credits ✨
         </span>
@@ -30,12 +29,9 @@ export default function AnnouncementBar() {
 
         <Link
           href="/loyalty"
-          className="group relative font-medium text-navy transition-all duration-300"
+          className="font-semibold text-navy tracking-wider uppercase transition-colors duration-300 hover:text-navy/80"
         >
-          <span className="relative z-10">
-            250 Ritual Credits = $10 Off
-          </span>
-          <span className="absolute left-0 bottom-0 w-full h-[1px] bg-mauve/40 group-hover:bg-navy transition-colors duration-300" />
+          250 Credits = $10 Off
         </Link>
 
         <span className="hidden sm:inline text-mauve/50">—</span>

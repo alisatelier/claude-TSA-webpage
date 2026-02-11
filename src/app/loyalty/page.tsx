@@ -6,12 +6,22 @@ export default function LoyaltyPage() {
       {/* Hero */}
       <section className="bg-navy py-20 px-4">
         <div className="max-w-7xl mx-auto text-center">
-          <h1 className="font-heading text-5xl md:text-6xl text-white mb-4">
-            The Atelier Recognizes You
-          </h1>
-          <p className="font-accent italic text-white/70 text-lg max-w-2xl mx-auto">
-            A Loyalty Program by The Spirit Atelier
-          </p>
+          <div>
+            <h1 className="font-heading text-5xl md:text-6xl text-white mb-4">
+              The Atelier Recognizes You
+            </h1>
+            <p className="font-accent italic text-white/70 text-lg max-w-2xl mx-auto">
+              A Loyalty Program by The Spirit Atelier
+            </p>
+          </div>
+          <span className="mt-8 inline-block">
+            <Link
+              href="/account"
+              className="inline-block px-8 py-3 bg-gradient-to-r from-cream via-white to-cream text-navy font-semibold tracking-wider uppercase rounded-xl shadow-md transition-all duration-300 hover:shadow-lg"
+            >
+              ✨ Start Earning Credits ✨
+            </Link>
+          </span>
         </div>
       </section>
 
@@ -22,10 +32,10 @@ export default function LoyaltyPage() {
             Our Philosophy
           </h2>
           <p className="text-navy/80 leading-relaxed text-lg">
-            Returning to a practice — and to a place that supports it — deserves
+            Returning to a practice and to a place that supports it deserves
             recognition. This program is our way of honoring those who walk with
             us more than once. Every purchase, review, and referral earns Ritual
-            Credits — redeemable toward future tools, readings, and offerings.
+            Credits which are redeemable toward future tools, readings, and offerings.
           </p>
         </div>
       </section>
@@ -47,6 +57,12 @@ export default function LoyaltyPage() {
                   50 Ritual Credits
                 </span>{" "}
                 as a welcome gift.
+              </p>
+              <p className="py-4">
+                Create an account to activate your loyalty membership. <br />
+                <br />
+                Already purchased? You’re enrolled — sign in to earn Ritual
+                Credits, access your wishlist, and revisit past orders.
               </p>
             </div>
 
@@ -80,8 +96,8 @@ export default function LoyaltyPage() {
                     <span className="font-semibold text-navy">200 Credits</span>
                   </div>
                   <span className="text-xs text-navy/50">
-                    ✨ Your friend receives 250 Credits when they create a
-                    loyalty account.
+                    ✨ Your friend receives 250 Credits when they create an
+                    account.
                   </span>
                   <span className="text-xs text-navy/50">
                     ✨ You earn 200 Credits when they complete their first
@@ -141,8 +157,10 @@ export default function LoyaltyPage() {
             </div>
 
             {/* Keeper */}
-            <div className="bg-white rounded-xl p-8 shadow-[0_4px_12px_rgba(83,91,115,0.08)] border border-blush">
+      
+            <div className="relative bg-white rounded-xl p-8 shadow-[0_4px_12px_rgba(83,91,115,0.08)] border border-blush">
               <div className="text-center mb-6">
+               
                 <h3 className="font-heading text-2xl text-navy">Keeper</h3>
                 <p className="text-xs text-mauve mt-1 uppercase tracking-wider">
                   500+ Credits
@@ -154,6 +172,9 @@ export default function LoyaltyPage() {
                 <li>24-Hour Early Access to Limited Drops</li>
                 <li>Recognition in a Dedicated Instagram Story</li>
               </ul>
+               <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blush text-white text-xs px-3 py-1 rounded-full uppercase tracking-wider font-semibold">
+              Within Near Reach
+            </span>
             </div>
 
             {/* Elder */}
@@ -189,16 +210,7 @@ export default function LoyaltyPage() {
 
           <Link
             href="/account"
-           className="relative inline-block px-8 py-4 w-full max-w-md mx-auto
-          bg-white text-navy font-semibold rounded-xl 
-            tracking-widest uppercase text-center overflow-hidden shadow-lg transition-all duration-300
-            before:absolute before:inset-0 
-            before:bg-[linear-gradient(110deg,transparent,rgba(212,175,55,0.12),rgba(212,175,55,0.35),rgba(212,175,55,0.12),transparent)]
-            before:animate-[goldSweep_6s_linear_infinite]
-            md:before:animate-none md:before:translate-x-[-150%]
-            md:before:transition-transform md:before:duration-[2800ms]
-            md:before:ease-[cubic-bezier(0.4,0,0.2,1)] md:hover:before:translate-x-[150%]"
-
+            className="inline-block px-8 py-3 bg-gradient-to-r from-cream via-white to-cream text-navy font-semibold tracking-wider uppercase rounded-xl shadow-md transition-all duration-300 hover:shadow-lg"
           >
             ✨ Start Earning Credits ✨
           </Link>

@@ -2,18 +2,23 @@
 
 import Link from "next/link";
 import { useCart } from "@/lib/CartContext";
+import { useAuth } from "@/lib/AuthContext";
+import { getTierProgress } from "@/lib/loyalty-utils";
 import { products, services } from "@/lib/data";
 import ProductCard from "@/components/ProductCard";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faHeart } from "@fortawesome/free-solid-svg-icons";
+import { faHeart, faStar } from "@fortawesome/free-solid-svg-icons";
 import { faHeart as faHeartRegular } from "@fortawesome/free-regular-svg-icons";
 
 export default function WishlistPage() {
   const { wishlist, toggleWishlist } = useCart();
+  const { user, isLoggedIn, tier } = useAuth();
 
   const wishlistProducts = products.filter((p) => wishlist.includes(p.id));
   const wishlistServices = services.filter((s) => wishlist.includes(s.id));
   const totalItems = wishlistProducts.length + wishlistServices.length;
+
+  const progress = user ? getTierProgress(user.loyalty.lifetimeCredits) : null;
 
   return (
     <>
@@ -23,6 +28,41 @@ export default function WishlistPage() {
           <p className="font-accent italic text-white/70 text-lg">{totalItems} {totalItems === 1 ? "item" : "items"} saved</p>
         </div>
       </section>
+
+      {/* Credit summary card (logged-in only) */}
+      {isLoggedIn && user && progress && (
+        <section className="py-8 px-4">
+          <div className="max-w-7xl mx-auto">
+            <div className="bg-cream rounded-xl p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <FontAwesomeIcon icon={faStar} className="w-6 h-6 text-blush" />
+                <div>
+                  <p className="text-navy font-semibold">{user.loyalty.currentCredits} Ritual Credits</p>
+                  <p className="text-sm text-mauve">{user.loyalty.lifetimeCredits} lifetime credits</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <span className="px-3 py-1 bg-navy text-white text-xs font-medium tracking-wider uppercase rounded-full">
+                  {tier}
+                </span>
+                {progress.nextTier && (
+                  <div className="flex items-center gap-3">
+                    <div className="w-32 bg-navy/10 rounded-full h-2">
+                      <div
+                        className="bg-gradient-to-r from-blush to-navy h-2 rounded-full transition-all duration-500"
+                        style={{ width: `${progress.progressPercent}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-navy/70 whitespace-nowrap">
+                      {progress.creditsToNext} to {progress.nextTier}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="py-16 px-4">
         <div className="max-w-7xl mx-auto">

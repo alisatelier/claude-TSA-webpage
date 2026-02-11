@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
 import { useCart } from "@/lib/CartContext";
+import { useAuth } from "@/lib/AuthContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlass, faUser, faHeart, faBagShopping, faBars, faXmark } from "@fortawesome/free-solid-svg-icons";
 
@@ -31,6 +32,7 @@ export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [shopDropdown, setShopDropdown] = useState(false);
   const { cartCount, wishlistCount } = useCart();
+  const { isLoggedIn } = useAuth();
 
   return (
     <header className="sticky top-0 z-5 bg-navy w-full">
@@ -112,7 +114,7 @@ export default function Header() {
               <Link href="/account" className="p-2 text-white hover:text-light-blush transition-colors" aria-label="Account">
                 <FontAwesomeIcon icon={faUser} className="w-5 h-5" />
               </Link>
-              <Link href="/loyalty" className="p-2 text-white hover:text-light-blush transition-colors relative" aria-label="Wishlist">
+              <Link href={isLoggedIn ? "/wishlist" : "/loyalty"} className="p-2 text-white hover:text-light-blush transition-colors relative" aria-label="Wishlist">
                 <FontAwesomeIcon icon={faHeart} className="w-5 h-5" />
                 {wishlistCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-blush text-navy text-xs w-5 h-5 rounded-full flex items-center justify-center font-medium">
@@ -183,7 +185,7 @@ export default function Header() {
             ))}
             <div className="pt-4 border-t border-white/10 flex gap-6">
               <Link href="/account" className="font-heading text-white text-sm" onClick={() => setMobileOpen(false)}>Account</Link>
-              <Link href="/wishlist" className="font-heading text-white text-sm" onClick={() => setMobileOpen(false)}>Wishlist</Link>
+              <Link href={isLoggedIn ? "/wishlist" : "/loyalty"} className="font-heading text-white text-sm" onClick={() => setMobileOpen(false)}>Wishlist</Link>
             </div>
           </nav>
         </div>
