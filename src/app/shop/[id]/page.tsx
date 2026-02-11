@@ -17,7 +17,7 @@ export default function ProductPage() {
   const [selectedVariation, setSelectedVariation] = useState(product?.variations.filter(v => v !== "Imperfect")[0] || "");
   const [isImperfect, setIsImperfect] = useState(false);
   const [variationSelected, setVariationSelected] = useState(false);
-  const [openTabs, setOpenTabs] = useState<Set<string>>(new Set());
+  const [openTabs, setOpenTabs] = useState<Set<string>>(new Set(["description"]));
   const [activeTab, setActiveTab] = useState("description"); // For desktop tabs
   const [addedToCart, setAddedToCart] = useState(false);
 
