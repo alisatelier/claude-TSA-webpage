@@ -122,6 +122,7 @@ export default function ProductPage() {
       rating: r.rating,
       text: r.text,
       verified: r.verified,
+      owner: r.owner,
       isUserReview: false,
     })),
     ...userReviews.map((r) => ({
@@ -130,6 +131,7 @@ export default function ProductPage() {
       rating: r.rating,
       text: r.text,
       verified: true,
+      owner:false,
       isUserReview: true,
     })),
   ];
@@ -424,21 +426,23 @@ export default function ProductPage() {
           {productReviews.length > 0 ? (
             <div className="space-y-6">
               {productReviews.map((review) => (
-                <div key={review.id} className="bg-cream rounded-xl p-6">
+                <div key={review.id} className="bg-navy rounded-xl p-6">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <span className="font-medium text-navy">{review.reviewer}</span>
-                      {review.isUserReview && <span className="px-2 py-0.5 bg-teal-400/20 text-teal-700 text-[10px] font-medium tracking-wider uppercase rounded-full">Verified Purchase</span>}
-                      {!review.isUserReview && review.verified && <span className="px-2 py-0.5 bg-navy/10 text-navy text-[10px] font-medium tracking-wider uppercase rounded-full">Verified</span>}
+                      <span className="font-medium text-cream">{review.reviewer}</span>
+                      {review.isUserReview && <span className="px-2 py-0.5 bg-cream text-[#a69fa5]] text-[10px] font-medium tracking-wider uppercase rounded-full">Verified Purchase</span>}
+                      {review.owner && <span className="px-2 py-0.5 bg-cream text-[#a69fa5]] text-[10px] font-medium tracking-wider uppercase rounded-full">Owner</span>}
+
+                      {!review.isUserReview && review.verified && <span className="px-2 py-0.5 bg-[#a69Fa5] text-cream text-[10px] font-medium tracking-wider uppercase rounded-full">Verified</span>}
                     </div>
                     <StarRating rating={review.rating} />
                   </div>
-                  <p className="text-navy/80 text-sm leading-relaxed">{review.text}</p>
+                  <p className="text-cream text-sm leading-relaxed">{review.text}</p>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 bg-cream rounded-xl">
+            <div className="text-center py-12 bg-navy rounded-xl">
               <p className="text-mauve font-accent italic">No reviews yet. Be the first to share your experience.</p>
             </div>
           )}

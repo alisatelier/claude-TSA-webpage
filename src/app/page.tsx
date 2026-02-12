@@ -21,7 +21,7 @@ export default function HomePage() {
   const [newsletterSubmitted, setNewsletterSubmitted] = useState(false);
 
   const featuredProducts = products.slice(0, 4);
-  const featuredReviews = reviews.slice(0, 3);
+  const featuredReviews = reviews.slice(0, 6);
 
   const serviceIconMap: Record<string, typeof faLayerGroup> = {
     tarot: faLayerGroup,
@@ -183,47 +183,66 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="py-20 bg-cream">
-        <div className="max-w-5xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="font-heading text-4xl md:text-5xl text-navy mb-3">
-              Voices from the Journey
-            </h2>
+     {/* Testimonials */}
+<section className="py-20 bg-cream">
+  <div className="max-w-5xl mx-auto px-4">
+    <div className="text-center mb-12">
+      <h2 className="font-heading text-4xl md:text-5xl text-navy mb-3">
+        Messages from the Author
+      </h2>
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      {featuredReviews.map((review) => (
+        <div
+          key={review.id}
+          className="bg-white rounded-xl p-8 shadow-[0_4px_12px_rgba(83,91,115,0.08)] flex flex-col"
+        >
+          {/* Content Wrapper */}
+          <div className="flex flex-col gap-4 flex-1">
+
+            {/* Stars */}
+            <div className="flex items-center gap-0.5">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <FontAwesomeIcon
+                  key={star}
+                  icon={faStar}
+                  className={`w-4 h-4 ${
+                    star <= review.rating ? "text-blush" : "text-mauve/30"
+                  }`}
+                />
+              ))}
+            </div>
+
+            {/* Product Title */}
+            <h3 className="text-xl uppercase tracking-wider text-navy font-medium">
+              {review.productName}
+            </h3>
+
+            {/* Review Text */}
+            <p className="font-accent italic text-navy/80 text-sm leading-relaxed whitespace-pre-line">
+              &ldquo;{review.text}&rdquo;
+            </p>
+
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {featuredReviews.map((review) => (
-              <div
-                key={review.id}
-                className="bg-white rounded-xl p-8 shadow-[0_4px_12px_rgba(83,91,115,0.08)]"
-              >
-                <div className="flex items-center gap-0.5 mb-4">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <FontAwesomeIcon
-                      key={star}
-                      icon={faStar}
-                      className={`w-4 h-4 ${star <= review.rating ? "text-blush" : "text-mauve/30"}`}
-                    />
-                  ))}
-                </div>
-                <p className="font-accent italic text-navy/80 text-sm leading-relaxed mb-4">
-                  &ldquo;{review.text}&rdquo;
-                </p>
-                <div className="flex items-center gap-2">
-                  <span className="text-navy font-medium text-sm">
-                    {review.reviewer}
-                  </span>
-                  {review.verified && (
-                    <span className="text-[10px] text-mauve font-medium uppercase tracking-wider">
-                      Verified
-                    </span>
-                  )}
-                </div>
-              </div>
-            ))}
+
+          {/* Reviewer (Pinned Bottom) */}
+          <div className="pt-6 mt-auto flex items-center gap-2">
+            <span className="text-navy font-medium text-sm">
+              {review.reviewer}
+            </span>
+            {review.owner && (
+              <span className="text-[10px] text-mauve font-medium uppercase tracking-wider">
+                Owner
+              </span>
+            )}
           </div>
         </div>
-      </section>
+      ))}
+    </div>
+  </div>
+</section>
+
 
       {/* Newsletter Signup */}
       <section className="py-20 bg-gradient-to-br from-light-blush via-blush/30 to-cream">

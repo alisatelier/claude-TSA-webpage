@@ -59,7 +59,7 @@ export default function Header() {
               priority
             />
             <span className="font-heading text-white text-2xl hidden sm:block lg:block">
-              THE SPIIT ATELIE
+              THE SPIIT ATELIE
             </span>
             {/* Mobile: centered title only */}
           </Link>

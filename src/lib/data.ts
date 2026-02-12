@@ -43,10 +43,12 @@ export interface BlogPost {
 export interface Review {
   id: string;
   productId: string;
+  productName: string;
   reviewer: string;
   rating: number;
   text: string;
   verified: boolean;
+  owner: boolean; // true if this review was written by the website creator.
 }
 
 export const products: Product[] = [
@@ -370,43 +372,63 @@ export const reviews: Review[] = [
   {
     id: "r1",
     productId: "whims-whispers-tarot",
-    reviewer: "Luna M.",
+    productName: "Whims & Whispers Tarot Deck",
+    reviewer: "A. K. Bird",
     rating: 5,
-    text: "This deck has become my daily companion. The simplicity of the pips invites me to truly listen rather than rely on imagery. Beautiful craftsmanship.",
+    text: "This deck was truly a joy to make! I was able to flex my knowledge and experience with the tarot and create a unique experience for reading the cards. Now, I get to use them in my own practice which is immensely special and rewarding. I hope you find plentiful benefit and guidance in them as was intended when I crafted them.",
     verified: true,
+    owner: true,
   },
   {
     id: "r2",
-    productId: "whims-whispers-tarot",
-    reviewer: "Sage R.",
+    productId: "whims-whispers-journal",
+    productName: "Whims & Whispers Journal",
+    reviewer: "A. K. Bird.",
     rating: 5,
-    text: "I have used many tarot decks over the years, but the Whims & Whispers deck brings a clarity I have not experienced before. The guidebook is thoughtful and thorough.",
+    text: "I made this Journal as a reflection of my own practice. As someone who has struggled with tasking and rigid routines, I wanted to create a tool that encourages presence without pressure. It is meant to be returned to whenever you feel called to practice, rather than approached with urgency. I hope it supports you in finding your own rhythm.",
     verified: true,
+    owner: true,
   },
   {
     id: "r3",
-    productId: "whims-whispers-journal",
-    reviewer: "Aria K.",
+    productId: "norse-runes",
+    productName: "Norse Runes",
+    reviewer: "A. K. Bird.",
     rating: 5,
-    text: "The structured prompts alongside free pages create the perfect balance. I finally have a journaling practice that feels sustainable and meaningful.",
+    text: " The Norse Runes were the first product I created, and they hold a special place in my heart. I have been working with the Elder Futhark since the woman from my Shamanic Journey crafted her first set of runes from clay. My intention was to create a tool that bridges historical form with contemporary practice, preserving the integrity of the symbols while offering a steady, grounded experience.",
     verified: true,
+    owner: true,
   },
   {
     id: "r4",
-    productId: "norse-runes",
-    reviewer: "Rowan T.",
-    rating: 4,
-    text: "The quality of these runes is exceptional. The metallic finish is stunning and each piece feels substantial in the hand. The guidebook is clear and well-written.",
+    productId: "norse-runes-cloth",
+    productName: "Norse Runes & Cloth",
+    reviewer: "A. K. Bird",
+    rating: 5,
+    text: "Have you ever encountered a casting cloth quite like this? I hadn’t! So I created one. I longed for a way to weave structure, timing, and lived context into traditional rune casting without diminishing its spirit. The Norse were deeply spiritual, holding layered cosmologies much like the interwoven systems we see in modern practice. The twelve astrological houses felt like a natural bridge and a contemporary framework through which ancient rune casting could continue to speak.",
     verified: true,
+    owner: true,
   },
-  {
+    {
     id: "r5",
     productId: "whims-whispers-spirit-board",
-    reviewer: "Ember J.",
+    productName: "Whims & Whispers Spirit Board",
+    reviewer: "A. K. Bird",
     rating: 5,
-    text: "Beautifully crafted and deeply thoughtful. The integration of chakras, elements, and zodiac symbols creates a rich interpretive experience.",
+    text: "I was inspired to create the Spirit Board at the very start of The Spirit Atelier's conception. I wanted to offer a tool that is symbolic rather than summoning, and provides a direct connecting to Spirit. These will forever be in short supply, as they are extremely finicky to make! If you are drawn to this tool, I encourage you to claim it when you can.",
     verified: true,
+    owner: true,
   },
+   {
+    id: "r6",
+    productId: "my-intuition-made-me-do-it",
+    productName: "My Intuition Made Me Do It",
+    reviewer: "A. K. Bird",
+    rating: 5,
+    text: "As a roman à clef, this story is rooted in lived experience. During a training, I was asked, 'If you could do anything, without limitation, what would it be?' The answer came instantly and without hesitation: to write my memories down — if only to affirm that they were real. What is published now is only part of a much larger unfolding.",
+    verified: true,
+    owner: true,
+  }
 ];
 
 export const faqCategories = [
