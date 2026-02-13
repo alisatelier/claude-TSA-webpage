@@ -1,7 +1,10 @@
+import { CurrencyPrices } from "./CurrencyContext";
+
 export interface Product {
   id: string;
   name: string;
   price: number;
+  prices: CurrencyPrices;
   shortDescription: string;
   categories: string[];
   badges: string[];
@@ -23,9 +26,10 @@ export interface Service {
   name: string;
   duration: string;
   startingPrice: number;
+  startingPrices: CurrencyPrices;
   description: string;
   includes: string[];
-  addOn?: { name: string; price: number };
+  addOn?: { name: string; price: number; prices: CurrencyPrices };
   icon: string;
 }
 
@@ -53,9 +57,10 @@ export interface Review {
 
 export const products: Product[] = [
   {
-    id: "whims-whispers-journal",
+     id: "whims-whispers-journal",
     name: "Whims & Whispers Journal",
     price: 33,
+    prices: { CAD: 33, USD: 22, GBP: 22, AUD: 33, EUR: 22 },
     shortDescription: "For a journaling practice that inspires the best in you.",
     categories: ["Ritual Tools"],
     badges: ["Locally Printed"],
@@ -81,6 +86,7 @@ export const products: Product[] = [
     id: "whims-whispers-tarot",
     name: "Whims & Whispers Tarot Deck",
     price: 44,
+    prices: { CAD: 44, USD: 33, GBP: 22, AUD: 44, EUR: 33 },
     shortDescription:
       "For finding clarity, guidance and insight into the questions you wish to answer.",
     categories: ["Ritual Tools", "Divination Tools"],
@@ -104,9 +110,10 @@ export const products: Product[] = [
     reviewCount: 42,
   },
   {
-    id: "whims-whispers-spirit-board",
+   id: "whims-whispers-spirit-board",
     name: "Whims & Whispers Spirit Board",
     price: 111,
+    prices: { CAD: 111, USD: 88, GBP: 66, AUD: 122, EUR: 77 },
     shortDescription: "For guiding yourself to Spirit, through symbolism.",
     categories: ["Ritual Tools", "Divination Tools"],
     badges: ["Handcrafted", "Locally Printed"],
@@ -129,9 +136,10 @@ export const products: Product[] = [
     reviewCount: 18,
   },
   {
-    id: "norse-runes",
+     id: "norse-runes",
     name: "Norse Runes",
     price: 55,
+    prices: { CAD: 55, USD: 44, GBP: 33, AUD: 66, EUR: 44 },
     shortDescription: "For receiving ancient wisdom and guidance.",
     categories: ["Ritual Tools", "Divination Tools"],
     badges: ["Handcrafted", "Locally Printed"],
@@ -174,6 +182,7 @@ export const products: Product[] = [
     id: "norse-runes-cloth",
     name: "Norse Runes & Cloth",
     price: 77,
+    prices: { CAD: 77, USD: 66, GBP: 44, AUD: 88, EUR: 55 },
     shortDescription:
       "For uncovering the upcoming highlights and hurdles you face.",
     categories: ["Ritual Tools", "Divination Tools"],
@@ -216,6 +225,7 @@ export const products: Product[] = [
     id: "my-intuition-made-me-do-it",
     name: "My Intuition Made Me Do It",
     price: 22,
+    prices: { CAD: 22, USD: 22, GBP: 11, AUD: 22, EUR: 11 },
     shortDescription:
       "For following your intuition and uncovering your calling.",
     categories: ["Literature"],
@@ -252,6 +262,7 @@ export const services: Service[] = [
     name: "Tarot Reading",
     duration: "60 Minutes",
     startingPrice: 60,
+    startingPrices: { CAD: 66, USD: 55, GBP: 55, AUD: 77, EUR: 55 },
     description:
       "A personalized tarot reading session designed to bring clarity and insight to the questions that weigh most on your heart. Using the Whims & Whispers Tarot, we gently explore the energies surrounding your inquiry with care, intention, and honesty.",
     includes: [
@@ -260,14 +271,15 @@ export const services: Service[] = [
       "Virtual Video Call",
       "Integration Guidance",
     ],
-    addOn: { name: "Digital Summary of Your Spread, With Key Insights", price: 15 },
+    addOn: { name: "Digital Summary of Your Spread, With Key Insights", price: 22, prices: { CAD: 22, USD: 11, GBP: 11, AUD: 22, EUR: 11 } },
     icon: "tarot",
   },
   {
     id: "rune-reading",
     name: "Norse Rune Reading",
     duration: "30 Minutes",
-    startingPrice: 40,
+    startingPrice: 44,
+    startingPrices: { CAD: 44, USD: 44, GBP: 33, AUD: 55, EUR: 33 },
     description:
       "A focused Elder Futhark rune casting offering direct, grounded insight into the patterns shaping your present path. The runes speak plainly — illuminating themes, cycles, and forces at work beneath the surface of your current season.",
     includes: [
@@ -276,14 +288,15 @@ export const services: Service[] = [
       "Virtual Video Call",
       "Integration Guidance",
     ],
-    addOn: { name: "Digital Summary of Your Cast, With Key Insights", price: 15 },
+    addOn: { name: "Digital Summary of Your Cast, With Key Insights", price: 22, prices: { CAD: 22, USD: 11, GBP: 11, AUD: 22, EUR: 11  } },
     icon: "runes",
   },
   {
     id: "tarot-rune-reading",
     name: "Tarot & Norse Rune Reading",
     duration: "60 Minutes",
-    startingPrice: 80,
+    startingPrice: 88,
+    startingPrices: { CAD: 88, USD: 77, GBP: 66, AUD: 99, EUR: 77 },
     description:
       "For those who want both the map and the medicine.\n\nThis combined session offers the grounded clarity of the Norse runes alongside the layered narrative of tarot. The runes reveal the structural forces and timeline at play; the tarot brings emotional nuance, relational insight, and spiritual guidance. Together, they create a full-spectrum reading — practical, intuitive, and deeply integrative.",
     includes: [
@@ -294,7 +307,7 @@ export const services: Service[] = [
       "Virtual Video Call",
       "Integration Guidance",
     ],
-    addOn: { name: "Digital Summary of Your Cast & Spread, With Key Insights", price: 30 },
+    addOn: { name: "Digital Summary of Your Cast & Spread, With Key Insights", price: 33, prices: { CAD: 33, USD: 22, GBP: 22, AUD: 33, EUR: 22 } },
     icon: "combined",
   },
 ];
@@ -437,58 +450,66 @@ export const faqCategories = [
     questions: [
       {
         q: "How long does shipping take?",
-        a: "Domestic orders typically arrive within 5-7 business days. International shipping times vary by location and may take 2-4 weeks.",
+        a: "Orders are typically processed within 2–4 business days. Domestic shipments generally arrive within 5–7 business days after dispatch. International delivery times vary by destination and may take 2–4 weeks.",
       },
       {
         q: "Do you ship internationally?",
-        a: "Yes, we ship to most countries worldwide. Please note that customs duties and import taxes are the responsibility of the buyer.",
+        a: "Yes. We ship worldwide where possible. Please note that customs duties, taxes, or import fees are the responsibility of the recipient.",
       },
       {
         q: "How can I track my order?",
-        a: "Once your order ships, you will receive a confirmation email with your tracking number. You can also track your order through your customer portal.",
+        a: "Once your order ships, you will receive a confirmation email with tracking information. You may also log into your customer portal to view order updates.",
       },
     ],
   },
   {
-    name: "Returns & Exchanges",
+    name: "Returns & Gifting",
     questions: [
       {
-        q: "What is your return policy?",
-        a: "We accept returns within 30 days of delivery for unused items in their original packaging. Handcrafted items may have a different return policy due to their unique nature.",
+        q: "Do you accept returns?",
+        a: "Due to the ceremonial and personal nature of our offerings, all sales are final. We encourage thoughtful purchasing and intentional selection.",
       },
       {
-        q: "How do I initiate a return?",
-        a: "Contact us through our contact page or email us directly. We will provide you with return instructions and a prepaid shipping label where applicable.",
+        q: "What if the item isn’t right for me?",
+        a: "If a product does not resonate as expected, we encourage re-gifting it to someone who may benefit from it. Many of our pieces carry meaning and intention, and often find their way to the right hands.",
       },
     ],
   },
   {
     name: "Product Care",
-    questions: [
-      {
-        q: "How should I care for my resin runes?",
-        a: "Store your runes in the provided drawstring bag when not in use. Avoid prolonged exposure to direct sunlight or extreme heat, as this may affect the finish over time.",
-      },
-      {
-        q: "Are your products ethically sourced?",
-        a: "Yes, all materials are sourced with intention and care. Our Handcrafted items are crafted locally, and we prioritize sustainable practices wherever possible.",
-      },
-    ],
+questions: [
+  {
+    q: "How should I care for my resin runes?",
+    a: "Store your runes in their drawstring bag when not in use. Avoid prolonged exposure to direct sunlight or extreme heat, as this may affect the finish and colour over time. Handle them with care, as you would any ceremonial object.",
+  },
+  {
+    q: "How should I care for my rune casting cloth?",
+    a: "To preserve the integrity of the print and fabric, gently hand wash or machine wash on a delicate cycle in cold water. Lay flat or hang to air dry. Do not place the cloth in a dryer, as heat may cause shrinkage or distortion of the design.",
+  },
+  {
+    q: "How should I care for my tarot cards or spirit board?",
+    a: "Keep your cards and board in a dry, clean space. Avoid moisture, bending, or excessive pressure. Many customers choose to store them in their drawstring bag or original packaging to preserve their longevity.",
+  },
+  {
+    q: "Are your materials ethically sourced?",
+    a: "Yes. Our pieces are created with intention and care. Whenever possible, materials are sourced responsibly and produced locally. Each product is developed with long-term use and durability in mind.",
+  },
+  {
+    q: "Are these products suitable for children?",
+    a: "Our products are intended for adult use. Small pieces, including runes and accessories, may present a choking hazard. Please keep all items out of reach of children and pets.",
+  },
+],
   },
   {
     name: "Services & Bookings",
     questions: [
       {
         q: "How do I book a service?",
-        a: "Visit our Services page and select the service you are interested in. Choose your preferred date and time, fill in your details, and complete your booking.",
+        a: "Visit our Services page to view current offerings. Select your preferred date and time, complete your details, and confirm your booking. All sessions are conducted virtually unless otherwise specified.",
       },
       {
-        q: "Can I reschedule my appointment?",
-        a: "Yes, you may reschedule up to 24 hours before your appointment time. Contact us directly or use your booking confirmation link.",
-      },
-      {
-        q: "Are sessions virtual or in-person?",
-        a: "We offer both virtual and in-person sessions. Virtual sessions are conducted via video call, and a link will be sent to you prior to your appointment.",
+        q: "Can I reschedule my session?",
+        a: "Sessions may be rescheduled with at least 24 hours’ notice. Please use the booking confirmation link provided in your email or contact us directly for assistance.",
       },
     ],
   },
@@ -497,20 +518,20 @@ export const faqCategories = [
     questions: [
       {
         q: "What payment methods do you accept?",
-        a: "We accept all major credit and debit cards, PayPal, Apple Pay, and Google Pay. All transactions are processed securely through our payment gateway.",
+        a: "We accept major credit and debit cards, PayPal, Apple Pay, and Google Pay. All transactions are processed securely through encrypted payment gateways.",
       },
       {
         q: "Is my payment information secure?",
-        a: "Absolutely. We use industry-standard SSL encryption and PCI-compliant payment processing to ensure your information is always protected.",
+        a: "Yes. We use industry-standard SSL encryption and PCI-compliant processing to ensure your payment details remain protected at all times.",
       },
     ],
   },
   {
-    name: "Account & Rewards",
+    name: "Account & Ritual Credits",
     questions: [
       {
-        q: "How does the rewards program work?",
-        a: "Earn Ritual Credits with every purchase ($1 = 1 Credit), plus bonus credits for creating an account (50), writing reviews (100), referrals (200 + 200), and on your birthday (75). Redeem 250 Credits for $10 off or 500 Credits for $20 off your order.",
+        q: "How do Ritual Credits work?",
+        a: "Earn Ritual Credits with every purchase ($1 = 1 Credit), plus bonus credits for creating an account (50), writing a review (100), referrals (200 + 200), and celebrating your birthday (150). Redeem 250 Credits for $10 off or 500 Credits for $20 off your order.",
       },
       {
         q: "Do my Ritual Credits expire?",
@@ -519,3 +540,4 @@ export const faqCategories = [
     ],
   },
 ];
+

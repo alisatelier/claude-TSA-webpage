@@ -36,6 +36,7 @@ export interface LoyaltyState {
   joinDate: string;
   firstPurchaseCompleted: boolean;
   referredBy: string | null;
+  lockedCurrency: string | null;
 }
 
 export interface User {
@@ -58,7 +59,7 @@ interface AuthContextType {
   logout: () => void;
   addCredits: (amount: number, action: string) => void;
   deductCredits: (amount: number, action: string) => boolean;
-  recordPurchase: (productIds: string[], totalSpent: number) => void;
+  recordPurchase: (productIds: string[], totalSpent: number, currency?: string) => void;
   submitReview: (productId: string, rating: number, text: string) => boolean;
   setBirthdayMonth: (month: number) => void;
   claimBirthdayCredits: () => boolean;
@@ -86,6 +87,7 @@ function createDefaultLoyalty(referralCode: string, referredBy: string | null): 
     joinDate: new Date().toISOString(),
     firstPurchaseCompleted: false,
     referredBy,
+    lockedCurrency: null,
   };
 }
 
@@ -285,7 +287,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoggedIn(false);
   }, []);
 
-  const recordPurchase = useCallback((productIds: string[], totalSpent: number) => {
+  const recordPurchase = useCallback((productIds: string[], totalSpent: number, currency?: string) => {
     setUser((prev) => {
       if (!prev) return prev;
       const creditsEarned = Math.floor(totalSpent);
@@ -301,6 +303,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         runningBalance: newCurrent,
       });
 
+      // Lock currency on first purchase
+      const newLockedCurrency = prev.loyalty.lockedCurrency ?? (currency || null);
+
       return {
         ...prev,
         loyalty: {
@@ -309,6 +314,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           lifetimeCredits: newLifetime,
           purchasedProducts: newPurchased,
           firstPurchaseCompleted: true,
+          lockedCurrency: newLockedCurrency,
           pointsHistory: [...entries, ...prev.loyalty.pointsHistory],
         },
       };

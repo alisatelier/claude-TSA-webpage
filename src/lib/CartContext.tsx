@@ -9,9 +9,14 @@ export interface CartItem {
   productId: string;
   name: string;
   price: number;
+  cadPrice?: number;
   quantity: number;
   variation?: string;
   image: string;
+  isService?: boolean;
+  holdId?: string;
+  selectedDate?: string;
+  selectedTime?: string;
 }
 
 export interface Toast {
@@ -36,7 +41,7 @@ interface CartContextType {
   creditDiscount: number;
   applyCredits: (amount: number) => void;
   removeCredits: () => void;
-  checkout: () => void;
+  checkout: (currency?: string) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -165,10 +170,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setAppliedCredits(0);
   }, []);
 
-  const checkout = useCallback(() => {
+  const checkout = useCallback((currency?: string) => {
     if (items.length === 0) return;
     const productIds = items.map((i) => i.productId);
-    const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+    // Use CAD price for loyalty credit calculation
+    const cadSubtotal = items.reduce((sum, i) => sum + (i.cadPrice ?? i.price) * i.quantity, 0);
 
     // Re-validate credits before deducting (prevents stale state / multi-tab)
     let validCredits = appliedCredits;
@@ -179,17 +185,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
 
     const discount = validCredits === 500 ? 20 : validCredits === 250 ? 10 : 0;
-    if (discount > subtotal) {
+    if (discount > cadSubtotal) {
       validCredits = 0;
     }
     const actualDiscount = validCredits === 500 ? 20 : validCredits === 250 ? 10 : 0;
-    const finalTotal = Math.max(0, subtotal - actualDiscount);
+    const finalCADTotal = Math.max(0, cadSubtotal - actualDiscount);
 
     if (validCredits > 0) {
       deductCredits(validCredits, `Redeemed ${validCredits} credits ($${actualDiscount} off)`);
     }
 
-    recordPurchase(productIds, finalTotal);
+    recordPurchase(productIds, finalCADTotal, currency);
     setItems([]);
     setAppliedCredits(0);
   }, [items, appliedCredits, deductCredits, recordPurchase, user]);

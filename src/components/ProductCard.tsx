@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "@/lib/CartContext";
+import { useCurrency } from "@/lib/CurrencyContext";
 import type { Product } from "@/lib/data";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faStar, faHeart } from "@fortawesome/free-solid-svg-icons";
@@ -159,6 +160,7 @@ function ProductCardCarousel({ images, alt, syncIndex }: { images: string[]; alt
 
 export default function ProductCard({ product, syncIndex }: { product: Product; syncIndex?: number }) {
   const { toggleWishlist, wishlist } = useCart();
+  const { formatPrice, getProductPrice } = useCurrency();
   const isWishlisted = wishlist.includes(product.id);
   const allImages = getAllImages(product);
 
@@ -229,7 +231,7 @@ export default function ProductCard({ product, syncIndex }: { product: Product; 
 
         {/* Price and CTA - always at bottom */}
         <div className="flex items-center justify-between mt-auto pt-2">
-          <span className="text-xl font-semibold text-navy">${product.price}</span>
+          <span className="text-xl font-semibold text-navy">{formatPrice(getProductPrice(product.prices))}</span>
           <Link
             href={`/shop/${product.id}`}
             className="px-4 py-2 bg-navy text-white text-xs font-medium tracking-wider uppercase rounded-lg hover:bg-navy/90 transition-colors"

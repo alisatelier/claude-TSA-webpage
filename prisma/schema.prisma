@@ -1,0 +1,190 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  CUSTOMER
+}
+
+enum OrderStatus {
+  PROCESSING
+  SHIPPED
+  COMPLETED
+  CANCELLED
+}
+
+enum BookingStatus {
+  HELD
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id                    String   @id @default(cuid())
+  name                  String?
+  email                 String   @unique
+  emailVerified         DateTime?
+  image                 String?
+  passwordHash          String   @default("")
+  role                  Role     @default(CUSTOMER)
+  ritualCredits         Int      @default(0)
+  createdAt             DateTime @default(now())
+
+  accounts              Account[]
+  sessions              Session[]
+  loyalty               Loyalty?
+  reviews               Review[]
+  wishlistItems         Wishlist[]
+  serviceBookings       ServiceBooking[]
+  transactionLog        TransactionLog[]
+  orders                Order[]
+  ritualCreditLogs      RitualCreditLog[]
+}
+
+model Account {
+  id                    String   @id @default(cuid())
+  userId                String
+  type                  String
+  provider              String
+  providerAccountId     String
+  refresh_token         String?
+  access_token          String?
+  expires_at            Int?
+  token_type            String?
+  scope                 String?
+  id_token              String?
+  session_state         String?
+
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id                    String   @id @default(cuid())
+  sessionToken          String   @unique
+  userId                String
+  expires               DateTime
+
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier            String
+  token                 String   @unique
+  expires               DateTime
+
+  @@unique([identifier, token])
+}
+
+model Loyalty {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  currentCredits        Int      @default(0)
+  lifetimeCredits       Int      @default(0)
+  referralCode          String   @unique
+  referralCount         Int      @default(0)
+  birthdayMonth         Int?
+  birthdayClaimed       Int?
+  firstPurchaseCompleted Boolean @default(false)
+  referredBy            String?
+  joinDate              DateTime @default(now())
+}
+
+model TransactionLog {
+  id                    String   @id @default(cuid())
+  userId                String
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  action                String
+  credits               Int
+  runningBalance        Int
+  createdAt             DateTime @default(now())
+}
+
+model Review {
+  id                    String   @id @default(cuid())
+  userId                String
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  productId             String
+  rating                Int
+  text                  String
+  createdAt             DateTime @default(now())
+
+  @@unique([userId, productId])
+}
+
+model Wishlist {
+  id                    String   @id @default(cuid())
+  userId                String
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  productId             String
+  createdAt             DateTime @default(now())
+
+  @@unique([userId, productId])
+}
+
+model Order {
+  id                    String      @id @default(cuid())
+  userId                String
+  user                  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  status                OrderStatus @default(PROCESSING)
+  totalAmount           Int
+  trackingNumber        String?
+  createdAt             DateTime    @default(now())
+
+  items                 OrderItem[]
+}
+
+model OrderItem {
+  id                    String   @id @default(cuid())
+  orderId               String
+  order                 Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  productId             String
+  quantity              Int
+}
+
+model RitualCreditLog {
+  id                    String   @id @default(cuid())
+  userId                String
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  adminId               String
+  amount                Int
+  reason                String
+  createdAt             DateTime @default(now())
+}
+
+model ServiceBooking {
+  id                    String        @id @default(cuid())
+  userId                String?
+  user                  User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  serviceId             String
+  selectedDate          String
+  selectedTime          String
+  status                BookingStatus @default(HELD)
+  userName              String
+  userEmail             String
+  userNotes             String        @default("")
+  addOn                 Boolean       @default(false)
+  totalPrice            Float
+  expiresAt             DateTime?
+  createdAt             DateTime      @default(now())
+
+  @@index([serviceId, selectedDate, selectedTime])
+  @@index([status])
+}

@@ -14,6 +14,7 @@ import {
   faBars,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
+import CurrencySelector from "@/components/CurrencySelector";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -65,8 +66,8 @@ export default function Header() {
           </Link>
 
           {/* Mobile: centered title */}
-          <span className="font-heading text-white text-2xl sm:hidden absolute left-1/2 -translate-x-1/2">
-            THE SPIIT ATELIE
+          <span className="font-heading text-white text-2xl sm:hidden absolute left-1/2 -translate-x-1/2"> /* NEVER CHANGE THE SPIIT ATELIE. THERE ARE SPECIAL CHARACTERS*/
+            THE SPIIT ATELIE
           </span>
 
           {/* Desktop nav (right aligned) */}
@@ -116,6 +117,7 @@ export default function Header() {
 
             {/* Icons */}
             <div className="flex items-center gap-3 ml-4 border-l border-white/20 pl-4">
+              <CurrencySelector variant="desktop" />
               <button
                 className="p-2 text-white hover:text-light-blush transition-colors"
                 aria-label="Search"
@@ -267,6 +269,12 @@ export default function Header() {
                 )}
               </div>
             ))}
+
+            {/* Currency selector */}
+            <div className="pt-4 border-t border-white/10">
+              <p className="font-heading text-white/40 text-xs uppercase tracking-wider mb-2">Currency</p>
+              <CurrencySelector variant="mobile" />
+            </div>
 
             {/* Account section */}
             <div className="pt-4 border-t border-white/10">

@@ -104,3 +104,8 @@ html {
   animation: fade-in 0.3s ease-out;
 }
 
+/*About Page Heart Video*/
+.heart-video {
+  aspect-ratio: 1 / 1;
+  clip-path: path("M50 90  C20 60, 0 40, 25 20 C40 10, 50 25, 50 25 C50 25, 60 10, 75 20  C100 40, 80 60, 50 90 Z");
+}
