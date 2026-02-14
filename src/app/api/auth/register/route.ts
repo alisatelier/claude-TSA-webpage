@@ -16,25 +16,28 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Name, email, and password are required" }, { status: 400 });
     }
 
+    // Capitalize first letter of name
+    const capitalizedName = name.charAt(0).toUpperCase() + name.slice(1);
+
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
       return NextResponse.json({ error: "An account with that email already exists" }, { status: 409 });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
-    const refCode = generateReferralCode(name);
+    const refCode = generateReferralCode(capitalizedName);
 
     let referredBy: string | null = null;
-    let referrerUserId: string | null = null;
+    let referrerName: string | null = null;
 
     if (referralCode) {
       const referrerLoyalty = await prisma.loyalty.findUnique({
         where: { referralCode },
-        include: { user: true },
+        include: { user: { select: { name: true } } },
       });
       if (referrerLoyalty) {
         referredBy = referralCode;
-        referrerUserId = referrerLoyalty.userId;
+        referrerName = referrerLoyalty.user.name;
       }
     }
 
@@ -44,7 +47,7 @@ export async function POST(request: Request) {
 
     const user = await prisma.user.create({
       data: {
-        name,
+        name: capitalizedName,
         email,
         passwordHash,
         role: "CUSTOMER",
@@ -71,45 +74,16 @@ export async function POST(request: Request) {
       },
     });
 
-    // Referral bonus entries
-    if (referredBy && referrerUserId) {
-      // Transaction for new user
+    // Referral bonus for the new user only — referrer gets credited on first purchase
+    if (referredBy) {
       await prisma.transactionLog.create({
         data: {
           userId: user.id,
-          action: "Referral bonus (referred by friend)",
+          action: `Referral bonus (referred by ${referrerName ?? "a friend"})`,
           credits: referralBonus,
           runningBalance: initialCredits,
         },
       });
-
-      // Award referrer
-      const referrerLoyalty = await prisma.loyalty.findUnique({
-        where: { userId: referrerUserId },
-      });
-
-      if (referrerLoyalty) {
-        const newReferrerCredits = referrerLoyalty.currentCredits + 200;
-        const newReferrerLifetime = referrerLoyalty.lifetimeCredits + 200;
-
-        await prisma.loyalty.update({
-          where: { userId: referrerUserId },
-          data: {
-            currentCredits: newReferrerCredits,
-            lifetimeCredits: newReferrerLifetime,
-            referralCount: referrerLoyalty.referralCount + 1,
-          },
-        });
-
-        await prisma.transactionLog.create({
-          data: {
-            userId: referrerUserId,
-            action: `Referral reward (${name} joined)`,
-            credits: 200,
-            runningBalance: newReferrerCredits,
-          },
-        });
-      }
     }
 
     return NextResponse.json({ success: true, userId: user.id });

@@ -401,6 +401,11 @@ export default function RewardsPage() {
                   ? `${user.loyalty.referralCount} friend${user.loyalty.referralCount === 1 ? "" : "s"} referred so far!`
                   : "Share your code with friends to earn bonus credits."}
               </p>
+              {user.loyalty.referredByName && (
+                <p className="text-sm text-navy/60 mt-2">
+                  Referred by <span className="font-medium text-navy">{user.loyalty.referredByName}</span>
+                </p>
+              )}
             </div>
 
             {/* Birthday Credit */}

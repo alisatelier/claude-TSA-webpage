@@ -1,6 +1,8 @@
 import { redirect, notFound } from "next/navigation";
+import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { formatOrderNumber } from "@/lib/order-utils";
 import Badge from "../../components/ui/Badge";
 import CreditAdjustForm from "./CreditAdjustForm";
 import DeleteUserButton from "./DeleteUserButton";
@@ -84,7 +86,7 @@ export default async function AdminUserDetailPage({
             <thead className="border-b border-gray-200">
               <tr>
                 <th className="text-left py-2 font-medium text-gray-600">
-                  Order ID
+                  Order #
                 </th>
                 <th className="text-left py-2 font-medium text-gray-600">
                   Status
@@ -101,7 +103,12 @@ export default async function AdminUserDetailPage({
               {user.orders.map((order) => (
                 <tr key={order.id}>
                   <td className="py-2 font-mono text-xs">
-                    {order.id.slice(0, 8)}...
+                    <Link
+                      href={`/admin/orders/${order.id}`}
+                      className="text-slate-700 hover:text-slate-900 underline"
+                    >
+                      {formatOrderNumber(order.orderNumber)}
+                    </Link>
                   </td>
                   <td className="py-2">
                     <Badge status={order.status} />

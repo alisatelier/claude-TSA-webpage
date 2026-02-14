@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useAuth } from "@/lib/AuthContext";
 
 type FormState = "idle" | "submitting" | "success" | "limit-reached" | "error";
@@ -11,7 +12,10 @@ export default function ChapterDownloadForm() {
   const [email, setEmail] = useState("");
   const [createAccount, setCreateAccount] = useState(false);
   const [name, setName] = useState("");
+  const [initial, setInitial] = useState("");
   const [password, setPassword] = useState("");
+  const [referralCode, setReferralCode] = useState("");
+  const [birthdayMonth, setBirthdayMonth] = useState(0);
   const [formState, setFormState] = useState<FormState>("idle");
   const [remaining, setRemaining] = useState<number | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
@@ -30,7 +34,16 @@ export default function ChapterDownloadForm() {
         setFormState("error");
         return;
       }
-      const success = await register(name.trim(), effectiveEmail, password);
+      const formattedName = initial
+        ? `${name.trim()}. ${initial}`
+        : name.trim();
+      const success = await register(
+        formattedName,
+        effectiveEmail,
+        password,
+        referralCode || undefined,
+        birthdayMonth || undefined,
+      );
       if (!success) {
         setErrorMsg("An account with that email already exists. Uncheck the box or sign in first.");
         setFormState("error");
@@ -124,18 +137,11 @@ export default function ChapterDownloadForm() {
         </div>
       )}
 
-      <div>
-        <label className="block text-sm font-semibold text-navy mb-2 uppercase tracking-wider">
-          Email
-        </label>
-        {isLoggedIn && user ? (
-          <input
-            type="email"
-            value={user.email}
-            readOnly
-            className="w-full px-4 py-3 border border-navy/20 rounded-lg text-navy bg-cream/50 cursor-not-allowed"
-          />
-        ) : (
+      {!isLoggedIn && !createAccount && (
+        <div>
+          <label className="block text-sm font-semibold text-navy mb-2 uppercase tracking-wider">
+            Email
+          </label>
           <input
             type="email"
             value={email}
@@ -144,8 +150,8 @@ export default function ChapterDownloadForm() {
             placeholder="your@email.com"
             required
           />
-        )}
-      </div>
+        </div>
+      )}
 
       {!isLoggedIn && (
         <label className="flex items-start gap-3 cursor-pointer">
@@ -165,6 +171,19 @@ export default function ChapterDownloadForm() {
         <div className="space-y-4 animate-slide-up">
           <div>
             <label className="block text-sm font-semibold text-navy mb-2 uppercase tracking-wider">
+              Email
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-3 border border-navy/20 rounded-lg text-navy placeholder:text-mauve focus:outline-none focus:border-navy transition-colors"
+              placeholder="your@email.com"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-navy mb-2 uppercase tracking-wider">
               Name
             </label>
             <input
@@ -172,7 +191,28 @@ export default function ChapterDownloadForm() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full px-4 py-3 border border-navy/20 rounded-lg text-navy placeholder:text-mauve focus:outline-none focus:border-navy transition-colors"
-              placeholder="Your name"
+              placeholder="Your First Name"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-navy mb-2 uppercase tracking-wider">
+              Initial{" "}
+              <span className="text-mauve font-normal normal-case">
+                (Optional: max 1 character)
+              </span>
+            </label>
+            <input
+              type="text"
+              value={initial}
+              maxLength={1}
+              onChange={(e) => {
+                const value = e.target.value
+                  .toUpperCase()
+                  .replace(/[^A-Z]/g, "");
+                setInitial(value);
+              }}
+              className="w-full px-4 py-3 border border-navy/20 rounded-lg text-navy placeholder:text-mauve focus:outline-none focus:border-navy transition-colors uppercase"
+              placeholder="Your Initial"
             />
           </div>
           <div>
@@ -187,6 +227,49 @@ export default function ChapterDownloadForm() {
               placeholder="Choose a password"
             />
           </div>
+          <div>
+            <label className="block text-sm font-semibold text-navy mb-2 uppercase tracking-wider">
+              Birthday Month{" "}
+              <span className="text-mauve font-normal normal-case">
+                (optional)
+              </span>
+            </label>
+            <select
+              value={birthdayMonth}
+              onChange={(e) => setBirthdayMonth(Number(e.target.value))}
+              className="w-full px-4 py-3 border border-navy/20 rounded-lg text-navy focus:outline-none focus:border-navy transition-colors"
+            >
+              <option value={0}>Select your birthday month...</option>
+              {[
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December",
+              ].map((month, i) => (
+                <option key={month} value={i + 1}>{month}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-navy mb-2 uppercase tracking-wider">
+              Referral Code{" "}
+              <span className="text-mauve font-normal normal-case">
+                (Part of our Refer a Friend{" "}
+                <Link
+                  href="/loyalty"
+                  className="underline hover:text-navy transition-colors"
+                >
+                  Loyalty Program
+                </Link>
+                )
+              </span>
+            </label>
+            <input
+              type="text"
+              value={referralCode}
+              onChange={(e) => setReferralCode(e.target.value)}
+              className="w-full px-4 py-3 border border-navy/20 rounded-lg text-navy placeholder:text-mauve focus:outline-none focus:border-navy transition-colors"
+              placeholder="e.g. REF-LUNA-A3B2"
+            />
+          </div>
         </div>
       )}
 
@@ -197,6 +280,11 @@ export default function ChapterDownloadForm() {
       >
         {formState === "submitting" ? "Preparing Download..." : "Download First Chapter"}
       </button>
+      {!isLoggedIn && createAccount && (
+        <p className="text-xs text-mauve text-center">
+          Earn 50 Ritual Credits just for creating an account!
+        </p>
+      )}
     </form>
   );
 }

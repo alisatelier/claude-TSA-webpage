@@ -165,7 +165,7 @@ export default function AboutPage() {
             </div>
 
             <div>
-              <div className="w-14 h-14 bg-white rounded-full mx-auto mb-4 flex items-center justify-center">
+              <div className="w-14 h-14 bg-white rounded-full mx-auto mb-4flex items-center justify-center">
                 <FontAwesomeIcon icon={faSun} className="w-6 h-6 text-navy" />
               </div>
               <h3 className="font-heading text-xl text-navy mb-2">
@@ -180,14 +180,14 @@ export default function AboutPage() {
       </section>
 
       {/* ABOUT A.K. BIRD */}
-      <section className="py-20 px-4">
-        <div className="max-w-4xl mx-auto grid md:grid-cols-3 gap-12 items-center">
+      <section className="py-20 px-4 ">
+        <div className="max-w-4xl mx-auto grid md:grid-cols-3 gap-12 items-center bg-navy p-8 rounded-xl">
           <div className="md:col-span-2">
-            <h2 className="font-heading text-4xl text-navy mb-6">
+            <h2 className="font-heading text-4xl text-white mb-6">
               About A. K. Bird
             </h2>
 
-            <div className="space-y-6 text-navy/80 leading-relaxed">
+            <div className="space-y-6 text-white leading-relaxed">
               <p>
                 A. K. Bird writes stories about intuition, unraveling, and
                 becoming.
@@ -205,7 +205,7 @@ export default function AboutPage() {
             </div>
           </div>
 
-          <div className="flex justify-center md:justify-end">
+          <div className="flex justify-center md:justify-end md:mt-12">
             <div className="w-[75vw] max-w-[500px] aspect-square relative">
               <svg viewBox="0 0 100 100" className="absolute w-0 h-0">
                 <defs>
@@ -241,7 +241,7 @@ export default function AboutPage() {
       {/* WHY WE DO THIS */}
       <section className="py-20 px-4 bg-cream">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="font-heading text-4xl text-navy mb-6">
+          <h2 className="font-heading text-4xl text-navy/80 mb-6">
             Why We Do This
           </h2>
 

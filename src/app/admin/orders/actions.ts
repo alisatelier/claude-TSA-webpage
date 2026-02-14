@@ -20,6 +20,7 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus) {
     data: { status },
   });
   revalidatePath("/admin/orders");
+  revalidatePath(`/admin/orders/${orderId}`);
 }
 
 export async function updateTrackingNumber(
@@ -32,6 +33,7 @@ export async function updateTrackingNumber(
     data: { trackingNumber },
   });
   revalidatePath("/admin/orders");
+  revalidatePath(`/admin/orders/${orderId}`);
 }
 
 export async function exportOrderCsv(filters?: {
@@ -52,10 +54,10 @@ export async function exportOrderCsv(filters?: {
     orderBy: { createdAt: "desc" },
   });
 
-  const header = "ID,Email,Status,Total,Tracking,Date";
+  const header = "Order #,Email,Status,Total,Tracking,Date";
   const rows = orders.map(
     (o) =>
-      `${o.id},${o.user.email},${o.status},${(o.totalAmount / 100).toFixed(2)},${o.trackingNumber ?? ""},${o.createdAt.toISOString()}`
+      `${o.orderNumber},${o.user.email},${o.status},${(o.totalAmount / 100).toFixed(2)},${o.trackingNumber ?? ""},${o.createdAt.toISOString()}`
   );
   return [header, ...rows].join("\n");
 }

@@ -1,7 +1,9 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { OrderStatus } from "@/generated/prisma/client";
+import { formatOrderNumber } from "@/lib/order-utils";
 import Badge from "../components/ui/Badge";
 import Pagination from "../components/ui/Pagination";
 import SearchInput from "../components/ui/SearchInput";
@@ -67,7 +69,7 @@ export default async function AdminOrdersPage({
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
               <th className="text-left px-4 py-3 font-medium text-gray-600">
-                Order ID
+                Order #
               </th>
               <th className="text-left px-4 py-3 font-medium text-gray-600">
                 Email
@@ -100,7 +102,12 @@ export default async function AdminOrdersPage({
               orders.map((order) => (
                 <tr key={order.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 font-mono text-xs">
-                    {order.id.slice(0, 8)}...
+                    <Link
+                      href={`/admin/orders/${order.id}`}
+                      className="text-slate-700 hover:text-slate-900 underline"
+                    >
+                      {formatOrderNumber(order.orderNumber)}
+                    </Link>
                   </td>
                   <td className="px-4 py-3">{order.user.email}</td>
                   <td className="px-4 py-3">

@@ -163,7 +163,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     toastTimeoutRef.current = setTimeout(() => {
       setToast(null);
       toastTimeoutRef.current = null;
-    }, 80000);
+    }, 4000);
   }, []);
 
   const addToCart = useCallback((item: CartItem) => {
@@ -258,7 +258,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [isLoggedIn]);
 
-  const creditDiscount = appliedCredits === 500 ? 20 : appliedCredits === 250 ? 10 : 0;
+  const creditDiscount = appliedCredits === 500 ? 10 : appliedCredits === 250 ? 5 : 0;
 
   const applyCredits = useCallback((amount: number) => {
     if (amount !== 250 && amount !== 500) return;
@@ -282,11 +282,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    const discount = validCredits === 500 ? 20 : validCredits === 250 ? 10 : 0;
+    const discount = validCredits === 500 ? 10 : validCredits === 250 ? 5 : 0;
     if (discount > cadSubtotal) {
       validCredits = 0;
     }
-    const actualDiscount = validCredits === 500 ? 20 : validCredits === 250 ? 10 : 0;
+    const actualDiscount = validCredits === 500 ? 10 : validCredits === 250 ? 5 : 0;
     const finalCADTotal = Math.max(0, cadSubtotal - actualDiscount);
 
     if (validCredits > 0) {

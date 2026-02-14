@@ -31,7 +31,7 @@ export default function AnnouncementBar() {
           href="/loyalty"
           className="font-semibold text-navy tracking-wider uppercase transition-colors duration-300 hover:text-navy/80"
         >
-          250 Credits = $10 Off
+          250 Credits = $5 Off
         </Link>
 
         <span className="hidden sm:inline text-mauve/50">—</span>

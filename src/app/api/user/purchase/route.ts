@@ -25,18 +25,26 @@ export async function POST(request: Request) {
   const newLifetime = loyalty.lifetimeCredits + creditsEarned;
   const newLockedCurrency = loyalty.lockedCurrency ?? (currency || null);
 
-  // Create order
-  const order = await prisma.order.create({
-    data: {
-      userId,
-      totalAmount: Math.round(totalSpent * 100), // Store in cents
-      items: {
-        create: productIds.map((pid: string) => ({
-          productId: pid,
-          quantity: 1,
-        })),
+  // Create order with atomic sequential orderNumber
+  const order = await prisma.$transaction(async (tx) => {
+    const result = await tx.$queryRaw<[{ max: number | null }]>`
+      SELECT MAX("orderNumber") as max FROM "Order" FOR UPDATE
+    `;
+    const nextNumber = (result[0].max ?? 10) + 1;
+
+    return tx.order.create({
+      data: {
+        userId,
+        orderNumber: nextNumber,
+        totalAmount: Math.round(totalSpent * 100), // Store in cents
+        items: {
+          create: productIds.map((pid: string) => ({
+            productId: pid,
+            quantity: 1,
+          })),
+        },
       },
-    },
+    });
   });
 
   // Update loyalty
@@ -60,5 +68,40 @@ export async function POST(request: Request) {
     },
   });
 
-  return NextResponse.json({ success: true, orderId: order.id, creditsEarned });
+  // Award referrer on first purchase
+  if (!loyalty.firstPurchaseCompleted && loyalty.referredBy) {
+    const referrerLoyalty = await prisma.loyalty.findUnique({
+      where: { referralCode: loyalty.referredBy },
+    });
+
+    if (referrerLoyalty) {
+      const newReferrerCredits = referrerLoyalty.currentCredits + 200;
+      const newReferrerLifetime = referrerLoyalty.lifetimeCredits + 200;
+
+      await prisma.loyalty.update({
+        where: { userId: referrerLoyalty.userId },
+        data: {
+          currentCredits: newReferrerCredits,
+          lifetimeCredits: newReferrerLifetime,
+          referralCount: referrerLoyalty.referralCount + 1,
+        },
+      });
+
+      const purchaser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { name: true },
+      });
+
+      await prisma.transactionLog.create({
+        data: {
+          userId: referrerLoyalty.userId,
+          action: `Referral reward (${purchaser?.name ?? "a friend"} made first purchase)`,
+          credits: 200,
+          runningBalance: newReferrerCredits,
+        },
+      });
+    }
+  }
+
+  return NextResponse.json({ success: true, orderId: order.id, orderNumber: order.orderNumber, creditsEarned });
 }

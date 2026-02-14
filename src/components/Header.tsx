@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { useCart } from "@/lib/CartContext";
 import { useAuth } from "@/lib/AuthContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -42,6 +43,8 @@ export default function Header() {
   const [accountDropdown, setAccountDropdown] = useState(false);
   const { cartCount, wishlistCount } = useCart();
   const { isLoggedIn, logout } = useAuth();
+  const pathname = usePathname();
+  const accountHref = !isLoggedIn && pathname === "/loyalty" ? "/account" : "/loyalty";
 
   return (
     <header className="sticky top-0 z-5 bg-navy w-full">
@@ -184,7 +187,7 @@ export default function Header() {
                 </div>
               ) : (
                 <Link
-                  href="/loyalty"
+                  href={accountHref}
                   className="p-2 text-white hover:text-light-blush transition-colors relative"
                   aria-label="Account"
                 >
@@ -326,7 +329,7 @@ export default function Header() {
                 </>
               ) : (
                 <Link
-                  href="/loyalty"
+                  href={accountHref}
                   className="flex items-center gap-2 font-heading text-white text-sm"
                   onClick={() => setMobileOpen(false)}
                 >

@@ -310,7 +310,7 @@ export default function ProductPage() {
       {user.loyalty.currentCredits >= 250 ? (
         <div className="text-right">
           <p className="text-sm font-medium text-navy">
-            ✨ $10 Off Available
+            ✨ $5 Off Available
           </p>
           <p className="text-xs text-mauve">
             Redeem 250 Ritual Credits at checkout

@@ -34,6 +34,7 @@ export interface LoyaltyState {
   joinDate: string;
   firstPurchaseCompleted: boolean;
   referredBy: string | null;
+  referredByName: string | null;
   lockedCurrency: string | null;
 }
 
@@ -74,6 +75,7 @@ const defaultLoyalty: LoyaltyState = {
   joinDate: new Date().toISOString(),
   firstPurchaseCompleted: false,
   referredBy: null,
+  referredByName: null,
   lockedCurrency: null,
 };
 
@@ -115,6 +117,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           joinDate: data.joinDate,
           firstPurchaseCompleted: data.firstPurchaseCompleted,
           referredBy: data.referredBy,
+          referredByName: data.referredByName ?? null,
           lockedCurrency: data.lockedCurrency,
         });
         setLoyaltyLoaded(true);
@@ -223,7 +226,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
-    signOut({ redirect: false });
+    signOut({ callbackUrl: "/" });
   }, []);
 
   const addCredits = useCallback((amount: number, action: string) => {

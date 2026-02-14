@@ -2,60 +2,35 @@
 
 import Link from "next/link";
 import { useCart } from "@/lib/CartContext";
-import { useAuth } from "@/lib/AuthContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark, faHeart } from "@fortawesome/free-solid-svg-icons";
 
 export default function ToastNotification() {
   const { toast, dismissToast } = useCart();
-  const { isLoggedIn } = useAuth();
 
   if (!toast) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-6">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-navy/25 backdrop-blur-sm" />
-
-      {/* Card */}
-      <div className="relative bg-white rounded-3xl shadow-[0_25px_70px_rgba(83,91,115,0.25)] border border-cream p-10 max-w-md w-full">
-        {/* Close Button */}
-        <button
-          onClick={dismissToast}
-          className="absolute top-5 right-5 text-mauve hover:text-navy transition-colors"
-          aria-label="Dismiss"
-        >
-          <FontAwesomeIcon icon={faXmark} className="w-5 h-5" />
-        </button>
-
-        <div className="flex flex-col items-center text-center gap-5">
-          {/* Heart Icon */}
-          <div className="w-14 h-14 bg-[#F2E9E9]/30 rounded-full flex items-center justify-center shadow-inner">
-            <FontAwesomeIcon
-              icon={faHeart}
-              className="text-blush/70 text-4xl"
-            />
-          </div>
-
-          <p className="text-lg text-navy font-semibold leading-relaxed">
-            {toast.message}
-          </p>
-          {!isLoggedIn && (
-            <p className="text-sm text-navy/70 leading-relaxed">
-             Create an account to begin earning Ritual Credits and unlock wishlist access & purchase history. Already purchased? You&#39;re automatically enrolled.
-            </p>
-          )}
-
+    <div className="hidden lg:block fixed bottom-6 right-6 z-50 animate-slide-up">
+      <div className="bg-white rounded-xl shadow-lg border border-cream/80 px-5 py-4 max-w-xs flex items-center gap-3">
+        <FontAwesomeIcon icon={faHeart} className="text-blush text-lg flex-shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm text-navy font-medium">{toast.message}</p>
           <Link
             href={toast.link.href}
             onClick={dismissToast}
-            className="inline-block px-8 py-3 bg-gradient-to-r from-cream via-white to-cream text-navy font-semibold tracking-wider uppercase rounded-xl shadow-md transition-all duration-300 hover:shadow-lg"
+            className="text-xs text-mauve hover:text-navy transition-colors underline"
           >
             {toast.link.label}
           </Link>
-
-          <p className="text-xs text-mauve/60 italic">Tap the ✕ to close</p>
         </div>
+        <button
+          onClick={dismissToast}
+          className="text-mauve/50 hover:text-navy transition-colors flex-shrink-0"
+          aria-label="Dismiss"
+        >
+          <FontAwesomeIcon icon={faXmark} className="w-4 h-4" />
+        </button>
       </div>
     </div>
   );

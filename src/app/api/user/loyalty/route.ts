@@ -37,6 +37,16 @@ export async function GET() {
   const purchasedProducts = [...new Set(orderItems.map((oi) => oi.productId))];
   const reviewedProducts = reviews.map((r) => r.productId);
 
+  // Resolve referrer name from referral code
+  let referredByName: string | null = null;
+  if (loyalty.referredBy) {
+    const referrerLoyalty = await prisma.loyalty.findUnique({
+      where: { referralCode: loyalty.referredBy },
+      include: { user: { select: { name: true } } },
+    });
+    referredByName = referrerLoyalty?.user.name ?? null;
+  }
+
   return NextResponse.json({
     currentCredits: loyalty.currentCredits,
     lifetimeCredits: loyalty.lifetimeCredits,
@@ -55,6 +65,7 @@ export async function GET() {
     joinDate: loyalty.joinDate.toISOString(),
     firstPurchaseCompleted: loyalty.firstPurchaseCompleted,
     referredBy: loyalty.referredBy,
+    referredByName,
     lockedCurrency: loyalty.lockedCurrency,
     preferredCurrency: user?.preferredCurrency ?? null,
   });

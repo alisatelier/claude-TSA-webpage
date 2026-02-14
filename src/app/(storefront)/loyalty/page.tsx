@@ -100,7 +100,7 @@ export default function LoyaltyPage() {
                     account.
                   </span>
                   <span className="text-xs text-navy/50">
-                    ✨ You earn 200 Credits when they complete their first
+                    ✨ You earn 200 Credits when your friend completes their first
                     purchase.
                   </span>
                 </li>
@@ -115,13 +115,13 @@ export default function LoyaltyPage() {
                   <span className="font-semibold text-navy">
                     250 Ritual Credits
                   </span>{" "}
-                  = <span className="font-semibold text-navy">$10 Off</span>
+                  = <span className="font-semibold text-navy">$5 Off</span>
                 </div>
                 <div className="bg-cream rounded-lg py-3 px-4">
                   <span className="font-semibold text-navy">
                     500 Ritual Credits
                   </span>{" "}
-                  = <span className="font-semibold text-navy">$20 Off</span>
+                  = <span className="font-semibold text-navy">$10 Off</span>
                 </div>
                 <p className="text-navy/60 text-xs mt-2">
                   Credits apply at checkout toward any eligible order.

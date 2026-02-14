@@ -386,7 +386,7 @@ export default function CartPage() {
                             onClick={() => appliedCredits === 250 ? removeCredits() : applyCredits(250)}
                             className={`flex-1 py-2 text-xs font-medium rounded-lg border transition-colors ${appliedCredits === 250 ? "bg-navy text-white border-navy" : "border-navy/20 text-navy hover:border-navy"}`}
                           >
-                            250 = $10 off
+                            250 = $5 off
                           </button>
                         )}
                         {canApply500 && (
@@ -394,7 +394,7 @@ export default function CartPage() {
                             onClick={() => appliedCredits === 500 ? removeCredits() : applyCredits(500)}
                             className={`flex-1 py-2 text-xs font-medium rounded-lg border transition-colors ${appliedCredits === 500 ? "bg-navy text-white border-navy" : "border-navy/20 text-navy hover:border-navy"}`}
                           >
-                            500 = $20 off
+                            500 = $10 off
                           </button>
                         )}
                       </div>

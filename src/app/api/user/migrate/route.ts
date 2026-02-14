@@ -84,18 +84,26 @@ export async function POST(request: Request) {
     if (data.loyalty.purchasedProducts?.length) {
       const existingOrders = await prisma.order.count({ where: { userId } });
       if (existingOrders === 0) {
-        await prisma.order.create({
-          data: {
-            userId,
-            totalAmount: 0,
-            status: "COMPLETED",
-            items: {
-              create: data.loyalty.purchasedProducts.map((pid) => ({
-                productId: pid,
-                quantity: 1,
-              })),
+        await prisma.$transaction(async (tx) => {
+          const result = await tx.$queryRaw<[{ max: number | null }]>`
+            SELECT MAX("orderNumber") as max FROM "Order" FOR UPDATE
+          `;
+          const nextNumber = (result[0].max ?? 10) + 1;
+
+          await tx.order.create({
+            data: {
+              userId,
+              orderNumber: nextNumber,
+              totalAmount: 0,
+              status: "COMPLETED",
+              items: {
+                create: data.loyalty!.purchasedProducts!.map((pid) => ({
+                  productId: pid,
+                  quantity: 1,
+                })),
+              },
             },
-          },
+          });
         });
       }
     }

@@ -531,7 +531,7 @@ questions: [
     questions: [
       {
         q: "How do Ritual Credits work?",
-        a: "Earn Ritual Credits with every purchase ($1 = 1 Credit), plus bonus credits for creating an account (50), writing a review (100), referrals (200 + 200), and celebrating your birthday (150). Redeem 250 Credits for $10 off or 500 Credits for $20 off your order.",
+        a: "Earn Ritual Credits with every purchase ($1 = 1 Credit), plus bonus credits for creating an account (50), writing a review (100), referrals (200 + 200), and celebrating your birthday (150). Redeem 250 Credits for $5 off or 500 Credits for $10 off your order.",
       },
       {
         q: "Do my Ritual Credits expire?",
