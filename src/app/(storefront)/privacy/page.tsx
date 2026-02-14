@@ -28,7 +28,7 @@ export default function PrivacyPage() {
           </div>
           <div>
             <h2 className="font-heading text-2xl text-navy mb-3">Your Rights</h2>
-            <p>You have the right to access, correct, or delete your personal information. You may also opt out of marketing communications at any time. To exercise these rights, please contact us at hello@thespiritatelier.com.</p>
+            <p>You have the right to access, correct, or delete your personal information. You may also opt out of marketing communications at any time. To exercise these rights, please contact us via the contact form on our website.</p>
           </div>
           <div>
             <h2 className="font-heading text-2xl text-navy mb-3">Data Security</h2>

@@ -1,10 +1,15 @@
 import { emailLayout, fillPlaceholders } from "./layout";
+import { getTrackingUrl } from "@/lib/tracking-utils";
 
 // ── Types ──────────────────────────────────────────────────────────
 
-export interface AccountCreatedData {
+export interface WishlistBackInStockData {
   firstName: string;
-  referralCode: string;
+  productName: string;
+  productImage: string;
+  variation?: string;
+  price: number;
+  productUrl: string;
 }
 
 export interface LoyaltyWelcomeData {
@@ -19,6 +24,7 @@ export interface OrderItem {
   quantity: number;
   price: number;
   variation?: string;
+  image?: string;
 }
 
 export interface OrderConfirmationData {
@@ -59,16 +65,18 @@ export interface ReferralCompletedData {
   firstName: string;
   referredName: string;
   creditsEarned: number;
+  credits: number;
 }
 
 export interface StatusUpgradeData {
   firstName: string;
   newTier: string;
   benefits: string[];
+  credits: number;
 }
 
 export type TemplateData =
-  | AccountCreatedData
+  | WishlistBackInStockData
   | LoyaltyWelcomeData
   | OrderConfirmationData
   | OrderShippedData
@@ -120,23 +128,84 @@ function render(
 
 // ── Template Render Functions ──────────────────────────────────────
 
-function renderAccountCreated(data: AccountCreatedData): RenderedEmail {
+function buildProductCard(data: WishlistBackInStockData): string {
+  const variationLine = data.variation
+    ? `<p style="margin:4px 0 0;font-size:13px;color:#A69FA6;">${data.variation}</p>`
+    : "";
+
+  return `
+  <div style="
+    background-color:#ffffff;
+    border:1px solid #535B73;
+    border-radius:16px;
+    padding:12px;
+    margin:0 0 8px;
+    text-align:center;
+    max-width:360px;
+  ">
+    
+    <!-- Product Image -->
+    <img 
+      src="${data.productImage}" 
+      alt="${data.productName}" 
+      width="200" 
+      style="
+        display:block;
+        margin:0 auto 12px auto;
+        border-radius:12px;
+        height:auto;
+      " 
+    />
+
+    <!-- Product Name -->
+    <p style="
+      margin:0 0 8px 0;
+      font-size:18px;
+      font-weight:600;
+      color:#535B73;
+    ">
+      ${data.productName}
+    </p>
+
+    ${variationLine ? `
+      <p style="
+        margin:0 0 12px 0;
+        font-size:14px;
+        color:#A69FA6;
+      ">
+        ${variationLine}
+      </p>
+    ` : ''}
+
+    <!-- Price -->
+    <p style="
+      margin:12px 0 0 0;
+      font-size:16px;
+      font-weight:600;
+      color:#535B73;
+    ">
+      ${fmt(data.price)}
+    </p>
+
+  </div>
+`;
+}
+
+function renderWishlistBackInStock(data: WishlistBackInStockData): RenderedEmail {
   const variables: Record<string, string> = {
     firstName: data.firstName,
-    referralCode: data.referralCode,
+    productName: data.productName,
+    productCard: buildProductCard(data),
+    productUrl: data.productUrl,
   };
 
   const body = `<p style="margin:0 0 16px;">Dear {{firstName}},</p>
-       <p style="margin:0 0 16px;">Welcome to The Spirit Atelier. Your account has been created successfully.</p>
-       <p style="margin:0 0 16px;">You now have access to order tracking, saved favourites, and our loyalty programme.</p>
-       <p style="margin:0 0 16px;">Your personal referral code:</p>
-       <div style="background-color:#F2E9E9;padding:16px;text-align:center;border-radius:4px;margin:0 0 16px;">
-         <span style="font-size:18px;letter-spacing:2px;color:#535B73;font-weight:bold;">{{referralCode}}</span>
-       </div>
-       ${btn("Visit Your Account")}
-       <p style="margin:0;color:#A69FA6;font-size:13px;">We're so glad you're here.</p>`;
+       <p style="margin:0 0 16px;">Great news — an item on your wishlist is back in stock.</p>
+       {{productCard}}
+       <p style="margin:0 0 16px;font-size:14px;color:#A69FA6;text-align:center;">It may not last long — claim yours before it's gone.</p>
+       ${btn("View Product", "{{productUrl}}")}`;
 
-  return render(body, variables, "Welcome to The Spirit Atelier", "Your account is ready");
+  return render(body, variables, "{{productName}} Is Back in Stock", "{{productName}} is available again");
 }
 
 function renderLoyaltyWelcome(data: LoyaltyWelcomeData): RenderedEmail {
@@ -159,60 +228,72 @@ function renderLoyaltyWelcome(data: LoyaltyWelcomeData): RenderedEmail {
   return render(body, variables, "Your Ritual Credits Await", "You have {{credits}} credits waiting");
 }
 
-function renderOrderConfirmation(data: OrderConfirmationData): RenderedEmail {
-  const rows = data.items
+function buildOrderItemsTable(items: OrderItem[], total: number): string {
+  const rows = items
     .map(
       (item) =>
         `<tr>
-          <td style="padding:8px 0;border-bottom:1px solid #F2E9E9;color:#535B73;font-size:14px;">
-            ${item.name}${item.variation ? ` <span style="color:#A69FA6;">— ${item.variation}</span>` : ""}
+          <td style="padding:8px 0;border-bottom:1px solid #F2E9E9;width:48px;vertical-align:middle;">
+            ${item.image
+              ? `<img src="${item.image}" alt="${item.name}" width="48" height="48" style="display:block;border-radius:4px;object-fit:cover;" />`
+              : `<div style="width:48px;height:48px;border-radius:4px;background-color:#F2E9E9;"></div>`}
           </td>
-          <td style="padding:8px 0;border-bottom:1px solid #F2E9E9;color:#535B73;font-size:14px;text-align:center;">${item.quantity}</td>
-          <td style="padding:8px 0;border-bottom:1px solid #F2E9E9;color:#535B73;font-size:14px;text-align:right;">${fmt(item.price)}</td>
+          <td style="padding:8px 0 8px 12px;border-bottom:1px solid #F2E9E9;color:#535B73;font-size:14px;vertical-align:middle;">
+            ${item.name}${item.variation ? `<br/><span style="color:#A69FA6;font-size:12px;">${item.variation}</span>` : ""}
+          </td>
+          <td style="padding:8px 0;border-bottom:1px solid #F2E9E9;color:#535B73;font-size:14px;text-align:center;vertical-align:middle;">${item.quantity}</td>
+          <td style="padding:8px 0;border-bottom:1px solid #F2E9E9;color:#535B73;font-size:14px;text-align:right;vertical-align:middle;">${fmt(item.price)}</td>
         </tr>`
     )
     .join("");
 
-  const variables: Record<string, string> = {
-    firstName: data.firstName,
-    orderNumber: data.orderNumber,
-    total: fmt(data.total),
-  };
-
-  const body = `<p style="margin:0 0 16px;">Dear {{firstName}},</p>
-       <p style="margin:0 0 16px;">Thank you for your order. Here's your confirmation:</p>
-       <p style="margin:0 0 16px;font-size:14px;color:#A69FA6;">Order #{{orderNumber}}</p>
-       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px;">
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px;">
          <tr style="border-bottom:2px solid #FEDDE8;">
-           <td style="padding:8px 0;font-size:13px;color:#A69FA6;font-weight:bold;">Item</td>
+           <td style="padding:8px 0;font-size:13px;color:#A69FA6;font-weight:bold;width:48px;"></td>
+           <td style="padding:8px 0 8px 12px;font-size:13px;color:#A69FA6;font-weight:bold;">Item</td>
            <td style="padding:8px 0;font-size:13px;color:#A69FA6;font-weight:bold;text-align:center;">Qty</td>
            <td style="padding:8px 0;font-size:13px;color:#A69FA6;font-weight:bold;text-align:right;">Price</td>
          </tr>
          ${rows}
          <tr>
-           <td colspan="2" style="padding:12px 0 0;font-size:15px;color:#535B73;font-weight:bold;">Total</td>
-           <td style="padding:12px 0 0;font-size:15px;color:#535B73;font-weight:bold;text-align:right;">{{total}}</td>
+           <td colspan="3" style="padding:12px 0 0;font-size:15px;color:#535B73;font-weight:bold;">Total</td>
+           <td style="padding:12px 0 0;font-size:15px;color:#535B73;font-weight:bold;text-align:right;">${fmt(total)}</td>
          </tr>
-       </table>
+       </table>`;
+}
+
+function renderOrderConfirmation(data: OrderConfirmationData): RenderedEmail {
+  const variables: Record<string, string> = {
+    firstName: data.firstName,
+    orderNumber: data.orderNumber,
+    orderItems: buildOrderItemsTable(data.items, data.total),
+  };
+
+  const body = `<p style="margin:0 0 16px;">Dear {{firstName}},</p>
+       <p style="margin:0 0 16px;">Thank you for your order. Here's your confirmation:</p>
+       <p style="margin:0 0 16px;font-size:14px;color:#A69FA6;">Order #{{orderNumber}}</p>
+       {{orderItems}}
        ${btn("View Order")}`;
 
   return render(body, variables, "Order {{orderNumber}} Confirmed", "Order {{orderNumber}} confirmed");
 }
 
 function renderOrderShipped(data: OrderShippedData): RenderedEmail {
+  const trackingUrl = getTrackingUrl(data.trackingNumber);
   const variables: Record<string, string> = {
     firstName: data.firstName,
     orderNumber: data.orderNumber,
     trackingNumber: data.trackingNumber,
+    trackingUrl,
   };
 
   const body = `<p style="margin:0 0 16px;">Dear {{firstName}},</p>
        <p style="margin:0 0 16px;">Your order <strong>#{{orderNumber}}</strong> is on its way.</p>
        <p style="margin:0 0 8px;font-size:14px;color:#A69FA6;">Tracking Number:</p>
        <div style="background-color:#F2E9E9;padding:16px;text-align:center;border-radius:4px;margin:0 0 16px;">
-         <span style="font-size:16px;letter-spacing:1px;color:#535B73;font-weight:bold;">{{trackingNumber}}</span>
+         <a href="{{trackingUrl}}" style="font-size:16px;letter-spacing:1px;color:#535B73;font-weight:bold;text-decoration:none;">{{trackingNumber}}</a>
        </div>
-       ${btn("Track Your Order")}`;
+       ${btn("Track Your Order", "{{trackingUrl}}")}`;
 
   return render(body, variables, "Your Order Has Shipped", "Order #{{orderNumber}} has shipped");
 }
@@ -305,6 +386,7 @@ function renderReferralCompleted(data: ReferralCompletedData): RenderedEmail {
     firstName: data.firstName,
     referredName: data.referredName,
     creditsEarned: String(data.creditsEarned),
+    credits: String(data.credits),
   };
 
   const body = `<p style="margin:0 0 16px;">Dear {{firstName}},</p>
@@ -319,27 +401,38 @@ function renderReferralCompleted(data: ReferralCompletedData): RenderedEmail {
   return render(body, variables, "You Earned {{creditsEarned}} Ritual Credits", "+{{creditsEarned}} credits from your referral");
 }
 
-function renderStatusUpgrade(data: StatusUpgradeData): RenderedEmail {
-  const benefitsList = data.benefits
+function buildBenefitsBlock(tier: string, benefits: string[]): string {
+  const threshold = tier === "Elder" ? "1,500+" : tier === "Keeper" ? "500+" : "0+";
+
+  const benefitRows = benefits
     .map(
       (b) =>
         `<tr>
-          <td style="padding:6px 0 6px 16px;color:#535B73;font-size:14px;">&#8226; ${b}</td>
+          <td style="padding:6px 0 6px 20px;color:#535B73;font-size:14px;line-height:1.5;">&#8226; ${b}</td>
         </tr>`
     )
     .join("");
 
+  return `<div style="background-color:#F2E9E9;border-radius:8px;padding:24px;margin:0 0 24px;">
+    <p style="margin:0 0 4px;font-size:20px;font-weight:bold;color:#535B73;letter-spacing:1px;">${tier}</p>
+    <p style="margin:0 0 16px;font-size:13px;color:#A69FA6;">${threshold} Lifetime Credits Earned</p>
+    <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%; color:#535b73; ">
+      ${benefitRows}
+    </table>
+  </div>`;
+}
+
+function renderStatusUpgrade(data: StatusUpgradeData): RenderedEmail {
   const variables: Record<string, string> = {
     firstName: data.firstName,
     newTier: data.newTier,
+    credits: String(data.credits),
+    benefits: buildBenefitsBlock(data.newTier, data.benefits),
   };
 
   const body = `<p style="margin:0 0 16px;">Dear {{firstName}},</p>
        <p style="margin:0 0 16px;">Congratulations — you've been upgraded to <strong>{{newTier}}</strong> status!</p>
-       <p style="margin:0 0 8px;color:#A69FA6;font-size:13px;">Your new benefits:</p>
-       <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px;width:100%;">
-         ${benefitsList}
-       </table>
+       {{benefits}}
        ${btn("Explore Your Rewards")}
        <p style="margin:0;color:#A69FA6;font-size:13px;">Thank you for being part of our community.</p>`;
 
@@ -356,17 +449,18 @@ export interface TemplateMeta {
 }
 
 export const TEMPLATES: TemplateMeta[] = [
-  {
-    id: "account-created",
-    name: "Account Created",
-    description: "Welcome email sent when a new account is created.",
-    trigger: "User signs up",
-  },
+
   {
     id: "loyalty-welcome",
     name: "Loyalty Welcome",
     description: "Welcome bonus and referral code for the Ritual Rewards programme.",
     trigger: "First loyalty enrolment",
+  },
+  {
+    id: "wishlist-back-in-stock",
+    name: "Wishlist Back in Stock",
+    description: "Notification when a wishlisted item is restocked.",
+    trigger: "Stock replenished for wishlisted product",
   },
   {
     id: "order-confirmation",
@@ -415,7 +509,7 @@ export const TEMPLATES: TemplateMeta[] = [
 // ── Default Subjects ───────────────────────────────────────────────
 
 export const DEFAULT_SUBJECTS: Record<string, string> = {
-  "account-created": "Welcome to The Spirit Atelier",
+  "wishlist-back-in-stock": "{{productName}} Is Back in Stock",
   "loyalty-welcome": "Your Ritual Credits Await",
   "order-confirmation": "Order {{orderNumber}} Confirmed",
   "order-shipped": "Your Order Has Shipped",
@@ -429,7 +523,7 @@ export const DEFAULT_SUBJECTS: Record<string, string> = {
 // ── Dispatcher ─────────────────────────────────────────────────────
 
 const renderers: Record<string, (data: never) => RenderedEmail> = {
-  "account-created": renderAccountCreated as (data: never) => RenderedEmail,
+  "wishlist-back-in-stock": renderWishlistBackInStock as (data: never) => RenderedEmail,
   "loyalty-welcome": renderLoyaltyWelcome as (data: never) => RenderedEmail,
   "order-confirmation": renderOrderConfirmation as (data: never) => RenderedEmail,
   "order-shipped": renderOrderShipped as (data: never) => RenderedEmail,

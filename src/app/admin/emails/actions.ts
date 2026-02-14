@@ -8,8 +8,8 @@ import { sampleData } from "@/lib/email/sample-data";
 import { sendEmail } from "@/lib/email/send";
 import { emailLayout, fillPlaceholders } from "@/lib/email/layout";
 import { calculateTier, getTierBenefits } from "@/lib/loyalty-utils";
-import { formatOrderNumber } from "@/lib/order-utils";
-import { services } from "@/lib/data";
+import { formatOrderNumber, resolveProduct } from "@/lib/order-utils";
+import { services, products } from "@/lib/data";
 
 export async function getTestUsers(): Promise<
   { id: string; name: string | null; email: string }[]
@@ -37,10 +37,21 @@ async function buildTemplateDataForUser(
   const firstName = user.name ?? "Friend";
 
   switch (templateId) {
-    case "account-created": {
+    case "wishlist-back-in-stock": {
+      const wishlistItem = await prisma.wishlist.findFirst({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+      });
+      if (!wishlistItem) return null;
+      const resolved = resolveProduct(wishlistItem.productId, wishlistItem.variation || undefined);
+      const product = products.find((p) => p.id === wishlistItem.productId);
       return {
         firstName,
-        referralCode: user.loyalty?.referralCode ?? "SPIRIT-PREVIEW",
+        productName: resolved.name,
+        productImage: resolved.image,
+        variation: wishlistItem.variation || undefined,
+        price: product?.price ?? 0,
+        productUrl: `/shop/${wishlistItem.productId}`,
       };
     }
 
@@ -71,6 +82,7 @@ async function buildTemplateDataForUser(
           quantity: item.quantity,
           price: item.unitPrice / 100,
           variation: item.variation ?? undefined,
+          image: item.image || resolveProduct(item.productId, item.variation ?? undefined).image,
         })),
         total: order.totalAmount / 100,
       };
@@ -127,11 +139,22 @@ async function buildTemplateDataForUser(
     }
 
     case "birthday-month": {
-      return { firstName, credits: 150 };
+      return { firstName, credits: user.loyalty?.currentCredits ?? 0 };
     }
 
     case "referral-completed": {
-      return { firstName, referredName: "a friend", creditsEarned: 200 };
+      let referredName = "a friend";
+      if (user.loyalty?.referralCode) {
+        const referred = await prisma.loyalty.findFirst({
+          where: { referredBy: user.loyalty.referralCode },
+          orderBy: { joinDate: "desc" },
+          include: { user: { select: { name: true } } },
+        });
+        if (referred?.user.name) {
+          referredName = referred.user.name;
+        }
+      }
+      return { firstName, referredName, creditsEarned: 200, credits: user.loyalty?.currentCredits ?? 0 };
     }
 
     case "status-upgrade": {
@@ -142,6 +165,7 @@ async function buildTemplateDataForUser(
         firstName,
         newTier: tier,
         benefits: getTierBenefits(tier),
+        credits: user.loyalty?.currentCredits ?? 0,
       };
     }
 
@@ -219,7 +243,11 @@ export async function sendTestEmail(
   const filledBody = fillPlaceholders(bodyToSend, variables);
   const filledSubject = fillPlaceholders(subjectToSend, variables);
   const html = emailLayout(filledBody);
-  return sendEmail({ subject: `[TEST] ${filledSubject}`, html });
+  const result = await sendEmail({ subject: `[TEST] ${filledSubject}`, html });
+  if (!result.success) {
+    console.error("[sendTestEmail] Failed:", result.error);
+  }
+  return result;
 }
 
 export async function sendCustomTestEmail(

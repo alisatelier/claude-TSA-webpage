@@ -205,7 +205,7 @@ export default function ProductCard({ product, syncIndex, averageRating, savedVa
             )}
           </Link>
           <button
-            onClick={() => toggleWishlist(product.id, defaultVariation)}
+            onClick={() => toggleWishlist(product.id, savedVariation || defaultVariation)}
             className="flex-shrink-0 p-1 hover:scale-110 transition-transform"
             aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
           >

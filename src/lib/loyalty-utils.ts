@@ -26,18 +26,15 @@ export function getTierBenefits(tier: Tier): string[] {
       ];
     case "Keeper":
       return [
-        "1.5x credit multiplier on all purchases",
-        "Early access to new collections",
-        "Free gift wrapping on every order",
-        "Exclusive seasonal rituals guide",
+        "24-Hour Early Access to Limited Drops",
+        "Recognition in a Dedicated Instagram Story",
       ];
     case "Elder":
       return [
-        "2x credit multiplier on all purchases",
-        "Priority booking for services",
-        "Complimentary gift with every order",
-        "Annual exclusive Elder ritual kit",
-        "Personal concierge support",
+        "All Keeper benefits",
+        "72-Hour Early Access to Limited Drops",
+        "1.5× Ritual Credit Earning Rate",
+        "Recognition in a Dedicated Instagram Feed Post",
       ];
   }
 }

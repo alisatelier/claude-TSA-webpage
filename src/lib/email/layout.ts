@@ -35,12 +35,12 @@ export function emailLayoutShell(options: LayoutOptions = {}): string {
           <!-- Header -->
          <tr>
   <td align="center" style="background-color:#535B73; padding:40px 20px; border-radius:16px;">
-    <img 
-      src="/images/the-spirit-atelier-email.png" 
-      alt="The Spirit Atelier" 
-      width="400" 
-      style="display:block; margin:0 auto 16px auto; height:auto;"
-    />
+  <img 
+    src="/images/the-spirit-atelier-email.png"
+    alt="The Spirit Atelier"
+    width="300"
+    style="display:block; max-width:300px; width:100%; height:auto;"
+  />
     <hr 
       style="border:none; border-top:1px solid #FEDDE8; margin:16px auto 0 auto; width:80px;"
     />
@@ -62,7 +62,7 @@ export function emailLayoutShell(options: LayoutOptions = {}): string {
                 Sent with intention.
               </p>
               <p style="margin:0;color:#A69FA6;font-size:12px;">
-                hello@thespiritatelier.com
+                hello@thespiritatelier.ca
               </p>
             </td>
           </tr>

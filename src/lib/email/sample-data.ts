@@ -1,5 +1,5 @@
 import type {
-  AccountCreatedData,
+  WishlistBackInStockData,
   LoyaltyWelcomeData,
   OrderConfirmationData,
   OrderShippedData,
@@ -10,10 +10,15 @@ import type {
   StatusUpgradeData,
   TemplateData,
 } from "./templates";
+import { resolveProduct } from "@/lib/order-utils";
 
-const accountCreated: AccountCreatedData = {
+const wishlistBackInStock: WishlistBackInStockData = {
   firstName: "Sophia",
-  referralCode: "SPIRIT-SOPHIA",
+  productName: "Norse Runes",
+  productImage: resolveProduct("norse-runes", "Black | Gold").image,
+  variation: "Black | Gold",
+  price: 55,
+  productUrl: "/shop/norse-runes",
 };
 
 const loyaltyWelcome: LoyaltyWelcomeData = {
@@ -27,11 +32,11 @@ const orderConfirmation: OrderConfirmationData = {
   firstName: "Sophia",
   orderNumber: "SA-20250214-001",
   items: [
-    { name: "Rose Quartz Elixir", quantity: 1, price: 42.0, variation: "30ml" },
-    { name: "Lunar Mist Candle", quantity: 2, price: 28.0 },
-    { name: "Amethyst Ritual Kit", quantity: 1, price: 65.0, variation: "Imperfect" },
+    { name: "Whims & Whispers Journal", quantity: 1, price: 33.0, variation: "Grey", image: resolveProduct("whims-whispers-journal", "Grey").image },
+    { name: "Norse Runes", quantity: 1, price: 55.0, variation: "Black | Gold", image: resolveProduct("norse-runes", "Black | Gold").image },
+    { name: "Whims & Whispers Tarot Deck", quantity: 1, price: 44.0, variation: "Pink", image: resolveProduct("whims-whispers-tarot", "Pink").image },
   ],
-  total: 163.0,
+  total: 132.0,
 };
 
 const orderShipped: OrderShippedData = {
@@ -66,21 +71,22 @@ const referralCompleted: ReferralCompletedData = {
   firstName: "Sophia",
   referredName: "Elena",
   creditsEarned: 200,
+  credits: 450,
 };
 
 const statusUpgrade: StatusUpgradeData = {
   firstName: "Sophia",
   newTier: "Keeper",
   benefits: [
-    "1.5x credit multiplier on all purchases",
-    "Early access to new collections",
-    "Free gift wrapping on every order",
-    "Exclusive seasonal rituals guide",
+    "All Seeker benefits",
+    "24-Hour Early Access to Limited Drops",
+    "Recognition in a Dedicated Instagram Story",
   ],
+  credits: 500,
 };
 
 export const sampleData: Record<string, TemplateData> = {
-  "account-created": accountCreated,
+  "wishlist-back-in-stock": wishlistBackInStock,
   "loyalty-welcome": loyaltyWelcome,
   "order-confirmation": orderConfirmation,
   "order-shipped": orderShipped,

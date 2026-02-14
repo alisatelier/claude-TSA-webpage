@@ -51,7 +51,7 @@ export default function Footer() {
                 <FontAwesomeIcon icon={faTiktok} className="w-5 h-5" />
               </a>
               <a
-                href="mailto:hello@thespiritatelier.com"
+                href="mailto:hello@thespiritatelier.ca"
                 aria-label="Email"
                 className="text-white/70 hover:text-blush transition-colors"
               >

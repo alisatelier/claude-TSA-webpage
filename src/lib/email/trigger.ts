@@ -3,8 +3,8 @@ import { renderTemplate, DEFAULT_SUBJECTS, type TemplateData } from "./templates
 import { sendEmail } from "./send";
 import { emailLayout, fillPlaceholders } from "./layout";
 import { calculateTier, getTierBenefits } from "@/lib/loyalty-utils";
-import { formatOrderNumber } from "@/lib/order-utils";
-import { services } from "@/lib/data";
+import { formatOrderNumber, resolveProduct } from "@/lib/order-utils";
+import { services, products } from "@/lib/data";
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
@@ -44,18 +44,29 @@ async function buildAndSend(
 
 // ── Trigger Functions ───────────────────────────────────────────────
 
-export async function triggerAccountCreatedEmail(userId: string) {
+export async function triggerWishlistBackInStockEmail(
+  userId: string,
+  productId: string,
+  variation?: string
+) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    include: { loyalty: true },
+    select: { email: true, name: true },
   });
-  if (!user?.email || !user.loyalty) return;
+  if (!user?.email) return;
+
+  const resolved = resolveProduct(productId, variation);
+  const product = products.find((p) => p.id === productId);
 
   await buildAndSend(
-    "account-created",
+    "wishlist-back-in-stock",
     {
       firstName: user.name?.split(" ")[0] ?? "there",
-      referralCode: user.loyalty.referralCode,
+      productName: resolved.name,
+      productImage: resolved.image,
+      variation,
+      price: product?.price ?? 0,
+      productUrl: `/shop/${productId}`,
     },
     user.email
   );
@@ -203,15 +214,18 @@ export async function triggerReferralCompletedEmail(
       firstName: user.name?.split(" ")[0] ?? "there",
       referredName,
       creditsEarned: 200,
+      credits: user.loyalty?.currentCredits ?? 0,
     },
     user.email
   );
 }
 
 export async function triggerStatusUpgradeEmail(userId: string, newTier: string) {
+  if (newTier !== "Keeper" && newTier !== "Elder") return;
+
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { email: true, name: true },
+    include: { loyalty: true },
   });
   if (!user?.email) return;
 
@@ -223,6 +237,7 @@ export async function triggerStatusUpgradeEmail(userId: string, newTier: string)
       firstName: user.name?.split(" ")[0] ?? "there",
       newTier,
       benefits,
+      credits: user.loyalty?.currentCredits ?? 0,
     },
     user.email
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useCart } from "@/lib/CartContext";
 import { useAuth } from "@/lib/AuthContext";
@@ -13,6 +14,16 @@ import { faHeart as faHeartRegular } from "@fortawesome/free-regular-svg-icons";
 
 export default function WishlistPage() {
   const { wishlist, toggleWishlist } = useCart();
+  const [productRatings, setProductRatings] = useState<
+    Record<string, { average: number; count: number }>
+  >({});
+
+  useEffect(() => {
+    fetch("/api/reviews/ratings")
+      .then((res) => (res.ok ? res.json() : { ratings: {} }))
+      .then((data) => setProductRatings(data.ratings ?? {}))
+      .catch(() => {});
+  }, []);
   const { formatPrice, getProductPrice } = useCurrency();
   const { user, isLoggedIn, tier } = useAuth();
 
@@ -126,6 +137,7 @@ export default function WishlistPage() {
                         key={`${entry.product.id}-${entry.variation || ""}`}
                         product={entry.product}
                         savedVariation={entry.variation}
+                        averageRating={productRatings[entry.product.id]?.average}
                       />
                     ))}
                   </div>
