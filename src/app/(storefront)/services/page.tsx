@@ -23,8 +23,10 @@ export default function ServicesPage() {
   const [addOnSelected, setAddOnSelected] = useState(false);
   const [holdError, setHoldError] = useState("");
   const [addedToCart, setAddedToCart] = useState(false);
+  const [blockedSlots, setBlockedSlots] = useState<Set<string>>(new Set());
+  const [loadingSlots, setLoadingSlots] = useState(false);
 
-  const timeSlots = ["10:00 AM", "11:30 AM", "1:00 PM", "2:30 PM", "4:00 PM"];
+  const timeSlots = ["12:00 PM", "2:00 PM", "4:00 PM", "6:00 PM", "8:00 PM"];
 
   const activeHold = getActiveHold();
   const currentService = bookingService ? services.find((s) => s.id === bookingService) : null;
@@ -251,37 +253,56 @@ export default function ServicesPage() {
                       type="date"
                       value={selectedDate}
                       onChange={(e) => {
-                        setSelectedDate(e.target.value);
+                        const newDate = e.target.value;
+                        setSelectedDate(newDate);
                         setSelectedTime("");
+                        if (newDate) {
+                          setLoadingSlots(true);
+                          fetch(`/api/schedule/availability?date=${newDate}`)
+                            .then((res) => res.ok ? res.json() : { blockedSlots: [] })
+                            .then((data) => setBlockedSlots(new Set(data.blockedSlots ?? [])))
+                            .catch(() => setBlockedSlots(new Set()))
+                            .finally(() => setLoadingSlots(false));
+                        } else {
+                          setBlockedSlots(new Set());
+                        }
                       }}
                       className="w-full px-4 py-3 border border-navy/20 rounded-lg text-navy focus:outline-none focus:border-navy mb-6"
                       min={new Date().toISOString().split("T")[0]}
                     />
                     <h4 className="text-sm font-semibold text-navy mb-4 uppercase tracking-wider">Select a Time</h4>
                     <div className="grid grid-cols-2 gap-2 mb-6">
-                      {timeSlots.map((time) => {
-                        const taken = selectedDate && currentService
-                          ? isSlotTaken(currentService.id, selectedDate, time)
-                          : false;
-                        return (
-                          <button
-                            key={time}
-                            onClick={() => !taken && setSelectedTime(time)}
-                            disabled={taken || !selectedDate}
-                            className={`px-4 py-2.5 rounded-lg text-sm border transition-colors ${
-                              taken
-                                ? "border-navy/10 bg-navy/5 text-mauve/50 cursor-not-allowed"
-                                : selectedTime === time
-                                ? "border-navy bg-navy text-white"
-                                : !selectedDate
-                                ? "border-navy/10 text-mauve/50 cursor-not-allowed"
-                                : "border-navy/20 text-navy hover:border-navy"
-                            }`}
-                          >
-                            {taken ? `${time} — Unavailable` : time}
-                          </button>
-                        );
-                      })}
+                      {loadingSlots ? (
+                        <p className="col-span-2 text-sm text-mauve py-2">Loading availability...</p>
+                      ) : blockedSlots.size === timeSlots.length && selectedDate ? (
+                        <p className="col-span-2 text-sm text-mauve py-2">No time slots available for this date.</p>
+                      ) : (
+                        timeSlots.map((time) => {
+                          const taken = selectedDate && currentService
+                            ? isSlotTaken(currentService.id, selectedDate, time)
+                            : false;
+                          const blocked = blockedSlots.has(time);
+                          const unavailable = taken || blocked;
+                          return (
+                            <button
+                              key={time}
+                              onClick={() => !unavailable && setSelectedTime(time)}
+                              disabled={unavailable || !selectedDate}
+                              className={`px-4 py-2.5 rounded-lg text-sm border transition-colors ${
+                                unavailable
+                                  ? "border-navy/10 bg-navy/5 text-mauve/50 cursor-not-allowed"
+                                  : selectedTime === time
+                                  ? "border-navy bg-navy text-white"
+                                  : !selectedDate
+                                  ? "border-navy/10 text-mauve/50 cursor-not-allowed"
+                                  : "border-navy/20 text-navy hover:border-navy"
+                              }`}
+                            >
+                              {unavailable ? `${time} — Unavailable` : time}
+                            </button>
+                          );
+                        })
+                      )}
                     </div>
                     <button
                       onClick={() => setBookingStep(2)}

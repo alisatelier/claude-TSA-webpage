@@ -27,6 +27,7 @@ export default async function AdminUsersPage({
   const [users, total] = await Promise.all([
     prisma.user.findMany({
       where,
+      include: { loyalty: { select: { currentCredits: true } } },
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * PER_PAGE,
       take: PER_PAGE,
@@ -92,7 +93,7 @@ export default async function AdminUsersPage({
                   <td className="px-4 py-3">
                     <Badge status={user.role} />
                   </td>
-                  <td className="px-4 py-3">{user.ritualCredits}</td>
+                  <td className="px-4 py-3">{user.loyalty?.currentCredits ?? 0}</td>
                   <td className="px-4 py-3 text-gray-500">
                     {user.createdAt.toLocaleDateString()}
                   </td>

@@ -293,7 +293,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       deductCredits(validCredits, `Redeemed ${validCredits} credits ($${actualDiscount} off)`);
     }
 
-    recordPurchase(productIds, finalCADTotal, currency);
+    const purchaseItems = items.map((i) => ({
+      productId: i.productId,
+      name: i.name,
+      unitPrice: Math.round((i.cadPrice ?? i.price) * 100),
+      quantity: i.quantity,
+      variation: i.variation,
+      image: i.image,
+    }));
+
+    recordPurchase(productIds, finalCADTotal, currency, purchaseItems);
     setItems([]);
     setAppliedCredits(0);
     if (isLoggedIn) {

@@ -6,6 +6,7 @@ import { formatOrderNumber, resolveProduct } from "@/lib/order-utils";
 import Badge from "../../components/ui/Badge";
 import OrderDetailActions from "./OrderDetailActions";
 import DetailTrackingInput from "./DetailTrackingInput";
+import OrderPdfButton from "./OrderPdfButton";
 
 export default async function AdminOrderDetailPage({
   params,
@@ -27,10 +28,20 @@ export default async function AdminOrderDetailPage({
 
   if (!order) notFound();
 
-  const resolvedItems = order.items.map((item) => ({
-    ...item,
-    ...resolveProduct(item.productId),
-  }));
+  const resolvedItems = order.items.map((item) => {
+    // Use stored data if available; fall back to resolveProduct for pre-migration orders
+    if (item.name) {
+      return {
+        ...item,
+        image: item.image || resolveProduct(item.productId).image,
+        isService: false,
+      };
+    }
+    return {
+      ...item,
+      ...resolveProduct(item.productId),
+    };
+  });
 
   return (
     <div className="max-w-4xl">
@@ -49,7 +60,31 @@ export default async function AdminOrderDetailPage({
             </h1>
             <Badge status={order.status} />
           </div>
-          <OrderDetailActions orderId={order.id} currentStatus={order.status} />
+          <div className="flex items-center gap-2">
+            <OrderPdfButton
+              order={{
+                orderNumber: order.orderNumber,
+                status: order.status,
+                totalAmount: order.totalAmount,
+                refundAmount: order.refundAmount,
+                trackingNumber: order.trackingNumber,
+                createdAt: order.createdAt.toISOString(),
+                customer: { name: order.user.name ?? "", email: order.user.email },
+                items: resolvedItems.map((item) => ({
+                  name: item.name,
+                  variation: item.variation ?? null,
+                  quantity: item.quantity,
+                  unitPrice: item.unitPrice,
+                })),
+              }}
+            />
+            <OrderDetailActions
+              orderId={order.id}
+              currentStatus={order.status}
+              totalAmount={order.totalAmount}
+              refundAmount={order.refundAmount}
+            />
+          </div>
         </div>
       </div>
 
@@ -80,6 +115,23 @@ export default async function AdminOrderDetailPage({
               ${(order.totalAmount / 100).toFixed(2)}
             </dd>
           </div>
+          {order.refundAmount > 0 && (
+            <>
+              <div>
+                <dt className="text-gray-500">Refunded</dt>
+                <dd className="font-medium text-amber-700">
+                  -${(order.refundAmount / 100).toFixed(2)}{" "}
+                  ({Math.round((order.refundAmount / order.totalAmount) * 100)}%)
+                </dd>
+              </div>
+              <div>
+                <dt className="text-gray-500">Net Total</dt>
+                <dd className="font-medium">
+                  ${((order.totalAmount - order.refundAmount) / 100).toFixed(2)}
+                </dd>
+              </div>
+            </>
+          )}
           <div>
             <dt className="text-gray-500">Date</dt>
             <dd>{order.createdAt.toLocaleDateString()}</dd>
@@ -121,7 +173,15 @@ export default async function AdminOrderDetailPage({
                 <p className="text-sm font-medium text-gray-900 truncate">
                   {item.name}
                 </p>
-                <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
+                {item.variation && (
+                  <p className="text-xs text-indigo-600">{item.variation}</p>
+                )}
+                <p className="text-xs text-gray-500">
+                  Qty: {item.quantity}
+                  {item.unitPrice > 0 && (
+                    <> &middot; ${(item.unitPrice / 100).toFixed(2)} each</>
+                  )}
+                </p>
               </div>
               {item.isService && (
                 <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-purple-100 text-purple-800">

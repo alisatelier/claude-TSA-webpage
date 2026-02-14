@@ -4,10 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
+  faHandshake,
   faHeart,
   faPaintbrush,
-  faSun,
 } from "@fortawesome/free-solid-svg-icons";
+
 import ChapterDownloadForm from "@/components/ChapterDownloadForm";
 
 export default function AboutPage() {
@@ -145,7 +146,7 @@ export default function AboutPage() {
                 Intentional
               </h3>
               <p className="text-navy/70 text-sm">
-                Every product is designed with purpose, not spectacle.
+                Every product is designed with purpose, and intention.
               </p>
             </div>
 
@@ -165,8 +166,8 @@ export default function AboutPage() {
             </div>
 
             <div>
-              <div className="w-14 h-14 bg-white rounded-full mx-auto mb-4flex items-center justify-center">
-                <FontAwesomeIcon icon={faSun} className="w-6 h-6 text-navy" />
+              <div className="w-14 h-14 bg-white rounded-full mx-auto mb-4 flex items-center justify-center">
+                <FontAwesomeIcon icon={faHandshake} className="w-6 h-6 text-navy" />
               </div>
               <h3 className="font-heading text-xl text-navy mb-2">
                 Accessible

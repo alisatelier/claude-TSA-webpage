@@ -2,7 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { formatOrderNumber } from "@/lib/order-utils";
+import { formatOrderNumber, resolveProduct } from "@/lib/order-utils";
 import Badge from "../../components/ui/Badge";
 import CreditAdjustForm from "./CreditAdjustForm";
 import DeleteUserButton from "./DeleteUserButton";
@@ -22,6 +22,11 @@ export default async function AdminUserDetailPage({
     include: {
       orders: { orderBy: { createdAt: "desc" }, take: 10 },
       wishlistItems: true,
+      loyalty: true,
+      transactionLog: {
+        orderBy: { createdAt: "desc" },
+        take: 20,
+      },
       ritualCreditLogs: {
         orderBy: { createdAt: "desc" },
         take: 20,
@@ -56,8 +61,16 @@ export default async function AdminUserDetailPage({
             </dd>
           </div>
           <div>
-            <dt className="text-gray-500">Ritual Credits</dt>
-            <dd className="font-medium">{user.ritualCredits}</dd>
+            <dt className="text-gray-500">Current Credits</dt>
+            <dd className="font-medium">
+              {user.loyalty?.currentCredits ?? 0}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-gray-500">Lifetime Credits</dt>
+            <dd className="font-medium">
+              {user.loyalty?.lifetimeCredits ?? 0}
+            </dd>
           </div>
           <div>
             <dt className="text-gray-500">Joined</dt>
@@ -129,28 +142,52 @@ export default async function AdminUserDetailPage({
       {/* Wishlist */}
       <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
         <h2 className="text-lg font-medium text-gray-900 mb-4">
-          Wishlist Items
+          Wishlist Items ({user.wishlistItems.length})
         </h2>
         {user.wishlistItems.length === 0 ? (
           <p className="text-sm text-gray-500">No wishlist items</p>
         ) : (
-          <ul className="text-sm space-y-1">
-            {user.wishlistItems.map((item) => (
-              <li key={item.id} className="text-gray-700">
-                Product: {item.productId}
-              </li>
-            ))}
-          </ul>
+          <div className="divide-y divide-gray-100">
+            {user.wishlistItems.map((item) => {
+              const resolved = resolveProduct(item.productId);
+              return (
+                <div key={item.id} className="flex items-center gap-3 py-3">
+                  {resolved.image ? (
+                    <img
+                      src={resolved.image}
+                      alt={resolved.name}
+                      className="w-10 h-10 rounded object-cover bg-gray-100"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded bg-gray-100 flex items-center justify-center text-gray-400 text-xs">
+                      N/A
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {resolved.name}
+                    </p>
+                    <p className="text-xs text-gray-400">{item.productId}</p>
+                  </div>
+                  {resolved.isService && (
+                    <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-purple-100 text-purple-800">
+                      Service
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
 
       {/* Credit Log */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <h2 className="text-lg font-medium text-gray-900 mb-4">
-          Ritual Credit Ledger
+          Credit History
         </h2>
-        {user.ritualCreditLogs.length === 0 ? (
-          <p className="text-sm text-gray-500">No credit adjustments</p>
+        {user.transactionLog.length === 0 ? (
+          <p className="text-sm text-gray-500">No credit activity</p>
         ) : (
           <table className="w-full text-sm">
             <thead className="border-b border-gray-200">
@@ -159,7 +196,10 @@ export default async function AdminUserDetailPage({
                   Amount
                 </th>
                 <th className="text-left py-2 font-medium text-gray-600">
-                  Reason
+                  Action
+                </th>
+                <th className="text-left py-2 font-medium text-gray-600">
+                  Balance
                 </th>
                 <th className="text-left py-2 font-medium text-gray-600">
                   Date
@@ -167,15 +207,16 @@ export default async function AdminUserDetailPage({
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {user.ritualCreditLogs.map((log) => (
+              {user.transactionLog.map((log) => (
                 <tr key={log.id}>
                   <td
-                    className={`py-2 font-medium ${log.amount > 0 ? "text-green-600" : "text-red-600"}`}
+                    className={`py-2 font-medium ${log.credits > 0 ? "text-green-600" : "text-red-600"}`}
                   >
-                    {log.amount > 0 ? "+" : ""}
-                    {log.amount}
+                    {log.credits > 0 ? "+" : ""}
+                    {log.credits}
                   </td>
-                  <td className="py-2 text-gray-700">{log.reason}</td>
+                  <td className="py-2 text-gray-700">{log.action}</td>
+                  <td className="py-2 text-gray-500">{log.runningBalance}</td>
                   <td className="py-2 text-gray-500">
                     {log.createdAt.toLocaleDateString()}
                   </td>

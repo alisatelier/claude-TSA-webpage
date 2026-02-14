@@ -36,6 +36,32 @@ export async function updateTrackingNumber(
   revalidatePath(`/admin/orders/${orderId}`);
 }
 
+export async function refundOrder(orderId: string, refundAmountCents: number) {
+  await requireAdmin();
+
+  if (refundAmountCents <= 0) {
+    throw new Error("Refund amount must be greater than zero");
+  }
+
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!order) throw new Error("Order not found");
+
+  const remaining = order.totalAmount - order.refundAmount;
+  if (refundAmountCents > remaining) {
+    throw new Error(
+      `Refund amount ($${(refundAmountCents / 100).toFixed(2)}) exceeds remaining refundable amount ($${(remaining / 100).toFixed(2)})`
+    );
+  }
+
+  await prisma.order.update({
+    where: { id: orderId },
+    data: { refundAmount: { increment: refundAmountCents } },
+  });
+
+  revalidatePath("/admin/orders");
+  revalidatePath(`/admin/orders/${orderId}`);
+}
+
 export async function exportOrderCsv(filters?: {
   status?: OrderStatus;
   q?: string;
@@ -54,10 +80,10 @@ export async function exportOrderCsv(filters?: {
     orderBy: { createdAt: "desc" },
   });
 
-  const header = "Order #,Email,Status,Total,Tracking,Date";
+  const header = "Order #,Email,Status,Total,Refund,Tracking,Date";
   const rows = orders.map(
     (o) =>
-      `${o.orderNumber},${o.user.email},${o.status},${(o.totalAmount / 100).toFixed(2)},${o.trackingNumber ?? ""},${o.createdAt.toISOString()}`
+      `${o.orderNumber},${o.user.email},${o.status},${(o.totalAmount / 100).toFixed(2)},${(o.refundAmount / 100).toFixed(2)},${o.trackingNumber ?? ""},${o.createdAt.toISOString()}`
   );
   return [header, ...rows].join("\n");
 }

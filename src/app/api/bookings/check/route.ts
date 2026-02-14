@@ -13,6 +13,29 @@ export async function GET(request: Request) {
 
   const now = new Date();
 
+  // Check schedule blocks first
+  const dateObj = new Date(date + "T12:00:00");
+  const dayOfWeek = dateObj.getDay();
+
+  const scheduleBlock = await prisma.scheduleBlock.findFirst({
+    where: {
+      OR: [
+        // Full day recurring block
+        { isRecurring: true, dayOfWeek, time: null },
+        // Specific slot recurring block
+        { isRecurring: true, dayOfWeek, time },
+        // Full day date-specific block
+        { isRecurring: false, date, time: null },
+        // Specific slot date-specific block
+        { isRecurring: false, date, time },
+      ],
+    },
+  });
+
+  if (scheduleBlock) {
+    return NextResponse.json({ taken: true });
+  }
+
   const existing = await prisma.serviceBooking.findFirst({
     where: {
       serviceId,

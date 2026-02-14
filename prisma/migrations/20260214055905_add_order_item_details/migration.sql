@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "OrderItem" ADD COLUMN     "image" TEXT NOT NULL DEFAULT '',
+ADD COLUMN     "name" TEXT NOT NULL DEFAULT '',
+ADD COLUMN     "unitPrice" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "variation" TEXT;

@@ -31,7 +31,16 @@ export default async function AdminOrdersPage({
     where.status = statusFilter;
   }
   if (q) {
-    where.user = { email: { contains: q, mode: "insensitive" } };
+    const stripped = q.replace(/^#/, "");
+    const asNum = parseInt(stripped, 10);
+    if (!isNaN(asNum) && /^\d+$/.test(stripped)) {
+      where.OR = [
+        { orderNumber: asNum },
+        { user: { email: { contains: q, mode: "insensitive" } } },
+      ];
+    } else {
+      where.user = { email: { contains: q, mode: "insensitive" } };
+    }
   }
 
   const [orders, total] = await Promise.all([
@@ -60,7 +69,7 @@ export default async function AdminOrdersPage({
       </div>
 
       <div className="flex items-center gap-3 mb-4">
-        <SearchInput placeholder="Search by email..." />
+        <SearchInput placeholder="Search by email or order #..." />
         <StatusFilter current={statusFilter} />
       </div>
 

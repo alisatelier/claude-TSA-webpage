@@ -115,14 +115,17 @@ model TransactionLog {
 }
 
 model Review {
-  id                    String   @id @default(cuid())
+  id                    String    @id @default(cuid())
   userId                String
-  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   productId             String
   rating                Int
   text                  String
-  createdAt             DateTime @default(now())
+  approved              Boolean   @default(false)
+  adminResponse         String?
+  adminResponseAt       DateTime?
+  createdAt             DateTime  @default(now())
 
   @@unique([userId, productId])
 }
@@ -147,6 +150,7 @@ model Order {
   status                OrderStatus @default(PROCESSING)
   totalAmount           Int
   trackingNumber        String?
+  refundAmount          Int         @default(0)
   createdAt             DateTime    @default(now())
 
   items                 OrderItem[]
@@ -159,6 +163,10 @@ model OrderItem {
 
   productId             String
   quantity              Int
+  name                  String   @default("")
+  unitPrice             Int      @default(0)
+  variation             String?
+  image                 String   @default("")
 }
 
 model RitualCreditLog {
@@ -227,4 +235,28 @@ model CartItem {
   selectedTime String?
 
   @@unique([cartId, productId, variation])
+}
+
+model ProductStock {
+  id          String   @id @default(cuid())
+  productId   String
+  variation   String?
+  stock       Int      @default(0)
+  updatedAt   DateTime @updatedAt
+
+  @@unique([productId, variation])
+  @@index([productId])
+}
+
+model ScheduleBlock {
+  id          String   @id @default(cuid())
+  date        String?
+  dayOfWeek   Int?
+  time        String?
+  reason      String?
+  isRecurring Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([date])
+  @@index([dayOfWeek])
 }

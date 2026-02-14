@@ -12,6 +12,8 @@ export interface UserReview {
   rating: number;
   text: string;
   createdAt: string;
+  adminResponse?: string | null;
+  adminResponseAt?: string | null;
 }
 
 export interface PointsHistoryEntry {
@@ -53,7 +55,7 @@ interface AuthContextType {
   logout: () => void;
   addCredits: (amount: number, action: string) => void;
   deductCredits: (amount: number, action: string) => Promise<boolean>;
-  recordPurchase: (productIds: string[], totalSpent: number, currency?: string) => void;
+  recordPurchase: (productIds: string[], totalSpent: number, currency?: string, items?: { productId: string; name: string; unitPrice: number; quantity: number; variation?: string; image: string }[]) => void;
   submitReview: (productId: string, rating: number, text: string) => Promise<boolean>;
   setBirthdayMonth: (month: number) => Promise<void>;
   claimBirthdayCredits: () => Promise<boolean>;
@@ -281,7 +283,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [loyaltyData.currentCredits]);
 
-  const recordPurchase = useCallback((productIds: string[], totalSpent: number, currency?: string) => {
+  const recordPurchase = useCallback((productIds: string[], totalSpent: number, currency?: string, items?: { productId: string; name: string; unitPrice: number; quantity: number; variation?: string; image: string }[]) => {
     const creditsEarned = Math.floor(totalSpent);
 
     // Optimistic update
@@ -314,7 +316,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     fetch("/api/user/purchase", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ productIds, totalSpent, currency }),
+      body: JSON.stringify({ items, productIds, totalSpent, currency }),
     }).catch(() => {});
   }, []);
 

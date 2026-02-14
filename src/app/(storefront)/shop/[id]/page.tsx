@@ -10,9 +10,42 @@ import { useAuth, type UserReview } from "@/lib/AuthContext";
 import { StarRating } from "@/components/ProductCard";
 import ProductCard from "@/components/ProductCard";
 import ImageCarousel from "@/components/ImageCarousel";
+import ChapterDownloadForm from "@/components/ChapterDownloadForm";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faHeart, faChevronDown } from "@fortawesome/free-solid-svg-icons";
+import { faHeart, faChevronDown, faStar } from "@fortawesome/free-solid-svg-icons";
 import { faHeart as faHeartRegular } from "@fortawesome/free-regular-svg-icons";
+
+function ChapterDownloadReveal() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="mb-6 border border-navy/10 rounded-xl overflow-hidden">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-cream/50 transition-colors"
+      >
+        <div>
+          <p className="font-heading text-lg text-navy">
+            Interested? Read the First Chapter
+          </p>
+          <p className="text-xs text-mauve mt-0.5">
+            Free download — no purchase necessary
+          </p>
+        </div>
+        <span
+          className={`px-4 py-2 bg-cream text-navy text-xs font-medium tracking-wider uppercase rounded-lg transition-colors hover:bg-navy/90`}
+        >
+          Read &lsquo;The Journey&rsquo;
+        </span>
+      </button>
+      {open && (
+        <div className="px-5 pb-5 pt-2 border-t border-navy/10 animate-slide-up">
+          <ChapterDownloadForm />
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function ProductPage() {
   const params = useParams();
@@ -28,6 +61,8 @@ export default function ProductPage() {
   const [activeTab, setActiveTab] = useState("description"); // For desktop tabs
   const [addedToCart, setAddedToCart] = useState(false);
   const [clientUserReviews, setClientUserReviews] = useState<UserReview[]>([]);
+  const [stockData, setStockData] = useState<Record<string, number> | null>(null);
+  const [allRatings, setAllRatings] = useState<Record<string, { average: number; count: number }>>({});
 
   // Load user reviews from API
   useEffect(() => {
@@ -38,6 +73,28 @@ export default function ProductPage() {
         .catch(() => setClientUserReviews([]));
     }
   }, [product]);
+
+  // Load stock data from API
+  useEffect(() => {
+    if (product) {
+      fetch(`/api/inventory?productId=${encodeURIComponent(product.id)}`)
+        .then((res) => res.ok ? res.json() : null)
+        .then((data) => {
+          if (data?.stock?.[product.id]) {
+            setStockData(data.stock[product.id]);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [product]);
+
+  // Fetch dynamic ratings for related products
+  useEffect(() => {
+    fetch("/api/reviews/ratings")
+      .then((res) => (res.ok ? res.json() : { ratings: {} }))
+      .then((data) => setAllRatings(data.ratings ?? {}))
+      .catch(() => {});
+  }, []);
 
   // Includes images for specific products (shown on product page only)
   const includesImage = useMemo(() => {
@@ -118,6 +175,18 @@ export default function ProductPage() {
     );
   }
 
+  // Compute current stock for selected variation
+  const currentStock = (() => {
+    if (!stockData) return product.stock; // fallback to static
+    if (product.variations.length === 0) {
+      return stockData["_default"] ?? product.stock;
+    }
+    const key = isImperfect ? "Imperfect" : selectedVariation;
+    if (key && stockData[key] !== undefined) return stockData[key];
+    // Sum all variations as fallback
+    return Object.values(stockData).reduce((sum, v) => sum + v, 0);
+  })();
+
   const staticReviews = reviews.filter((r) => r.productId === product.id);
   const userReviews = clientUserReviews;
   const productReviews = [
@@ -129,6 +198,8 @@ export default function ProductPage() {
       verified: r.verified,
       owner: r.owner,
       isUserReview: false,
+      adminResponse: null as string | null,
+      adminResponseAt: null as string | null,
     })),
     ...userReviews.map((r) => ({
       id: r.id,
@@ -136,11 +207,15 @@ export default function ProductPage() {
       rating: r.rating,
       text: r.text,
       verified: true,
-      owner:false,
+      owner: false,
       isUserReview: true,
+      adminResponse: r.adminResponse ?? null,
+      adminResponseAt: r.adminResponseAt ?? null,
     })),
   ];
-  const totalReviewCount = product.reviewCount + userReviews.length;
+  const averageRating = productReviews.length > 0
+    ? Math.round((productReviews.reduce((sum, r) => sum + r.rating, 0) / productReviews.length) * 10) / 10
+    : product.rating;
   const isWishlisted = wishlist.includes(product.id);
   const relatedProducts = products.filter((p) => p.id !== product.id).slice(0, 4);
 
@@ -192,6 +267,7 @@ export default function ProductPage() {
                 alt={product.name}
                 variationSelected={variationSelected}
               />
+              <p className="text-xs text-mauve/60 mt-2 text-center italic">Photo Credit: Logee Photos</p>
             </div>
 
             <div>
@@ -208,8 +284,11 @@ export default function ProductPage() {
               <p className="font-accent italic text-mauve text-lg mb-4">{product.shortDescription}</p>
 
               <div className="flex items-center gap-2 mb-4">
-                <StarRating rating={product.rating} size="md" />
-                <span className="text-sm text-mauve">({totalReviewCount} reviews)</span>
+                <StarRating rating={averageRating} size="md" />
+                <span className="text-sm text-mauve flex items-center gap-1">
+                  ({averageRating.toFixed(1)}{" "}
+                  <FontAwesomeIcon icon={faStar} className="w-3 h-3 text-[#FEDDE8]" />)
+                </span>
               </div>
 
               <div className="flex items-center gap-3 mb-6">
@@ -226,8 +305,8 @@ export default function ProductPage() {
 
             
 
-              {product.stock <= 2 && product.stock > 0 && (
-                <p className="text-sm text-blush font-medium mb-4">Only {product.stock} left in stock!</p>
+              {currentStock <= 2 && currentStock > 0 && (
+                <p className="text-sm text-blush font-medium mb-4">Only {currentStock} left in stock!</p>
               )}
 
               <div className="bg-cream rounded-lg p-4 mb-6">
@@ -285,10 +364,14 @@ export default function ProductPage() {
                   <span className="px-4 py-3 font-medium text-navy min-w-[3rem] text-center">{quantity}</span>
                   <button onClick={() => setQuantity(quantity + 1)} className="px-4 py-3 text-navy hover:bg-cream transition-colors">+</button>
                 </div>
-                <button onClick={handleAddToCart} disabled={product.stock === 0}
-                  className={`flex-1 py-3.5 font-medium rounded-lg text-sm tracking-wider uppercase transition-colors ${addedToCart ? "bg-[#A69FA5] text-white" : product.stock === 0 ? "bg-mauve/30 text-mauve cursor-not-allowed" : "bg-navy text-white hover:bg-navy/90"}`}
-                >{addedToCart ? "Added!" : product.stock === 0 ? "Out of Stock" : "Add to Cart"}</button>
+                <button onClick={handleAddToCart} disabled={currentStock === 0}
+                  className={`flex-1 py-3.5 font-medium rounded-lg text-sm tracking-wider uppercase transition-colors ${addedToCart ? "bg-[#A69FA5] text-white" : currentStock === 0 ? "bg-mauve/30 text-mauve cursor-not-allowed" : "bg-navy text-white hover:bg-navy/90"}`}
+                >{addedToCart ? "Added!" : currentStock === 0 ? "Out of Stock" : "Add to Cart"}</button>
               </div>
+
+              {product.id === "my-intuition-made-me-do-it" && (
+                <ChapterDownloadReveal />
+              )}
 
               <div className="flex items-center justify-between gap-4 mb-8">
 
@@ -428,11 +511,11 @@ export default function ProductPage() {
         </div>
       </section>
 
-      <section className="py-12 px-4">
+      <section className="py-12 px-4 overflow-hidden">
         <div className="max-w-4xl mx-auto">
           <h2 className="font-heading text-3xl text-navy mb-8">Customer Reviews</h2>
           {productReviews.length > 0 ? (
-            <div className="space-y-6">
+            <div className="space-y-6 max-h-[25rem] overflow-y-auto pr-2">
               {productReviews.map((review) => (
                 <div key={review.id} className="bg-navy rounded-xl p-6">
                   <div className="flex items-center justify-between mb-3">
@@ -446,6 +529,16 @@ export default function ProductPage() {
                     <StarRating rating={review.rating} />
                   </div>
                   <p className="text-cream text-sm leading-relaxed">{review.text}</p>
+                  {review.adminResponse && (
+                    <div className="mt-4 bg-white rounded-xl p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="font-medium text-navy">A. K. Bird</span>
+                        <span className="px-2 py-0.5 bg-cream text-navy text-[10px] font-medium tracking-wider uppercase rounded-full">Owner</span>
+                          <span className="px-2 py-0.5 bg-mauve text-cream text-[10px] font-medium tracking-wider uppercase rounded-full">Verified</span>
+                      </div>
+                      <p className="text-mauve text-sm leading-relaxed">{review.adminResponse}</p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -461,7 +554,7 @@ export default function ProductPage() {
         <div className="max-w-7xl mx-auto">
           <h2 className="font-heading text-3xl text-navy mb-8 text-center">You May Also Like</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {relatedProducts.map((p) => (<ProductCard key={p.id} product={p} />))}
+            {relatedProducts.map((p) => (<ProductCard key={p.id} product={p} averageRating={allRatings[p.id]?.average} />))}
           </div>
         </div>
       </section>

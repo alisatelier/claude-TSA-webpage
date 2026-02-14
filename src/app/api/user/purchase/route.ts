@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -9,10 +10,11 @@ export async function POST(request: Request) {
   }
 
   const userId = session.user.id;
-  const { productIds, totalSpent, currency } = await request.json();
+  const { productIds, items, totalSpent, currency } = await request.json();
 
-  if (!productIds?.length || totalSpent == null) {
-    return NextResponse.json({ error: "productIds and totalSpent are required" }, { status: 400 });
+  // Accept either `items` (new format) or `productIds` (legacy)
+  if ((!items?.length && !productIds?.length) || totalSpent == null) {
+    return NextResponse.json({ error: "items (or productIds) and totalSpent are required" }, { status: 400 });
   }
 
   const loyalty = await prisma.loyalty.findUnique({ where: { userId } });
@@ -25,26 +27,56 @@ export async function POST(request: Request) {
   const newLifetime = loyalty.lifetimeCredits + creditsEarned;
   const newLockedCurrency = loyalty.lockedCurrency ?? (currency || null);
 
-  // Create order with atomic sequential orderNumber
+  // Create order with sequential orderNumber
   const order = await prisma.$transaction(async (tx) => {
-    const result = await tx.$queryRaw<[{ max: number | null }]>`
-      SELECT MAX("orderNumber") as max FROM "Order" FOR UPDATE
-    `;
-    const nextNumber = (result[0].max ?? 10) + 1;
+    const lastOrder = await tx.order.findFirst({
+      orderBy: { orderNumber: "desc" },
+      select: { orderNumber: true },
+    });
+    const nextNumber = (lastOrder?.orderNumber ?? 10) + 1;
 
-    return tx.order.create({
+    const orderItems = items
+      ? items.map((item: { productId: string; name: string; unitPrice: number; quantity: number; variation?: string; image: string }) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          name: item.name,
+          unitPrice: item.unitPrice,
+          variation: item.variation ?? null,
+          image: item.image,
+        }))
+      : productIds.map((pid: string) => ({
+          productId: pid,
+          quantity: 1,
+        }));
+
+    const order = await tx.order.create({
       data: {
         userId,
         orderNumber: nextNumber,
         totalAmount: Math.round(totalSpent * 100), // Store in cents
-        items: {
-          create: productIds.map((pid: string) => ({
-            productId: pid,
-            quantity: 1,
-          })),
-        },
+        items: { create: orderItems },
       },
     });
+
+    // Decrement stock for each ordered item
+    for (const item of orderItems) {
+      const variation = item.variation ?? "_default";
+      try {
+        await tx.productStock.update({
+          where: {
+            productId_variation: {
+              productId: item.productId,
+              variation,
+            },
+          },
+          data: { stock: { decrement: item.quantity } },
+        });
+      } catch {
+        // Stock entry may not exist — skip
+      }
+    }
+
+    return order;
   });
 
   // Update loyalty
@@ -102,6 +134,8 @@ export async function POST(request: Request) {
       });
     }
   }
+
+  revalidatePath("/admin/orders");
 
   return NextResponse.json({ success: true, orderId: order.id, orderNumber: order.orderNumber, creditsEarned });
 }

@@ -158,7 +158,7 @@ function ProductCardCarousel({ images, alt, syncIndex }: { images: string[]; alt
   );
 }
 
-export default function ProductCard({ product, syncIndex }: { product: Product; syncIndex?: number }) {
+export default function ProductCard({ product, syncIndex, averageRating }: { product: Product; syncIndex?: number; averageRating?: number }) {
   const { toggleWishlist, wishlist } = useCart();
   const { formatPrice, getProductPrice } = useCurrency();
   const isWishlisted = wishlist.includes(product.id);
@@ -216,8 +216,11 @@ export default function ProductCard({ product, syncIndex }: { product: Product; 
 
         {/* Reviews - fixed height */}
         <div className="flex items-center gap-2 mb-3 h-5">
-          <StarRating rating={product.rating} />
-          <span className="text-xs text-mauve">({product.reviewCount})</span>
+          <StarRating rating={averageRating ?? product.rating} />
+          <span className="text-xs text-mauve flex items-center gap-0.5">
+            ({(averageRating ?? product.rating).toFixed(1)}{" "}
+            <FontAwesomeIcon icon={faStar} className="w-2.5 h-2.5 text-[#FEDDE8]" />)
+          </span>
         </div>
 
         {/* Badges - flexible area that grows */}

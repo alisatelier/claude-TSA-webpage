@@ -85,10 +85,11 @@ export async function POST(request: Request) {
       const existingOrders = await prisma.order.count({ where: { userId } });
       if (existingOrders === 0) {
         await prisma.$transaction(async (tx) => {
-          const result = await tx.$queryRaw<[{ max: number | null }]>`
-            SELECT MAX("orderNumber") as max FROM "Order" FOR UPDATE
-          `;
-          const nextNumber = (result[0].max ?? 10) + 1;
+          const lastOrder = await tx.order.findFirst({
+            orderBy: { orderNumber: "desc" },
+            select: { orderNumber: true },
+          });
+          const nextNumber = (lastOrder?.orderNumber ?? 10) + 1;
 
           await tx.order.create({
             data: {

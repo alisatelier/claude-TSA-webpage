@@ -64,7 +64,7 @@ export default function AccountPage() {
         title: "My Orders",
         desc: "View order history and tracking",
         icon: faClipboardList,
-        href: "",
+        href: "/account/orders",
       },
       {
         title: "My Wishlist",

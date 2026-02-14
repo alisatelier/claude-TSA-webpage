@@ -56,8 +56,8 @@ export default function HomePage() {
           />
           {/*} DO NOT CHANGE THE SPIIT ATELIE  THERE ARE SPECIAL CHARACTERS */}
           <h1 className="font-heading text-5xl md:text-7xl text-white mb-4 leading-tight">
-            THE SPIIT ATELIE    
-                  </h1>
+            THE SPIIT ATELIE
+          </h1>
           <p className="font-accent italic text-white/80 text-xl md:text-2xl mb-10">
             May You Find Spirit Here
           </p>
@@ -112,39 +112,14 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* About Snippet */}
-      <section className="py-20 bg-cream">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="font-heading text-4xl md:text-5xl text-navy mb-6">
-            THE SPIIT ATELIE
-          </h2>
-          <p className="font-accent italic text-mauve text-lg mb-4">
-            Where craft meets ceremony
-          </p>
-          <p className="text-navy/80 leading-relaxed mb-8 max-w-2xl mx-auto">
-            We create handcrafted spiritual tools designed to support your
-            journey with clarity, beauty, and intention. Each piece in our
-            collection is made to be returned to — a companion in your practice.
-            Whether you are beginning to explore or deepening an established
-            path, our tools meet you where you are.
-          </p>
-          <Link
-            href="/about"
-            className="inline-block px-8 py-3.5 bg-navy text-white font-medium rounded-lg hover:bg-navy/90 transition-colors text-sm tracking-wider uppercase"
-          >
-            Learn More
-          </Link>
-        </div>
-      </section>
-
       {/* Services Overview */}
-      <section className="py-20 px-4">
+      <section className="py-20 px-4 bg-navy">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="font-heading text-4xl md:text-5xl text-navy mb-3">
+            <h2 className="font-heading text-4xl md:text-5xl text-white mb-3">
               Our Services
             </h2>
-            <p className="font-accent italic text-mauve text-lg">
+            <p className="font-accent italic text-cream text-lg">
               Guidance for your path
             </p>
           </div>
@@ -186,109 +161,115 @@ export default function HomePage() {
         </div>
       </section>
 
-     {/* Testimonials */}
-<section className="py-20 bg-cream">
-  <div className="max-w-5xl mx-auto px-4">
-    <div className="text-center mb-12">
-      <h2 className="font-heading text-4xl md:text-5xl text-navy mb-3">
-        Messages from the Author
-      </h2>
-    </div>
-
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-      {featuredReviews.map((review) => (
-        <div
-          key={review.id}
-          className="bg-white rounded-xl p-8 shadow-[0_4px_12px_rgba(83,91,115,0.08)] flex flex-col"
-        >
-          {/* Content Wrapper */}
-          <div className="flex flex-col gap-4 flex-1">
-
-            {/* Stars */}
-            <div className="flex items-center gap-0.5">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <FontAwesomeIcon
-                  key={star}
-                  icon={faStar}
-                  className={`w-4 h-4 ${
-                    star <= review.rating ? "text-blush" : "text-mauve/30"
-                  }`}
-                />
-              ))}
-            </div>
-
-            {/* Product Title */}
-            <h3 className="text-xl uppercase tracking-wider text-navy font-medium">
-              {review.productName}
-            </h3>
-
-            {/* Review Text */}
-            <p className="font-accent italic text-navy/80 text-sm leading-relaxed whitespace-pre-line">
-              &ldquo;{review.text}&rdquo;
-            </p>
-
+      {/* Testimonials */}
+      <section className="py-20 bg-cream">
+        <div className="max-w-5xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="font-heading text-4xl md:text-5xl text-navy mb-3">
+              Messages from the Author
+            </h2>
           </div>
 
-          {/* Reviewer (Pinned Bottom) */}
-          <div className="pt-6 mt-auto flex items-center gap-2">
-            <span className="text-navy font-medium text-sm">
-              {review.reviewer}
-            </span>
-            {review.owner && (
-              <span className="text-[10px] text-mauve font-medium uppercase tracking-wider">
-                Owner
-              </span>
-            )}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {featuredReviews.map((review) => (
+              <div
+                key={review.id}
+                className="bg-white rounded-xl p-8 shadow-[0_4px_12px_rgba(83,91,115,0.08)] flex flex-col"
+              >
+                {/* Content Wrapper */}
+                <div className="flex flex-col gap-4 flex-1">
+                  {/* Stars */}
+                  <div className="flex items-center gap-0.5">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <FontAwesomeIcon
+                        key={star}
+                        icon={faStar}
+                        className={`w-4 h-4 ${
+                          star <= review.rating ? "text-blush" : "text-mauve/30"
+                        }`}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Product Title */}
+                  <h3 className="text-xl uppercase tracking-wider text-navy font-medium">
+                    {review.productName}
+                  </h3>
+
+                  {/* Review Text */}
+                  <p className="font-accent italic text-navy/80 text-sm leading-relaxed whitespace-pre-line">
+                    &ldquo;{review.text}&rdquo;
+                  </p>
+                </div>
+
+                {/* Reviewer (Pinned Bottom) */}
+                <div className="pt-6 mt-auto flex items-center gap-2">
+                  <span className="text-navy font-medium text-sm">
+                    {review.reviewer}
+                  </span>
+                  {review.owner && (
+                    <span className="text-[10px] text-mauve font-medium uppercase tracking-wider">
+                      Owner
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
-      ))}
-    </div>
-  </div>
-</section>
+      </section>
 
-
-      {/* Newsletter Signup */}
-      <section className="py-20 bg-gradient-to-br from-light-blush via-blush/30 to-cream">
-        <div className="max-w-2xl mx-auto px-4 text-center">
-          <h2 className="font-heading text-4xl md:text-5xl text-navy mb-3">
-            Stay on the Path
+      {/* About Snippet */}
+      <section className="py-20 ">
+        <div className="max-w-4xl mx-auto px-4 text-center">
+          <h2 className="font-heading text-4xl md:text-5xl text-navy mb-6">
+            THE SPIIT ATELIE
           </h2>
-          <p className="font-accent italic text-navy/70 text-lg mb-8">
-            Join our journey — receive spiritual insights and exclusive offers
+          <p className="font-accent italic text-mauve text-lg mb-4">
+            Where craft meets ceremony
           </p>
-          {newsletterSubmitted ? (
-            <div className="bg-white/60 rounded-xl p-8">
-              <p className="font-accent italic text-navy text-lg">
-                Welcome to the journey. Check your inbox for a gift.
-              </p>
-            </div>
-          ) : (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                setNewsletterSubmitted(true);
-              }}
-              className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
+          <p className="text-navy/80 leading-relaxed mb-8 max-w-2xl mx-auto">
+            We create handcrafted spiritual tools designed to support your
+            journey with clarity, beauty, and intention. Each piece in our
+            collection is made to be returned to — a companion in your practice.
+            Whether you are beginning to explore or deepening an established
+            path, our tools meet you where you are.
+          </p>
+          <Link
+            href="/about"
+            className="inline-block px-8 py-3.5 bg-navy text-white font-medium rounded-lg hover:bg-navy/90 transition-colors text-sm tracking-wider uppercase"
+          >
+            Learn More
+          </Link>
+        </div>
+      </section>
+
+      <section className="bg-navy py-20 px-4">
+        <div className="max-w-7xl mx-auto text-center">
+          <div>
+            <h2 className="font-heading text-4xl md:text-5xl text-white mb-6">
+              Belonging Has Its Rewards
+            </h2>
+            <p className="text-white/80 leading-relaxed max-w-2xl mx-auto mb-4">
+              <em>The Atelier Recognizes You </em>is our loyalty program. A quiet
+              gesture of gratitude for those who return, reflect, and
+              participate in the practice.
+            </p>
+            <p className="text-white/70 leading-relaxed max-w-2xl mx-auto">
+              Earn credits through purchases, referrals, and seasonal
+              milestones. Redeem them toward the tools that enhance your
+              journey.
+            </p>
+          </div>
+
+          <span className="mt-10 inline-block">
+            <Link
+              href="/loyalty"
+              className="inline-block px-8 py-3 bg-gradient-to-r from-cream via-white to-cream text-navy font-semibold tracking-wider uppercase rounded-xl shadow-md transition-all duration-300 hover:shadow-lg"
             >
-              <input
-                type="email"
-                value={newsletterEmail}
-                onChange={(e) => setNewsletterEmail(e.target.value)}
-                placeholder="Your email address"
-                className="flex-1 px-5 py-3.5 rounded-lg border border-navy/20 bg-white/80 text-navy placeholder:text-mauve focus:outline-none focus:border-navy transition-colors"
-                required
-              />
-              <button
-                type="submit"
-                className="px-8 py-3.5 bg-navy text-white font-medium rounded-lg hover:bg-navy/90 transition-colors text-sm tracking-wider uppercase"
-              >
-                Subscribe
-              </button>
-            </form>
-          )}
-          <p className="text-xs text-navy/50 mt-4">
-            Get 10% off your first order when you subscribe
-          </p>
+              ✨ Explore the Loyalty Program ✨
+            </Link>
+          </span>
         </div>
       </section>
 

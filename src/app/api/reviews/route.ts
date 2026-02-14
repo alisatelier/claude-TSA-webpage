@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   }
 
   const reviews = await prisma.review.findMany({
-    where: { productId },
+    where: { productId, approved: true },
     include: {
       user: { select: { name: true, email: true } },
     },
@@ -26,6 +26,8 @@ export async function GET(request: Request) {
       rating: r.rating,
       text: r.text,
       createdAt: r.createdAt.toISOString(),
+      adminResponse: r.adminResponse,
+      adminResponseAt: r.adminResponseAt?.toISOString() ?? null,
     })),
   });
 }

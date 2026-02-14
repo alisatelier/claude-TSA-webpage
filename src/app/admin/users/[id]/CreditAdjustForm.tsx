@@ -5,21 +5,31 @@ import { adjustCredits } from "../actions";
 
 export default function CreditAdjustForm({ userId }: { userId: string }) {
   const [isPending, startTransition] = useTransition();
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState<{ text: string; error?: boolean }>({
+    text: "",
+  });
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const formData = new FormData(form);
     const amount = parseInt(formData.get("amount") as string, 10);
     const reason = formData.get("reason") as string;
 
     if (!amount || !reason) return;
 
     startTransition(async () => {
-      await adjustCredits(userId, amount, reason);
-      setMessage("Credits adjusted successfully");
-      (e.target as HTMLFormElement).reset();
-      setTimeout(() => setMessage(""), 3000);
+      try {
+        await adjustCredits(userId, amount, reason);
+        setMessage({ text: "Credits adjusted successfully" });
+        form.reset();
+      } catch (err) {
+        setMessage({
+          text: err instanceof Error ? err.message : "Failed to adjust credits",
+          error: true,
+        });
+      }
+      setTimeout(() => setMessage({ text: "" }), 3000);
     });
   }
 
@@ -52,7 +62,13 @@ export default function CreditAdjustForm({ userId }: { userId: string }) {
       >
         {isPending ? "Saving..." : "Adjust"}
       </button>
-      {message && <span className="text-sm text-green-600">{message}</span>}
+      {message.text && (
+        <span
+          className={`text-sm font-medium ${message.error ? "text-red-600" : "text-green-600"}`}
+        >
+          {message.text}
+        </span>
+      )}
     </form>
   );
 }

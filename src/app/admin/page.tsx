@@ -10,7 +10,7 @@ export default async function AdminDashboard() {
   const now = new Date();
   const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-  const [ordersThisMonth, revenueResult, activeBookings, creditsResult] =
+  const [ordersThisMonth, revenueResult, activeBookings, creditsResult, pendingReviews, lowStockItems] =
     await Promise.all([
       prisma.order.count({
         where: { createdAt: { gte: firstOfMonth } },
@@ -25,6 +25,12 @@ export default async function AdminDashboard() {
       prisma.ritualCreditLog.aggregate({
         where: { amount: { gt: 0 } },
         _sum: { amount: true },
+      }),
+      prisma.review.count({
+        where: { approved: false },
+      }),
+      prisma.productStock.count({
+        where: { stock: { lte: 2 } },
       }),
     ]);
 
@@ -42,6 +48,8 @@ export default async function AdminDashboard() {
         />
         <StatCard label="Active Bookings" value={activeBookings} />
         <StatCard label="Total Credits Issued" value={totalCreditsIssued} />
+        <StatCard label="Pending Reviews" value={pendingReviews} />
+        <StatCard label="Low Stock Items" value={lowStockItems} />
       </div>
     </div>
   );

@@ -36,13 +36,25 @@ export default function Footer() {
               For You, On Your Journey
             </p>
             <div className="flex gap-4">
-              <a href="#" aria-label="Instagram" className="text-white/70 hover:text-blush transition-colors">
+              <a
+                href="#"
+                aria-label="Instagram"
+                className="text-white/70 hover:text-blush transition-colors"
+              >
                 <FontAwesomeIcon icon={faInstagram} className="w-5 h-5" />
               </a>
-              <a href="#" aria-label="TikTok" className="text-white/70 hover:text-blush transition-colors">
+              <a
+                href="#"
+                aria-label="TikTok"
+                className="text-white/70 hover:text-blush transition-colors"
+              >
                 <FontAwesomeIcon icon={faTiktok} className="w-5 h-5" />
               </a>
-              <a href="mailto:hello@thespiritatelier.com" aria-label="Email" className="text-white/70 hover:text-blush transition-colors">
+              <a
+                href="mailto:hello@thespiritatelier.com"
+                aria-label="Email"
+                className="text-white/70 hover:text-blush transition-colors"
+              >
                 <FontAwesomeIcon icon={faEnvelope} className="w-5 h-5" />
               </a>
             </div>
@@ -61,7 +73,10 @@ export default function Footer() {
                 { href: "/contact", label: "Contact" },
               ].map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} className="text-white/70 hover:text-blush text-sm transition-colors">
+                  <Link
+                    href={link.href}
+                    className="text-white/70 hover:text-blush text-sm transition-colors"
+                  >
                     {link.label}
                   </Link>
                 </li>
@@ -80,7 +95,10 @@ export default function Footer() {
                 { href: "/terms", label: "Terms of Service" },
               ].map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} className="text-white/70 hover:text-blush text-sm transition-colors">
+                  <Link
+                    href={link.href}
+                    className="text-white/70 hover:text-blush text-sm transition-colors"
+                  >
                     {link.label}
                   </Link>
                 </li>
@@ -90,32 +108,20 @@ export default function Footer() {
 
           {/* Column 4: Newsletter */}
           <div>
-            <h4 className="font-heading text-lg mb-4">Stay Connected</h4>
+            <h4 className="font-heading text-lg mb-4">
+              The Atelier Recognizes You
+            </h4>
             <p className="text-white/70 text-sm mb-4">
-              Join our journey — receive spiritual insights and exclusive offers.
+              Earn credits for purchases, referrals, and seasonal milestones.
+              Redeem them toward the tools that continue your practice.
             </p>
-            {subscribed ? (
-              <p className="text-blush text-sm font-accent italic">
-                Welcome to the journey. Check your inbox.
-              </p>
-            ) : (
-              <form onSubmit={handleSubscribe} className="flex gap-2">
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Your email"
-                  className="flex-1 px-4 py-2.5 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-white/40 text-sm focus:outline-none focus:border-blush transition-colors"
-                  required
-                />
-                <button
-                  type="submit"
-                  className="px-4 py-2.5 bg-blush text-navy rounded-lg text-sm font-medium hover:bg-light-blush transition-colors"
-                >
-                  Join
-                </button>
-              </form>
-            )}
+
+            <Link
+              href="/loyalty"
+              className="inline-block px-2 py-3 text-sm bg-gradient-to-r from-cream via-white to-cream text-navy font-semibold tracking-wider uppercase rounded-xl shadow-md transition-all duration-300 hover:shadow-lg"
+            >
+              ✨ View Loyalty Program ✨
+            </Link>
           </div>
         </div>
 

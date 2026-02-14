@@ -29,6 +29,25 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "You already have an active hold" }, { status: 409 });
   }
 
+  // Check schedule blocks
+  const dateObj = new Date(selectedDate + "T12:00:00");
+  const dayOfWeek = dateObj.getDay();
+
+  const scheduleBlock = await prisma.scheduleBlock.findFirst({
+    where: {
+      OR: [
+        { isRecurring: true, dayOfWeek, time: null },
+        { isRecurring: true, dayOfWeek, time: selectedTime },
+        { isRecurring: false, date: selectedDate, time: null },
+        { isRecurring: false, date: selectedDate, time: selectedTime },
+      ],
+    },
+  });
+
+  if (scheduleBlock) {
+    return NextResponse.json({ error: "Slot unavailable" }, { status: 409 });
+  }
+
   // Check slot availability
   const slotTaken = await prisma.serviceBooking.findFirst({
     where: {
