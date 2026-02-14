@@ -135,6 +135,21 @@ export async function POST(request: Request) {
     }
   }
 
+  // Remove purchased items from wishlist
+  const orderItems = items ?? productIds.map((pid: string) => ({ productId: pid, variation: null }));
+  for (const item of orderItems) {
+    const variation = item.variation ?? "";
+    try {
+      await prisma.wishlist.delete({
+        where: {
+          userId_productId_variation: { userId, productId: item.productId, variation },
+        },
+      });
+    } catch {
+      // Wishlist entry may not exist — skip
+    }
+  }
+
   revalidatePath("/admin/orders");
 
   return NextResponse.json({ success: true, orderId: order.id, orderNumber: order.orderNumber, creditsEarned });

@@ -349,6 +349,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }));
 
     recordPurchase(productIds, finalCADTotal, currency, purchaseItems);
+
+    // Remove purchased items from wishlist
+    setWishlist((prev) =>
+      prev.filter(
+        (w) => !items.some((i) => i.productId === w.productId && (i.variation || "") === (w.variation || ""))
+      )
+    );
+
     setItems([]);
     setAppliedCredits(0);
     if (isLoggedIn) {
