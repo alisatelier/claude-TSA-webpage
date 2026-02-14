@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { triggerAccountCreatedEmail, triggerLoyaltyWelcomeEmail } from "@/lib/email/trigger";
 
 function generateReferralCode(name: string): string {
   const cleanName = name.toUpperCase().replace(/[^A-Z]/g, "").slice(0, 4) || "USER";
@@ -85,6 +86,10 @@ export async function POST(request: Request) {
         },
       });
     }
+
+    // Fire-and-forget email triggers
+    triggerAccountCreatedEmail(user.id);
+    triggerLoyaltyWelcomeEmail(user.id);
 
     return NextResponse.json({ success: true, userId: user.id });
   } catch (error) {

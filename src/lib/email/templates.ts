@@ -1,9 +1,10 @@
-import { emailLayout } from "./layout";
+import { emailLayout, fillPlaceholders } from "./layout";
 
 // ── Types ──────────────────────────────────────────────────────────
 
 export interface AccountCreatedData {
   firstName: string;
+  referralCode: string;
 }
 
 export interface LoyaltyWelcomeData {
@@ -77,6 +78,13 @@ export type TemplateData =
   | ReferralCompletedData
   | StatusUpgradeData;
 
+export interface RenderedEmail {
+  subject: string;
+  html: string;
+  body: string;
+  variables: Record<string, string>;
+}
+
 // ── Helpers ────────────────────────────────────────────────────────
 
 function btn(text: string, href = "#"): string {
@@ -95,40 +103,63 @@ function fmt(amount: number): string {
   return `$${amount.toFixed(2)}`;
 }
 
+function render(
+  body: string,
+  variables: Record<string, string>,
+  subject: string,
+  preheader: string
+): RenderedEmail {
+  const filledBody = fillPlaceholders(body, variables);
+  return {
+    subject: fillPlaceholders(subject, variables),
+    body,
+    variables,
+    html: emailLayout(filledBody, { preheader: fillPlaceholders(preheader, variables) }),
+  };
+}
+
 // ── Template Render Functions ──────────────────────────────────────
 
-function renderAccountCreated(data: AccountCreatedData) {
-  return {
-    subject: "Welcome to The Spirit Atelier",
-    html: emailLayout(
-      `<p style="margin:0 0 16px;">Dear ${data.firstName},</p>
+function renderAccountCreated(data: AccountCreatedData): RenderedEmail {
+  const variables: Record<string, string> = {
+    firstName: data.firstName,
+    referralCode: data.referralCode,
+  };
+
+  const body = `<p style="margin:0 0 16px;">Dear {{firstName}},</p>
        <p style="margin:0 0 16px;">Welcome to The Spirit Atelier. Your account has been created successfully.</p>
        <p style="margin:0 0 16px;">You now have access to order tracking, saved favourites, and our loyalty programme.</p>
+       <p style="margin:0 0 16px;">Your personal referral code:</p>
+       <div style="background-color:#F2E9E9;padding:16px;text-align:center;border-radius:4px;margin:0 0 16px;">
+         <span style="font-size:18px;letter-spacing:2px;color:#535B73;font-weight:bold;">{{referralCode}}</span>
+       </div>
        ${btn("Visit Your Account")}
-       <p style="margin:0;color:#A69FA6;font-size:13px;">We're so glad you're here.</p>`,
-      { preheader: "Your account is ready" }
-    ),
-  };
+       <p style="margin:0;color:#A69FA6;font-size:13px;">We're so glad you're here.</p>`;
+
+  return render(body, variables, "Welcome to The Spirit Atelier", "Your account is ready");
 }
 
-function renderLoyaltyWelcome(data: LoyaltyWelcomeData) {
-  return {
-    subject: "Your Ritual Credits Await",
-    html: emailLayout(
-      `<p style="margin:0 0 16px;">Dear ${data.firstName},</p>
-       <p style="margin:0 0 16px;">Welcome to our Ritual Rewards programme. You've been gifted <strong>${data.credits} credits</strong> as a welcome bonus.</p>
-       <p style="margin:0 0 16px;">Your current tier: <strong>${data.tier}</strong></p>
+function renderLoyaltyWelcome(data: LoyaltyWelcomeData): RenderedEmail {
+  const variables: Record<string, string> = {
+    firstName: data.firstName,
+    credits: String(data.credits),
+    referralCode: data.referralCode,
+    tier: data.tier,
+  };
+
+  const body = `<p style="margin:0 0 16px;">Dear {{firstName}},</p>
+       <p style="margin:0 0 16px;">Welcome to our Ritual Rewards programme. You've been gifted <strong>{{credits}} credits</strong> as a welcome bonus.</p>
+       <p style="margin:0 0 16px;">Your current tier: <strong>{{tier}}</strong></p>
        <p style="margin:0 0 16px;">Share your referral code with friends and earn even more credits:</p>
        <div style="background-color:#F2E9E9;padding:16px;text-align:center;border-radius:4px;margin:0 0 16px;">
-         <span style="font-size:18px;letter-spacing:2px;color:#535B73;font-weight:bold;">${data.referralCode}</span>
+         <span style="font-size:18px;letter-spacing:2px;color:#535B73;font-weight:bold;">{{referralCode}}</span>
        </div>
-       ${btn("Explore Rewards")}`,
-      { preheader: `You have ${data.credits} credits waiting` }
-    ),
-  };
+       ${btn("Explore Rewards")}`;
+
+  return render(body, variables, "Your Ritual Credits Await", "You have {{credits}} credits waiting");
 }
 
-function renderOrderConfirmation(data: OrderConfirmationData) {
+function renderOrderConfirmation(data: OrderConfirmationData): RenderedEmail {
   const rows = data.items
     .map(
       (item) =>
@@ -142,12 +173,15 @@ function renderOrderConfirmation(data: OrderConfirmationData) {
     )
     .join("");
 
-  return {
-    subject: `Order ${data.orderNumber} Confirmed`,
-    html: emailLayout(
-      `<p style="margin:0 0 16px;">Dear ${data.firstName},</p>
+  const variables: Record<string, string> = {
+    firstName: data.firstName,
+    orderNumber: data.orderNumber,
+    total: fmt(data.total),
+  };
+
+  const body = `<p style="margin:0 0 16px;">Dear {{firstName}},</p>
        <p style="margin:0 0 16px;">Thank you for your order. Here's your confirmation:</p>
-       <p style="margin:0 0 16px;font-size:14px;color:#A69FA6;">Order #${data.orderNumber}</p>
+       <p style="margin:0 0 16px;font-size:14px;color:#A69FA6;">Order #{{orderNumber}}</p>
        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px;">
          <tr style="border-bottom:2px solid #FEDDE8;">
            <td style="padding:8px 0;font-size:13px;color:#A69FA6;font-weight:bold;">Item</td>
@@ -157,125 +191,135 @@ function renderOrderConfirmation(data: OrderConfirmationData) {
          ${rows}
          <tr>
            <td colspan="2" style="padding:12px 0 0;font-size:15px;color:#535B73;font-weight:bold;">Total</td>
-           <td style="padding:12px 0 0;font-size:15px;color:#535B73;font-weight:bold;text-align:right;">${fmt(data.total)}</td>
+           <td style="padding:12px 0 0;font-size:15px;color:#535B73;font-weight:bold;text-align:right;">{{total}}</td>
          </tr>
        </table>
-       ${btn("View Order")}`,
-      { preheader: `Order ${data.orderNumber} confirmed` }
-    ),
-  };
+       ${btn("View Order")}`;
+
+  return render(body, variables, "Order {{orderNumber}} Confirmed", "Order {{orderNumber}} confirmed");
 }
 
-function renderOrderShipped(data: OrderShippedData) {
-  return {
-    subject: "Your Order Has Shipped",
-    html: emailLayout(
-      `<p style="margin:0 0 16px;">Dear ${data.firstName},</p>
-       <p style="margin:0 0 16px;">Your order <strong>#${data.orderNumber}</strong> is on its way.</p>
+function renderOrderShipped(data: OrderShippedData): RenderedEmail {
+  const variables: Record<string, string> = {
+    firstName: data.firstName,
+    orderNumber: data.orderNumber,
+    trackingNumber: data.trackingNumber,
+  };
+
+  const body = `<p style="margin:0 0 16px;">Dear {{firstName}},</p>
+       <p style="margin:0 0 16px;">Your order <strong>#{{orderNumber}}</strong> is on its way.</p>
        <p style="margin:0 0 8px;font-size:14px;color:#A69FA6;">Tracking Number:</p>
        <div style="background-color:#F2E9E9;padding:16px;text-align:center;border-radius:4px;margin:0 0 16px;">
-         <span style="font-size:16px;letter-spacing:1px;color:#535B73;font-weight:bold;">${data.trackingNumber}</span>
+         <span style="font-size:16px;letter-spacing:1px;color:#535B73;font-weight:bold;">{{trackingNumber}}</span>
        </div>
-       ${btn("Track Your Order")}`,
-      { preheader: `Order #${data.orderNumber} has shipped` }
-    ),
-  };
+       ${btn("Track Your Order")}`;
+
+  return render(body, variables, "Your Order Has Shipped", "Order #{{orderNumber}} has shipped");
 }
 
-function renderServiceBookingConfirmation(data: ServiceBookingConfirmationData) {
-  return {
-    subject: "Your Booking Is Confirmed",
-    html: emailLayout(
-      `<p style="margin:0 0 16px;">Dear ${data.firstName},</p>
+function renderServiceBookingConfirmation(data: ServiceBookingConfirmationData): RenderedEmail {
+  const variables: Record<string, string> = {
+    firstName: data.firstName,
+    serviceName: data.serviceName,
+    date: data.date,
+    time: data.time,
+    totalPrice: fmt(data.totalPrice),
+  };
+
+  const body = `<p style="margin:0 0 16px;">Dear {{firstName}},</p>
        <p style="margin:0 0 16px;">Your booking has been confirmed. Here are the details:</p>
        <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px;width:100%;">
          <tr>
            <td style="padding:8px 0;color:#A69FA6;font-size:13px;width:100px;">Service</td>
-           <td style="padding:8px 0;color:#535B73;font-size:15px;font-weight:bold;">${data.serviceName}</td>
+           <td style="padding:8px 0;color:#535B73;font-size:15px;font-weight:bold;">{{serviceName}}</td>
          </tr>
          <tr>
            <td style="padding:8px 0;color:#A69FA6;font-size:13px;">Date</td>
-           <td style="padding:8px 0;color:#535B73;font-size:15px;">${data.date}</td>
+           <td style="padding:8px 0;color:#535B73;font-size:15px;">{{date}}</td>
          </tr>
          <tr>
            <td style="padding:8px 0;color:#A69FA6;font-size:13px;">Time</td>
-           <td style="padding:8px 0;color:#535B73;font-size:15px;">${data.time}</td>
+           <td style="padding:8px 0;color:#535B73;font-size:15px;">{{time}}</td>
          </tr>
          <tr>
            <td style="padding:8px 0;color:#A69FA6;font-size:13px;">Total</td>
-           <td style="padding:8px 0;color:#535B73;font-size:15px;font-weight:bold;">${fmt(data.totalPrice)}</td>
+           <td style="padding:8px 0;color:#535B73;font-size:15px;font-weight:bold;">{{totalPrice}}</td>
          </tr>
        </table>
-       <p style="margin:0;color:#A69FA6;font-size:13px;">We look forward to seeing you.</p>`,
-      { preheader: `${data.serviceName} — ${data.date} at ${data.time}` }
-    ),
-  };
+       <p style="margin:0;color:#A69FA6;font-size:13px;">We look forward to seeing you.</p>`;
+
+  return render(body, variables, "Your Booking Is Confirmed", "{{serviceName}} — {{date}} at {{time}}");
 }
 
-function renderServiceReminder(data: ServiceReminderData) {
-  const prepNote = data.preparationNote
-    ? `<div style="background-color:#F2E9E9;padding:16px;border-radius:4px;margin:0 0 16px;">
-         <p style="margin:0;color:#535B73;font-size:14px;"><strong>To prepare:</strong> ${data.preparationNote}</p>
-       </div>`
-    : "";
+function renderServiceReminder(data: ServiceReminderData): RenderedEmail {
+  const variables: Record<string, string> = {
+    firstName: data.firstName,
+    serviceName: data.serviceName,
+    date: data.date,
+    time: data.time,
+    preparationNote: data.preparationNote ?? "",
+  };
 
-  return {
-    subject: "Your Session Is Tomorrow",
-    html: emailLayout(
-      `<p style="margin:0 0 16px;">Dear ${data.firstName},</p>
-       <p style="margin:0 0 16px;">This is a gentle reminder that your <strong>${data.serviceName}</strong> session is tomorrow.</p>
+  const prepBlock = `<div style="background-color:#F2E9E9;padding:16px;border-radius:4px;margin:0 0 16px;">
+         <p style="margin:0;color:#535B73;font-size:14px;"><strong>To prepare:</strong> {{preparationNote}}</p>
+       </div>`;
+
+  const body = `<p style="margin:0 0 16px;">Dear {{firstName}},</p>
+       <p style="margin:0 0 16px;">This is a gentle reminder that your <strong>{{serviceName}}</strong> session is tomorrow.</p>
        <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px;width:100%;">
          <tr>
            <td style="padding:8px 0;color:#A69FA6;font-size:13px;width:100px;">Date</td>
-           <td style="padding:8px 0;color:#535B73;font-size:15px;">${data.date}</td>
+           <td style="padding:8px 0;color:#535B73;font-size:15px;">{{date}}</td>
          </tr>
          <tr>
            <td style="padding:8px 0;color:#A69FA6;font-size:13px;">Time</td>
-           <td style="padding:8px 0;color:#535B73;font-size:15px;">${data.time}</td>
+           <td style="padding:8px 0;color:#535B73;font-size:15px;">{{time}}</td>
          </tr>
        </table>
-       ${prepNote}
-       <p style="margin:0;color:#A69FA6;font-size:13px;">See you soon.</p>`,
-      { preheader: `${data.serviceName} — tomorrow at ${data.time}` }
-    ),
-  };
+       ${data.preparationNote ? prepBlock : ""}
+       <p style="margin:0;color:#A69FA6;font-size:13px;">See you soon.</p>`;
+
+  return render(body, variables, "Your Session Is Tomorrow", "{{serviceName}} — tomorrow at {{time}}");
 }
 
-function renderBirthdayMonth(data: BirthdayMonthData) {
-  return {
-    subject: "A Birthday Gift Awaits You",
-    html: emailLayout(
-      `<p style="margin:0 0 16px;">Dear ${data.firstName},</p>
+function renderBirthdayMonth(data: BirthdayMonthData): RenderedEmail {
+  const variables: Record<string, string> = {
+    firstName: data.firstName,
+    credits: String(data.credits),
+  };
+
+  const body = `<p style="margin:0 0 16px;">Dear {{firstName}},</p>
        <p style="margin:0 0 16px;">Happy birthday month! We'd love to celebrate with you.</p>
        <div style="background-color:#F2E9E9;padding:24px;text-align:center;border-radius:4px;margin:0 0 16px;">
          <p style="margin:0 0 4px;color:#A69FA6;font-size:13px;">Your birthday gift</p>
-         <p style="margin:0;color:#535B73;font-size:28px;font-weight:bold;">${data.credits} Credits</p>
+         <p style="margin:0;color:#535B73;font-size:28px;font-weight:bold;">{{credits}} Credits</p>
        </div>
        <p style="margin:0 0 16px;">Use them on anything in the shop or toward a service booking this month.</p>
-       ${btn("Claim Your Gift")}`,
-      { preheader: `${data.credits} birthday credits are waiting for you` }
-    ),
-  };
+       ${btn("Claim Your Gift")}`;
+
+  return render(body, variables, "A Birthday Gift Awaits You", "{{credits}} birthday credits are waiting for you");
 }
 
-function renderReferralCompleted(data: ReferralCompletedData) {
-  return {
-    subject: "You Earned 200 Ritual Credits",
-    html: emailLayout(
-      `<p style="margin:0 0 16px;">Dear ${data.firstName},</p>
-       <p style="margin:0 0 16px;">Great news — your friend <strong>${data.referredName}</strong> just made their first purchase using your referral.</p>
+function renderReferralCompleted(data: ReferralCompletedData): RenderedEmail {
+  const variables: Record<string, string> = {
+    firstName: data.firstName,
+    referredName: data.referredName,
+    creditsEarned: String(data.creditsEarned),
+  };
+
+  const body = `<p style="margin:0 0 16px;">Dear {{firstName}},</p>
+       <p style="margin:0 0 16px;">Great news — your friend <strong>{{referredName}}</strong> just made their first purchase using your referral.</p>
        <div style="background-color:#F2E9E9;padding:24px;text-align:center;border-radius:4px;margin:0 0 16px;">
          <p style="margin:0 0 4px;color:#A69FA6;font-size:13px;">Credits earned</p>
-         <p style="margin:0;color:#535B73;font-size:28px;font-weight:bold;">+${data.creditsEarned}</p>
+         <p style="margin:0;color:#535B73;font-size:28px;font-weight:bold;">+{{creditsEarned}}</p>
        </div>
        <p style="margin:0 0 16px;">Keep sharing your referral code to earn more rewards.</p>
-       ${btn("View Your Credits")}`,
-      { preheader: `+${data.creditsEarned} credits from your referral` }
-    ),
-  };
+       ${btn("View Your Credits")}`;
+
+  return render(body, variables, "You Earned {{creditsEarned}} Ritual Credits", "+{{creditsEarned}} credits from your referral");
 }
 
-function renderStatusUpgrade(data: StatusUpgradeData) {
+function renderStatusUpgrade(data: StatusUpgradeData): RenderedEmail {
   const benefitsList = data.benefits
     .map(
       (b) =>
@@ -285,20 +329,21 @@ function renderStatusUpgrade(data: StatusUpgradeData) {
     )
     .join("");
 
-  return {
-    subject: `You've Reached ${data.newTier} Status`,
-    html: emailLayout(
-      `<p style="margin:0 0 16px;">Dear ${data.firstName},</p>
-       <p style="margin:0 0 16px;">Congratulations — you've been upgraded to <strong>${data.newTier}</strong> status!</p>
+  const variables: Record<string, string> = {
+    firstName: data.firstName,
+    newTier: data.newTier,
+  };
+
+  const body = `<p style="margin:0 0 16px;">Dear {{firstName}},</p>
+       <p style="margin:0 0 16px;">Congratulations — you've been upgraded to <strong>{{newTier}}</strong> status!</p>
        <p style="margin:0 0 8px;color:#A69FA6;font-size:13px;">Your new benefits:</p>
        <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px;width:100%;">
          ${benefitsList}
        </table>
        ${btn("Explore Your Rewards")}
-       <p style="margin:0;color:#A69FA6;font-size:13px;">Thank you for being part of our community.</p>`,
-      { preheader: `You're now a ${data.newTier} member` }
-    ),
-  };
+       <p style="margin:0;color:#A69FA6;font-size:13px;">Thank you for being part of our community.</p>`;
+
+  return render(body, variables, "You've Reached {{newTier}} Status", "You're now a {{newTier}} member");
 }
 
 // ── Template Registry ──────────────────────────────────────────────
@@ -367,24 +412,38 @@ export const TEMPLATES: TemplateMeta[] = [
   },
 ];
 
+// ── Default Subjects ───────────────────────────────────────────────
+
+export const DEFAULT_SUBJECTS: Record<string, string> = {
+  "account-created": "Welcome to The Spirit Atelier",
+  "loyalty-welcome": "Your Ritual Credits Await",
+  "order-confirmation": "Order {{orderNumber}} Confirmed",
+  "order-shipped": "Your Order Has Shipped",
+  "service-booking-confirmation": "Your Booking Is Confirmed",
+  "service-reminder": "Your Session Is Tomorrow",
+  "birthday-month": "A Birthday Gift Awaits You",
+  "referral-completed": "You Earned {{creditsEarned}} Ritual Credits",
+  "status-upgrade": "You've Reached {{newTier}} Status",
+};
+
 // ── Dispatcher ─────────────────────────────────────────────────────
 
-const renderers: Record<string, (data: never) => { subject: string; html: string }> = {
-  "account-created": renderAccountCreated as (data: never) => { subject: string; html: string },
-  "loyalty-welcome": renderLoyaltyWelcome as (data: never) => { subject: string; html: string },
-  "order-confirmation": renderOrderConfirmation as (data: never) => { subject: string; html: string },
-  "order-shipped": renderOrderShipped as (data: never) => { subject: string; html: string },
-  "service-booking-confirmation": renderServiceBookingConfirmation as (data: never) => { subject: string; html: string },
-  "service-reminder": renderServiceReminder as (data: never) => { subject: string; html: string },
-  "birthday-month": renderBirthdayMonth as (data: never) => { subject: string; html: string },
-  "referral-completed": renderReferralCompleted as (data: never) => { subject: string; html: string },
-  "status-upgrade": renderStatusUpgrade as (data: never) => { subject: string; html: string },
+const renderers: Record<string, (data: never) => RenderedEmail> = {
+  "account-created": renderAccountCreated as (data: never) => RenderedEmail,
+  "loyalty-welcome": renderLoyaltyWelcome as (data: never) => RenderedEmail,
+  "order-confirmation": renderOrderConfirmation as (data: never) => RenderedEmail,
+  "order-shipped": renderOrderShipped as (data: never) => RenderedEmail,
+  "service-booking-confirmation": renderServiceBookingConfirmation as (data: never) => RenderedEmail,
+  "service-reminder": renderServiceReminder as (data: never) => RenderedEmail,
+  "birthday-month": renderBirthdayMonth as (data: never) => RenderedEmail,
+  "referral-completed": renderReferralCompleted as (data: never) => RenderedEmail,
+  "status-upgrade": renderStatusUpgrade as (data: never) => RenderedEmail,
 };
 
 export function renderTemplate(
   templateId: string,
   data: TemplateData
-): { subject: string; html: string } {
+): RenderedEmail {
   const renderer = renderers[templateId];
   if (!renderer) throw new Error(`Unknown template: ${templateId}`);
   return renderer(data as never);

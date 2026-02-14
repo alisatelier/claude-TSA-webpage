@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { calculateTier } from "@/lib/loyalty-utils";
+import {
+  triggerOrderConfirmationEmail,
+  triggerReferralCompletedEmail,
+  triggerStatusUpgradeEmail,
+} from "@/lib/email/trigger";
 
 export async function POST(request: Request) {
   const session = await auth();
@@ -133,6 +139,34 @@ export async function POST(request: Request) {
         },
       });
     }
+  }
+
+  // Fire-and-forget email triggers
+  triggerOrderConfirmationEmail(order.id);
+
+  // Check for referral reward trigger
+  if (!loyalty.firstPurchaseCompleted && loyalty.referredBy) {
+    const referrerLoyalty2 = await prisma.loyalty.findUnique({
+      where: { referralCode: loyalty.referredBy },
+      select: { userId: true },
+    });
+    if (referrerLoyalty2) {
+      const purchaserUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { name: true },
+      });
+      triggerReferralCompletedEmail(
+        referrerLoyalty2.userId,
+        purchaserUser?.name ?? "a friend"
+      );
+    }
+  }
+
+  // Check for tier upgrade
+  const tierBefore = calculateTier(loyalty.lifetimeCredits);
+  const tierAfter = calculateTier(newLifetime);
+  if (tierAfter !== tierBefore) {
+    triggerStatusUpgradeEmail(userId, tierAfter);
   }
 
   // Remove purchased items from wishlist

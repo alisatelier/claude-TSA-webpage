@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { triggerServiceBookingConfirmationEmail } from "@/lib/email/trigger";
 
 export async function POST(request: Request) {
   const session = await auth();
@@ -38,6 +39,9 @@ export async function POST(request: Request) {
       expiresAt: null,
     },
   });
+
+  // Fire-and-forget booking confirmation email
+  triggerServiceBookingConfirmationEmail(confirmed.id);
 
   return NextResponse.json({
     bookingId: confirmed.id,

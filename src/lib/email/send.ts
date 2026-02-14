@@ -2,8 +2,8 @@ import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const FROM = "Spirit Atelier <onboarding@resend.dev>";
-const TEST_RECIPIENT = "ali.buchwald@proton.me";
+const FROM = "The Spirit Atelier <onboarding@resend.dev>";
+const TEST_RECIPIENT = process.env.ADMIN_EMAIL ?? "ali.buchwald@proton.me";
 
 export async function sendEmail({
   to,

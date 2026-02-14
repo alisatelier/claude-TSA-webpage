@@ -261,3 +261,14 @@ model ScheduleBlock {
   @@index([date])
   @@index([dayOfWeek])
 }
+
+model EmailTemplateOverride {
+  id          String   @id @default(cuid())
+  templateId  String
+  body        String
+  subject     String?
+  savedBy     String
+  createdAt   DateTime @default(now())
+
+  @@index([templateId])
+}

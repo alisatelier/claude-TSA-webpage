@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { OrderStatus } from "@/generated/prisma/client";
 import { revalidatePath } from "next/cache";
+import { triggerOrderShippedEmail } from "@/lib/email/trigger";
 
 async function requireAdmin() {
   const session = await auth();
@@ -19,6 +20,9 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus) {
     where: { id: orderId },
     data: { status },
   });
+  if (status === "SHIPPED") {
+    triggerOrderShippedEmail(orderId);
+  }
   revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${orderId}`);
 }

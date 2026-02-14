@@ -13,6 +13,7 @@ import type {
 
 const accountCreated: AccountCreatedData = {
   firstName: "Sophia",
+  referralCode: "SPIRIT-SOPHIA",
 };
 
 const loyaltyWelcome: LoyaltyWelcomeData = {

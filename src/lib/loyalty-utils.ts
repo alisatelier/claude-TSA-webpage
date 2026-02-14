@@ -16,6 +16,32 @@ export function calculateTier(lifetimeCredits: number): Tier {
   return tier;
 }
 
+export function getTierBenefits(tier: Tier): string[] {
+  switch (tier) {
+    case "Seeker":
+      return [
+        "Earn credits on every purchase",
+        "Birthday month bonus credits",
+        "Access to referral rewards",
+      ];
+    case "Keeper":
+      return [
+        "1.5x credit multiplier on all purchases",
+        "Early access to new collections",
+        "Free gift wrapping on every order",
+        "Exclusive seasonal rituals guide",
+      ];
+    case "Elder":
+      return [
+        "2x credit multiplier on all purchases",
+        "Priority booking for services",
+        "Complimentary gift with every order",
+        "Annual exclusive Elder ritual kit",
+        "Personal concierge support",
+      ];
+  }
+}
+
 export function getTierProgress(lifetimeCredits: number): {
   tier: Tier;
   nextTier: Tier | null;
