@@ -136,9 +136,10 @@ model Wishlist {
   user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   productId             String
+  variation             String   @default("")
   createdAt             DateTime @default(now())
 
-  @@unique([userId, productId])
+  @@unique([userId, productId, variation])
 }
 
 model Order {

@@ -5,9 +5,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "@/lib/CartContext";
 import { useCurrency } from "@/lib/CurrencyContext";
+import { useAuth } from "@/lib/AuthContext";
 import type { Product } from "@/lib/data";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faStar, faHeart } from "@fortawesome/free-solid-svg-icons";
+import { faStar, faHeart, faBagShopping } from "@fortawesome/free-solid-svg-icons";
 import { faHeart as faHeartRegular } from "@fortawesome/free-regular-svg-icons";
 
 function StarRating({ rating, size = "sm" }: { rating: number; size?: "sm" | "md" }) {
@@ -158,34 +159,35 @@ function ProductCardCarousel({ images, alt, syncIndex }: { images: string[]; alt
   );
 }
 
-export default function ProductCard({ product, syncIndex, averageRating }: { product: Product; syncIndex?: number; averageRating?: number }) {
-  const { toggleWishlist, wishlist } = useCart();
+export default function ProductCard({ product, syncIndex, averageRating, savedVariation }: { product: Product; syncIndex?: number; averageRating?: number; savedVariation?: string }) {
+  const { toggleWishlist, isWishlisted: checkWishlisted, addToCart } = useCart();
   const { formatPrice, getProductPrice } = useCurrency();
-  const isWishlisted = wishlist.includes(product.id);
+  const { isLoggedIn } = useAuth();
+  const [addedToCart, setAddedToCart] = useState(false);
+  const defaultVariation = product.variations.filter(v => v !== "Imperfect")[0];
+  const wishlisted = checkWishlisted(product.id, savedVariation || defaultVariation);
   const allImages = getAllImages(product);
+
+  // When a saved variation exists, show only that variant's first image
+  const savedVariationImage = savedVariation && product.variationImages?.[savedVariation]?.[0];
+  const displayImages = savedVariationImage ? [savedVariationImage] : allImages;
+
+  const productHref = savedVariation
+    ? `/shop/${product.id}?variant=${encodeURIComponent(savedVariation)}`
+    : `/shop/${product.id}`;
 
   return (
     <div className="group bg-white rounded-xl overflow-hidden shadow-[0_4px_12px_rgba(83,91,115,0.08)] hover:shadow-[0_8px_24px_rgba(83,91,115,0.15)] transition-all duration-300 h-full flex flex-col">
       {/* Image Carousel */}
-      <Link href={`/shop/${product.id}`} className="block relative aspect-square overflow-hidden bg-cream flex-shrink-0">
-        <ProductCardCarousel images={allImages} alt={product.name} syncIndex={syncIndex} />
-        {product.stock <= 2 && product.stock > 0 && (
-          <span className="absolute top-3 right-3 px-2.5 py-1 bg-blush text-navy text-[10px] font-semibold tracking-wider uppercase rounded-full z-10">
-            Low Stock
-          </span>
-        )}
-        {product.stock === 0 && (
-          <span className="absolute top-3 right-3 px-2.5 py-1 bg-mauve text-white text-[10px] font-semibold tracking-wider uppercase rounded-full z-10">
-            Sold Out
-          </span>
-        )}
+      <Link href={productHref} className="block relative aspect-square overflow-hidden bg-cream flex-shrink-0">
+        <ProductCardCarousel images={displayImages} alt={product.name} syncIndex={syncIndex} />
       </Link>
 
       {/* Details */}
       <div className="p-5 flex flex-col flex-grow">
         {/* Title row - fixed height area */}
         <div className="flex items-start justify-between gap-2 mb-2">
-          <Link href={`/shop/${product.id}`}>
+          <Link href={productHref}>
             <h3 className="font-heading text-lg text-navy leading-tight hover:text-mauve transition-colors line-clamp-2 min-h-[2.5rem]">
               {product.name.startsWith("Whims & Whispers") ? (
                 <>
@@ -198,15 +200,18 @@ export default function ProductCard({ product, syncIndex, averageRating }: { pro
                 product.name
               )}
             </h3>
+            {savedVariation && (
+              <p className="text-xs bg-cream text-navy px-2 max-w-40 rounded-lg ">{savedVariation}</p>
+            )}
           </Link>
           <button
-            onClick={() => toggleWishlist(product.id)}
+            onClick={() => toggleWishlist(product.id, defaultVariation)}
             className="flex-shrink-0 p-1 hover:scale-110 transition-transform"
-            aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+            aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
           >
             <FontAwesomeIcon
-              icon={isWishlisted ? faHeart : faHeartRegular}
-              className={`w-5 h-5 ${isWishlisted ? "text-blush" : "text-mauve"}`}
+              icon={wishlisted ? faHeart : faHeartRegular}
+              className={`w-5 h-5 ${wishlisted ? "text-blush" : "text-mauve"}`}
             />
           </button>
         </div>
@@ -216,9 +221,9 @@ export default function ProductCard({ product, syncIndex, averageRating }: { pro
 
         {/* Reviews - fixed height */}
         <div className="flex items-center gap-2 mb-3 h-5">
-          <StarRating rating={averageRating ?? product.rating} />
+          <StarRating rating={averageRating ?? 0} />
           <span className="text-xs text-mauve flex items-center gap-0.5">
-            ({(averageRating ?? product.rating).toFixed(1)}{" "}
+            ({(averageRating ?? 0).toFixed(1)}{" "}
             <FontAwesomeIcon icon={faStar} className="w-2.5 h-2.5 text-[#FEDDE8]" />)
           </span>
         </div>
@@ -235,12 +240,43 @@ export default function ProductCard({ product, syncIndex, averageRating }: { pro
         {/* Price and CTA - always at bottom */}
         <div className="flex items-center justify-between mt-auto pt-2">
           <span className="text-xl font-semibold text-navy">{formatPrice(getProductPrice(product.prices))}</span>
-          <Link
-            href={`/shop/${product.id}`}
-            className="px-4 py-2 bg-navy text-white text-xs font-medium tracking-wider uppercase rounded-lg hover:bg-navy/90 transition-colors"
-          >
-            View Details
-          </Link>
+          {isLoggedIn && wishlisted ? (
+            <button
+              onClick={() => {
+                const variation = savedVariation || defaultVariation;
+                const varImages = variation && product.variationImages?.[variation];
+                const image = varImages?.[0] || product.variationImages?.["_default"]?.[0] || product.images[0] || "";
+                addToCart({
+                  productId: product.id,
+                  name: product.name,
+                  price: getProductPrice(product.prices),
+                  cadPrice: product.prices.CAD,
+                  quantity: 1,
+                  variation,
+                  image,
+                });
+                setAddedToCart(true);
+                setTimeout(() => setAddedToCart(false), 2000);
+              }}
+              className={`px-4 py-2 text-navy text-xs font-medium tracking-wider uppercase rounded-lg transition-colors flex items-center gap-1.5 ${
+                addedToCart ? "bg-[#A69FA5]" : "bg-cream hover:bg-blush/80"
+              }`}
+            >
+              {addedToCart ? "Added!" : (
+                <>
+                  <FontAwesomeIcon icon={faBagShopping} className="w-3 h-3" />
+                  Buy It!
+                </>
+              )}
+            </button>
+          ) : (
+            <Link
+              href={productHref}
+              className="px-4 py-2 bg-navy text-white text-xs font-medium tracking-wider uppercase rounded-lg hover:bg-navy/90 transition-colors"
+            >
+              View Details
+            </Link>
+          )}
         </div>
       </div>
     </div>

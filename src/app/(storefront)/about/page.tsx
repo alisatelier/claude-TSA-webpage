@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faHandshake,
+  faUsers,
   faHeart,
   faPaintbrush,
 } from "@fortawesome/free-solid-svg-icons";
@@ -56,7 +56,7 @@ export default function AboutPage() {
             </p>
 
             <p>
-              Slowly, quietly, she understands. She has nothing to pass.
+              Slowly, quietly, she understood. She had nothing to pass.
             </p>
 
             <p>
@@ -167,7 +167,7 @@ export default function AboutPage() {
 
             <div>
               <div className="w-14 h-14 bg-white rounded-full mx-auto mb-4 flex items-center justify-center">
-                <FontAwesomeIcon icon={faHandshake} className="w-6 h-6 text-navy" />
+                <FontAwesomeIcon icon={faUsers} className="w-6 h-6 text-navy" />
               </div>
               <h3 className="font-heading text-xl text-navy mb-2">
                 Accessible

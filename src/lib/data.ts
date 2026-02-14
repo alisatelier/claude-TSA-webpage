@@ -16,9 +16,6 @@ export interface Product {
   ritual: string;
   ctaText: string;
   images: string[];
-  stock: number;
-  rating: number;
-  reviewCount: number;
 }
 
 export interface Service {
@@ -78,9 +75,6 @@ export const products: Product[] = [
       "If you wish to enter your journaling practice ceremonially, begin by preparing your space in a way that feels meaningful to you. You may choose to light a candle, cleanse the air with herbs, or simply sit quietly for a few moments before opening the journal. If flame is not appropriate, begin instead with breath.\n\nAllow your body to settle. Close your eyes briefly and notice the quality of stillness available to you in that moment. When you feel ready, open to the next two-page spread and move through the structured prompts slowly. If you intend to incorporate tarot into your ritual, pause at the reading section, choose your spread, and pull your cards with presence. Record them as they appear, without rushing to interpretation.\n\nWhen you turn to the lined page, write what surfaces first. Try not to censor your thoughts, yet do not feel compelled to confront what you are not prepared to hold. Ritual is not performance — it is practice. With repetition, this rhythm becomes familiar. The journal begins to feel less like a task, and more like a returning.",
     ctaText: "See The Full Guidance",
     images: ["/images/products/journal-1.jpg"],
-    stock: 15,
-    rating: 4.8,
-    reviewCount: 24,
   },
   {
     id: "whims-whispers-tarot",
@@ -105,9 +99,6 @@ export const products: Product[] = [
       "If you wish to approach the deck ceremonially, prepare your space before shuffling. Clear the surface. Sit upright. Allow your breath to settle before you begin. Shuffle with intention rather than speed.\n\nWhen a card is drawn, pause before reaching for its meaning. Observe the symbol. Notice your first impression. If working with multiple cards, lay them in a structured spread and consider their relationship to one another. The absence of illustrated pips invites you to participate more fully and to sense the energy of the suit and number rather than rely on imagery.\n\nThe Whims & Whispers Tarot rewards presence. It does not overwhelm with narrative. It asks you to engage. Over time, the language of the deck becomes familiar — not because it is complicated, but because it is clear.",
     ctaText: "See The Full Guidance",
     images: ["/images/products/tarot-1.jpg"],
-    stock: 8,
-    rating: 4.9,
-    reviewCount: 42,
   },
   {
    id: "whims-whispers-spirit-board",
@@ -131,9 +122,6 @@ export const products: Product[] = [
       "Approach this board with steadiness and respect.\n\nPrepare your space. Sit comfortably. Ground yourself before placing your hands on the planchette. Clarity thrives in calm presence.\n\nOpen with acknowledgment. Close with gratitude. These gestures create containment, not superstition.\n\nIf you are working with others, establish shared intention before beginning. If working alone, ensure you are rested and emotionally regulated. This tool is not designed for spectacle. It is designed for focus.\n\nUsed with consistency, the Spirit Board becomes less about movement across symbols and more about refinement of question. Over time, it trains discernment.",
     ctaText: "See The Full Guidance",
     images: ["/images/products/spirit-board-1.jpg"],
-    stock: 3,
-    rating: 5.0,
-    reviewCount: 18,
   },
   {
      id: "norse-runes",
@@ -174,9 +162,6 @@ export const products: Product[] = [
       "Approach the runes with a grounded presence.\n\nStore them in their drawstring bag when not in use. When ready to pull, draw them directly from the bag or a sacred vessel of your choice.\n\nThere is no requirement for ceremony, yet ritual can deepen attention. You may choose to clear your space, sit in stillness, or simply focus your breath before drawing.\n\nThe runes respond best to clarity of question. They are direct in their symbolism and do not dramatize. Over time, the language of the Elder Futhark becomes familiar, not because it is simplified, but because it is consistent.",
     ctaText: "See The Full Guidance",
     images: ["/images/products/runes-1.jpg"],
-    stock: 12,
-    rating: 4.7,
-    reviewCount: 31,
   },
   {
     id: "norse-runes-cloth",
@@ -217,9 +202,6 @@ export const products: Product[] = [
       "Approach this system with steadiness.\n\nLay the cloth flat on a clean surface. Confirm your timeline and intention before casting. Mythologically, the Norse Sky-God, Odin gifted humanity with the runes, and acknowledgement of this before starting always affirms good intention. A quick glance to the sky before casting is recommended.\n\nWhen working with clients, establish the scope of inquiry clearly and avoid casting for undefined periods.\n\nAllow the runes to fall naturally. Resist repositioning. Structure is found in placement, not rearrangement. Close each reading with acknowledgment and integration. Forecasting is not prediction. It is preparation.\n\nUsed consistently, this system refines discernment. It transforms casting into calibrated interpretation, and intuition into measured guidance.",
     ctaText: "See The Full Guidance",
     images: ["/images/products/runes-cloth-1.jpg"],
-    stock: 6,
-    rating: 4.9,
-    reviewCount: 15,
   },
   {
     id: "my-intuition-made-me-do-it",
@@ -246,13 +228,11 @@ export const products: Product[] = [
       "This book is meant to be read the way realization happens — gradually.\n\nAs you move through it, you may begin to notice your own pauses. The places where you stayed longer than you wanted to. The conversations you softened when you meant something sharper. The moments you felt a quiet knowing and chose not to follow it.\n\nYou may find yourself remembering the first time something didn't feel quite right. Or the first time you allowed yourself to imagine something different.\n\nThis story does not ask you to leave anything.\nIt simply asks you to listen.\n\nBy the time the solstice arrives, her life has shifted because she allowed herself to acknowledge what was already there.\n\nAnd perhaps, in the quiet after the final page, you will ask yourself the same gentle question she does:\nWhat is my intuition asking of me now?",
     ctaText: "See The Full Guidance",
     images: [
+      "/images/products/MIMMDI -  Staged.jpg",
       "/images/products/MIMMDI -  Roman a Clef.png",
       "/images/products/MIMMDI -  The Journey.png",
       "/images/products/MIMMDI -  TOC.png",
     ],
-    stock: 25,
-    rating: 4.6,
-    reviewCount: 56,
   },
 ];
 

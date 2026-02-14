@@ -7,6 +7,8 @@ import Badge from "../../components/ui/Badge";
 import CreditAdjustForm from "./CreditAdjustForm";
 import DeleteUserButton from "./DeleteUserButton";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminUserDetailPage({
   params,
 }: {
@@ -149,7 +151,7 @@ export default async function AdminUserDetailPage({
         ) : (
           <div className="divide-y divide-gray-100">
             {user.wishlistItems.map((item) => {
-              const resolved = resolveProduct(item.productId);
+              const resolved = resolveProduct(item.productId, item.variation || undefined);
               return (
                 <div key={item.id} className="flex items-center gap-3 py-3">
                   {resolved.image ? (
@@ -167,7 +169,14 @@ export default async function AdminUserDetailPage({
                     <p className="text-sm font-medium text-gray-900 truncate">
                       {resolved.name}
                     </p>
-                    <p className="text-xs text-gray-400">{item.productId}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs text-gray-400">{item.productId}</p>
+                      {item.variation && (
+                        <span className="px-1.5 py-0.5 text-xs font-medium rounded bg-gray-100 text-gray-600">
+                          {item.variation}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   {resolved.isService && (
                     <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-purple-100 text-purple-800">

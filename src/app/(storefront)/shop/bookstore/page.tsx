@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { products } from "@/lib/data";
@@ -9,8 +10,19 @@ import { StarRating } from "@/components/ProductCard";
 
 export default function BookstorePage() {
   const mimmdi = products.find((p) => p.id === "my-intuition-made-me-do-it");
-  const { toggleWishlist, wishlist } = useCart();
+  const { toggleWishlist, isWishlisted: checkWishlisted } = useCart();
   const { formatPrice, getProductPrice } = useCurrency();
+  const [ratingData, setRatingData] = useState<{ avg: number; count: number } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/reviews/ratings")
+      .then((res) => (res.ok ? res.json() : { ratings: {} }))
+      .then((data) => {
+        const r = data.ratings?.["my-intuition-made-me-do-it"];
+        if (r) setRatingData({ avg: r.average, count: r.count });
+      })
+      .catch(() => {});
+  }, []);
 
   function getFirstImage() {
     if (!mimmdi) return null;
@@ -20,7 +32,8 @@ export default function BookstorePage() {
   }
 
   const image = getFirstImage();
-  const isWishlisted = mimmdi ? wishlist.includes(mimmdi.id) : false;
+  const defaultVariation = mimmdi?.variations.filter(v => v !== "Imperfect")[0];
+  const isWishlisted = mimmdi ? checkWishlisted(mimmdi.id, defaultVariation) : false;
 
   return (
     <>
@@ -69,10 +82,12 @@ export default function BookstorePage() {
                 <h2 className="font-heading text-4xl text-navy mb-2">{mimmdi.name}</h2>
                 <p className="font-accent italic text-mauve text-lg mb-4">{mimmdi.shortDescription}</p>
 
-                <div className="flex items-center gap-2 mb-4">
-                  <StarRating rating={mimmdi.rating} />
-                  <span className="text-sm text-mauve">({mimmdi.reviewCount} reviews)</span>
-                </div>
+                {ratingData && ratingData.count > 0 && (
+                  <div className="flex items-center gap-2 mb-4">
+                    <StarRating rating={ratingData.avg} />
+                    <span className="text-sm text-mauve">({ratingData.count} reviews)</span>
+                  </div>
+                )}
 
                 <p className="text-navy/80 leading-relaxed mb-6">
                   {mimmdi.description.split("\n\n")[0]}
@@ -92,7 +107,7 @@ export default function BookstorePage() {
                     View Details
                   </Link>
                   <button
-                    onClick={() => toggleWishlist(mimmdi.id)}
+                    onClick={() => toggleWishlist(mimmdi.id, mimmdi.variations.filter(v => v !== "Imperfect")[0])}
                     className="flex items-center gap-2 text-sm text-navy hover:text-mauve transition-colors"
                   >
                     <svg className={`w-5 h-5 ${isWishlisted ? "text-blush fill-blush" : ""}`} fill={isWishlisted ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">

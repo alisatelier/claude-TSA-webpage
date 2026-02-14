@@ -57,11 +57,6 @@ export default function NorseRunesSelectPage() {
                         <span className="font-heading text-6xl text-navy/20">{product.name.charAt(0)}</span>
                       </div>
                     )}
-                    {product.stock <= 2 && product.stock > 0 && (
-                      <span className="absolute top-3 right-3 px-2.5 py-1 bg-blush text-navy text-[10px] font-semibold tracking-wider uppercase rounded-full">
-                        Low Stock
-                      </span>
-                    )}
                   </div>
                   <div className="p-8 text-center">
                     <h2 className="font-heading text-3xl text-navy mb-2">{product.name}</h2>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useState, useMemo, useEffect } from "react";
 import { products, reviews } from "@/lib/data";
@@ -49,14 +49,22 @@ function ChapterDownloadReveal() {
 
 export default function ProductPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const product = products.find((p) => p.id === params.id);
-  const { addToCart, toggleWishlist, wishlist } = useCart();
+  const { addToCart, toggleWishlist, isWishlisted: checkWishlisted } = useCart();
   const { formatPrice, getProductPrice } = useCurrency();
   const { user, isLoggedIn } = useAuth();
   const [quantity, setQuantity] = useState(1);
-  const [selectedVariation, setSelectedVariation] = useState(product?.variations.filter(v => v !== "Imperfect")[0] || "");
+
+  // Pre-select variant from query param (e.g. from wishlist link)
+  const variantParam = searchParams.get("variant");
+  const colorVariationsInit = product?.variations.filter(v => v !== "Imperfect") || [];
+  const initialVariation = (variantParam && colorVariationsInit.includes(variantParam))
+    ? variantParam
+    : colorVariationsInit[0] || "";
+  const [selectedVariation, setSelectedVariation] = useState(initialVariation);
   const [isImperfect, setIsImperfect] = useState(false);
-  const [variationSelected, setVariationSelected] = useState(false);
+  const [variationSelected, setVariationSelected] = useState(!!variantParam);
   const [openTabs, setOpenTabs] = useState<Set<string>>(new Set(["description"]));
   const [activeTab, setActiveTab] = useState("description"); // For desktop tabs
   const [addedToCart, setAddedToCart] = useState(false);
@@ -177,9 +185,9 @@ export default function ProductPage() {
 
   // Compute current stock for selected variation
   const currentStock = (() => {
-    if (!stockData) return product.stock; // fallback to static
+    if (!stockData) return 0; // fallback when no DB stock loaded
     if (product.variations.length === 0) {
-      return stockData["_default"] ?? product.stock;
+      return stockData["_default"] ?? 0;
     }
     const key = isImperfect ? "Imperfect" : selectedVariation;
     if (key && stockData[key] !== undefined) return stockData[key];
@@ -215,8 +223,7 @@ export default function ProductPage() {
   ];
   const averageRating = productReviews.length > 0
     ? Math.round((productReviews.reduce((sum, r) => sum + r.rating, 0) / productReviews.length) * 10) / 10
-    : product.rating;
-  const isWishlisted = wishlist.includes(product.id);
+    : 0;
   const relatedProducts = products.filter((p) => p.id !== product.id).slice(0, 4);
 
   // Special pricing for "Imperfect" variation (40% off)
@@ -233,7 +240,7 @@ export default function ProductPage() {
   const cadDisplayPrice = isImperfect ? Math.round(product.prices.CAD * 0.6) : product.prices.CAD;
 
   const handleAddToCart = () => {
-    addToCart({ productId: product.id, name: product.name, price: displayPrice, cadPrice: cadDisplayPrice, quantity, variation: fullVariation, image: currentImages[0] || product.images[0] });
+    addToCart({ productId: product.id, name: product.name, price: displayPrice, cadPrice: cadDisplayPrice, quantity, variation: fullVariation, image: currentImages[0] || product.variationImages?.["_default"]?.[0] || product.images[0] });
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2000);
   };
@@ -376,16 +383,22 @@ export default function ProductPage() {
               <div className="flex items-center justify-between gap-4 mb-8">
 
   {/* Wishlist */}
-  <button
-    onClick={() => toggleWishlist(product.id)}
-    className="flex items-center gap-2 text-sm text-navy hover:text-mauve transition-colors"
-  >
-    <FontAwesomeIcon
-      icon={isWishlisted ? faHeart : faHeartRegular}
-      className={`w-5 h-5 ${isWishlisted ? "text-blush" : ""}`}
-    />
-    {isWishlisted ? "In Wishlist" : "Add to Wishlist"}
-  </button>
+  {(() => {
+    const wishVariation = fullVariation || colorVariations[0];
+    const inWishlist = checkWishlisted(product.id, wishVariation);
+    return (
+      <button
+        onClick={() => toggleWishlist(product.id, wishVariation)}
+        className="flex items-center gap-2 text-sm text-navy hover:text-mauve transition-colors"
+      >
+        <FontAwesomeIcon
+          icon={inWishlist ? faHeart : faHeartRegular}
+          className={`w-5 h-5 ${inWishlist ? "text-blush" : ""}`}
+        />
+        {inWishlist ? "In Wishlist" : "Add to Wishlist"}
+      </button>
+    );
+  })()}
 
   {/* Loyalty Indicator */}
   {isLoggedIn && user && (

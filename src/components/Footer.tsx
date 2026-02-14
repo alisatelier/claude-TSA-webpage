@@ -22,9 +22,9 @@ export default function Footer() {
   return (
     <footer className="bg-navy text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
           {/* Column 1: About */}
-          <div>
+          <div className="text-center lg:text-left flex flex-col items-center lg:items-start">
             <Image
               src="/images/logo-white.png"
               alt="The Spirit Atelier"
@@ -37,14 +37,14 @@ export default function Footer() {
             </p>
             <div className="flex gap-4">
               <a
-                href="#"
+                href="https://www.instagram.com/thespiritatelier"
                 aria-label="Instagram"
                 className="text-white/70 hover:text-blush transition-colors"
               >
                 <FontAwesomeIcon icon={faInstagram} className="w-5 h-5" />
               </a>
               <a
-                href="#"
+                href="https://www.tiktok.com/@thespiritatelier"
                 aria-label="TikTok"
                 className="text-white/70 hover:text-blush transition-colors"
               >
@@ -60,54 +60,55 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Column 2: Quick Links */}
-          <div>
-            <h4 className="font-heading text-lg mb-4">Quick Links</h4>
-            <ul className="space-y-3">
-              {[
-                { href: "/shop", label: "Shop" },
-                { href: "/services", label: "Services" },
-                { href: "/loyalty", label: "Loyalty Program" },
-                { href: "/blog", label: "Journal" },
-                { href: "/about", label: "About Us" },
-                { href: "/contact", label: "Contact" },
-              ].map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-white/70 hover:text-blush text-sm transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+          {/* Columns 2 & 3: Quick Links + Customer Care — two columns on mobile */}
+          <div className="grid grid-cols-2 lg:contents gap-8">
+            <div>
+              <h4 className="font-heading text-lg mb-4">Quick Links</h4>
+              <ul className="space-y-3">
+                {[
+                  { href: "/shop", label: "Shop" },
+                  { href: "/services", label: "Services" },
+                  { href: "/loyalty", label: "Loyalty Program" },
+                  { href: "/blog", label: "Journal" },
+                  { href: "/about", label: "About Us" },
+                  { href: "/contact", label: "Contact" },
+                ].map((link) => (
+                  <li key={link.href}>
+                    <Link
+                      href={link.href}
+                      className="text-white/70 hover:text-blush text-sm transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-heading text-lg mb-4">Customer Care</h4>
+              <ul className="space-y-3">
+                {[
+                  { href: "/faq", label: "FAQ" },
+                  { href: "/shipping-returns", label: "Shipping & Returns" },
+                  { href: "/privacy", label: "Privacy Policy" },
+                  { href: "/terms", label: "Terms of Service" },
+                ].map((link) => (
+                  <li key={link.href}>
+                    <Link
+                      href={link.href}
+                      className="text-white/70 hover:text-blush text-sm transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
 
-          {/* Column 3: Customer Care */}
-          <div>
-            <h4 className="font-heading text-lg mb-4">Customer Care</h4>
-            <ul className="space-y-3">
-              {[
-                { href: "/faq", label: "FAQ" },
-                { href: "/shipping-returns", label: "Shipping & Returns" },
-                { href: "/privacy", label: "Privacy Policy" },
-                { href: "/terms", label: "Terms of Service" },
-              ].map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-white/70 hover:text-blush text-sm transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Column 4: Newsletter */}
-          <div>
+          {/* Column 4: Loyalty */}
+          <div className="text-center lg:text-left flex flex-col items-center lg:items-start">
             <h4 className="font-heading text-lg mb-4">
               The Atelier Recognizes You
             </h4>

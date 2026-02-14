@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useAuth } from "@/lib/AuthContext";
 import { useCurrency } from "@/lib/CurrencyContext";
+import { formatOrderNumber } from "@/lib/order-utils";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faClipboardList,
@@ -199,7 +200,7 @@ export default function OrdersPage() {
                       <div className="flex items-center gap-4 flex-wrap">
                         <div>
                           <p className="font-heading text-lg text-navy">
-                            Order #{order.orderNumber}
+                            Order {formatOrderNumber(order.orderNumber)}
                           </p>
                           <p className="text-xs text-mauve">
                             {new Date(order.createdAt).toLocaleDateString(

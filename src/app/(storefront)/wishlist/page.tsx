@@ -16,9 +16,12 @@ export default function WishlistPage() {
   const { formatPrice, getProductPrice } = useCurrency();
   const { user, isLoggedIn, tier } = useAuth();
 
-  const wishlistProducts = products.filter((p) => wishlist.includes(p.id));
-  const wishlistServices = services.filter((s) => wishlist.includes(s.id));
-  const totalItems = wishlistProducts.length + wishlistServices.length;
+  // Build one entry per wishlist item (same product can appear multiple times with different variants)
+  const wishlistProductEntries = wishlist
+    .map((w) => ({ product: products.find((p) => p.id === w.productId), variation: w.variation }))
+    .filter((e) => !!e.product) as { product: (typeof products)[number]; variation?: string }[];
+  const wishlistServices = services.filter((s) => wishlist.some((w) => w.productId === s.id));
+  const totalItems = wishlistProductEntries.length + wishlistServices.length;
 
   const progress = user ? getTierProgress(user.loyalty.lifetimeCredits) : null;
 
@@ -110,7 +113,7 @@ export default function WishlistPage() {
             </div>
           ) : (
             <>
-              {wishlistProducts.length > 0 && (
+              {wishlistProductEntries.length > 0 && (
                 <div className="mb-12">
                   {wishlistServices.length > 0 && (
                     <h2 className="font-heading text-2xl text-navy mb-6">
@@ -118,8 +121,12 @@ export default function WishlistPage() {
                     </h2>
                   )}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {wishlistProducts.map((product) => (
-                      <ProductCard key={product.id} product={product} />
+                    {wishlistProductEntries.map((entry) => (
+                      <ProductCard
+                        key={`${entry.product.id}-${entry.variation || ""}`}
+                        product={entry.product}
+                        savedVariation={entry.variation}
+                      />
                     ))}
                   </div>
                 </div>
@@ -127,7 +134,7 @@ export default function WishlistPage() {
 
               {wishlistServices.length > 0 && (
                 <div>
-                  {wishlistProducts.length > 0 && (
+                  {wishlistProductEntries.length > 0 && (
                     <h2 className="font-heading text-2xl text-navy mb-6">
                       Saved Services
                     </h2>

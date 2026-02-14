@@ -208,9 +208,11 @@ export default function AccountPage() {
                     <input
                       type="text"
                       value={formData.name}
-                      onChange={(e) =>
-                        setFormData({ ...formData, name: e.target.value })
-                      }
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        const capitalized = val.charAt(0).toUpperCase() + val.slice(1);
+                        setFormData({ ...formData, name: capitalized });
+                      }}
                       className="w-full px-4 py-3 border border-navy/20 rounded-lg text-navy placeholder:text-mauve focus:outline-none focus:border-navy transition-colors"
                       placeholder="Your First Name"
                     />

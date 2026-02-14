@@ -11,7 +11,7 @@ import { faHeart, faCheck, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { faHeart as faHeartRegular } from "@fortawesome/free-regular-svg-icons";
 
 export default function ServicesPage() {
-  const { toggleWishlist, wishlist, addToCart, removeFromCart } = useCart();
+  const { toggleWishlist, isWishlisted: checkWishlisted, addToCart, removeFromCart } = useCart();
   const { formatPrice, getProductPrice } = useCurrency();
   const { isSlotTaken, createHold, getActiveHold, releaseHold } = useBooking();
 
@@ -153,11 +153,11 @@ export default function ServicesPage() {
                     <button
                       onClick={() => toggleWishlist(service.id)}
                       className="flex-shrink-0 p-1 hover:scale-110 transition-transform mt-1"
-                      aria-label={wishlist.includes(service.id) ? "Remove from wishlist" : "Add to wishlist"}
+                      aria-label={checkWishlisted(service.id) ? "Remove from wishlist" : "Add to wishlist"}
                     >
                       <FontAwesomeIcon
-                        icon={wishlist.includes(service.id) ? faHeart : faHeartRegular}
-                        className={`w-5 h-5 ${wishlist.includes(service.id) ? "text-blush" : "text-mauve"}`}
+                        icon={checkWishlisted(service.id) ? faHeart : faHeartRegular}
+                        className={`w-5 h-5 ${checkWishlisted(service.id) ? "text-blush" : "text-mauve"}`}
                       />
                     </button>
                   </div>

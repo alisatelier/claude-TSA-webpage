@@ -10,10 +10,15 @@ export async function GET() {
 
   const items = await prisma.wishlist.findMany({
     where: { userId: session.user.id },
-    select: { productId: true },
+    select: { productId: true, variation: true },
   });
 
-  return NextResponse.json({ items: items.map((w) => w.productId) });
+  return NextResponse.json({
+    items: items.map((w) => ({
+      productId: w.productId,
+      variation: w.variation || undefined,
+    })),
+  });
 }
 
 export async function POST(request: Request) {
@@ -23,26 +28,28 @@ export async function POST(request: Request) {
   }
 
   const userId = session.user.id;
-  const { productId } = await request.json();
+  const { productId, variation } = await request.json();
 
   if (!productId) {
     return NextResponse.json({ error: "productId is required" }, { status: 400 });
   }
 
+  const variationKey = variation || "";
+
   // Toggle: if exists, remove; otherwise, add
   const existing = await prisma.wishlist.findUnique({
-    where: { userId_productId: { userId, productId } },
+    where: { userId_productId_variation: { userId, productId, variation: variationKey } },
   });
 
   if (existing) {
     await prisma.wishlist.delete({
-      where: { userId_productId: { userId, productId } },
+      where: { userId_productId_variation: { userId, productId, variation: variationKey } },
     });
     return NextResponse.json({ action: "removed" });
   }
 
   await prisma.wishlist.create({
-    data: { userId, productId },
+    data: { userId, productId, variation: variationKey },
   });
 
   return NextResponse.json({ action: "added" });

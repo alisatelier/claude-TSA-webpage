@@ -24,13 +24,19 @@ export interface Toast {
   link: { href: string; label: string };
 }
 
+export interface WishlistItem {
+  productId: string;
+  variation?: string;
+}
+
 interface CartContextType {
   items: CartItem[];
-  wishlist: string[];
+  wishlist: WishlistItem[];
   addToCart: (item: CartItem) => void;
   removeFromCart: (productId: string, variation?: string) => void;
   updateQuantity: (productId: string, quantity: number, variation?: string) => void;
-  toggleWishlist: (productId: string) => void;
+  toggleWishlist: (productId: string, variation?: string) => void;
+  isWishlisted: (productId: string, variation?: string) => boolean;
   cartCount: number;
   wishlistCount: number;
   cartTotal: number;
@@ -46,13 +52,18 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-function loadCartFromStorage(): { items: CartItem[]; wishlist: string[] } {
+function loadCartFromStorage(): { items: CartItem[]; wishlist: WishlistItem[] } {
   if (typeof window === "undefined") return { items: [], wishlist: [] };
   try {
     const raw = localStorage.getItem(CART_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      return { items: parsed.items || [], wishlist: parsed.wishlist || [] };
+      // Migrate old string[] format to WishlistItem[]
+      const rawWishlist = parsed.wishlist || [];
+      const wishlist: WishlistItem[] = rawWishlist.map((w: string | WishlistItem) =>
+        typeof w === "string" ? { productId: w } : w
+      );
+      return { items: parsed.items || [], wishlist };
     }
   } catch {
     // ignore
@@ -63,7 +74,7 @@ function loadCartFromStorage(): { items: CartItem[]; wishlist: string[] } {
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const { isLoggedIn, recordPurchase, deductCredits, user } = useAuth();
   const [items, setItems] = useState<CartItem[]>([]);
-  const [wishlist, setWishlist] = useState<string[]>([]);
+  const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
   const [toast, setToast] = useState<Toast | null>(null);
   const [appliedCredits, setAppliedCredits] = useState(0);
   const [mounted, setMounted] = useState(false);
@@ -128,6 +139,31 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     prevLoggedIn.current = isLoggedIn;
   }, [isLoggedIn, mounted]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Safety net: if logged in and mounted but DB not yet loaded, fetch from DB
+  useEffect(() => {
+    if (!mounted || !isLoggedIn || dbLoaded) return;
+    const fetchDb = async () => {
+      try {
+        const [cartRes, wishRes] = await Promise.all([
+          fetch("/api/user/cart"),
+          fetch("/api/user/wishlist"),
+        ]);
+        if (cartRes.ok) {
+          const cartData = await cartRes.json();
+          setItems(cartData.items);
+        }
+        if (wishRes.ok) {
+          const wishData = await wishRes.json();
+          setWishlist(wishData.items);
+        }
+        setDbLoaded(true);
+      } catch {
+        // keep current state
+      }
+    };
+    fetchDb();
+  }, [mounted, isLoggedIn, dbLoaded]);
 
   // Sync to localStorage for guests
   useEffect(() => {
@@ -218,37 +254,47 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     });
   }, [syncCartToDb, isLoggedIn]);
 
-  const toggleWishlist = useCallback((productId: string) => {
-    setWishlist((prev) => {
-      const isRemoving = prev.includes(productId);
-      if (!isRemoving) {
-        if (isLoggedIn) {
-          showToast({
-            message: "Added to your Wishlist",
-            link: { href: "/wishlist", label: "View Wishlist" },
-          });
-        } else {
-          showToast({
-            message: "Earn Ritual Credits with every purchase",
-            link: { href: "/loyalty", label: "Join the Loyalty Program" },
-          });
-        }
-      }
+  const isWishlisted = useCallback((productId: string, variation?: string) => {
+    if (variation !== undefined) {
+      return wishlist.some((w) => w.productId === productId && w.variation === variation);
+    }
+    return wishlist.some((w) => w.productId === productId);
+  }, [wishlist]);
 
-      // Sync to DB for logged-in users
+  const toggleWishlist = useCallback((productId: string, variation?: string) => {
+    const isRemoving = wishlist.some((w) => w.productId === productId && w.variation === variation);
+
+    // Show toast (only when adding)
+    if (!isRemoving) {
       if (isLoggedIn) {
-        fetch("/api/user/wishlist", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ productId }),
-        }).catch(() => {});
+        showToast({
+          message: "Added to your Wishlist",
+          link: { href: "/wishlist", label: "View Wishlist" },
+        });
+      } else {
+        showToast({
+          message: "Earn Ritual Credits with every purchase",
+          link: { href: "/loyalty", label: "Join the Loyalty Program" },
+        });
       }
+    }
 
-      return isRemoving
-        ? prev.filter((id) => id !== productId)
-        : [...prev, productId];
+    // Sync to DB for logged-in users (outside updater to avoid StrictMode double-fire)
+    if (isLoggedIn) {
+      fetch("/api/user/wishlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId, variation }),
+      }).catch(() => {});
+    }
+
+    setWishlist((prev) => {
+      const removing = prev.some((w) => w.productId === productId && w.variation === variation);
+      return removing
+        ? prev.filter((w) => !(w.productId === productId && w.variation === variation))
+        : [...prev, { productId, variation }];
     });
-  }, [showToast, isLoggedIn]);
+  }, [wishlist, showToast, isLoggedIn]);
 
   const clearCart = useCallback(() => {
     setItems([]);
@@ -323,6 +369,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         removeFromCart,
         updateQuantity,
         toggleWishlist,
+        isWishlisted,
         cartCount,
         wishlistCount,
         cartTotal,

@@ -189,7 +189,10 @@ export default function ChapterDownloadForm() {
             <input
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setName(val.charAt(0).toUpperCase() + val.slice(1));
+              }}
               className="w-full px-4 py-3 border border-navy/20 rounded-lg text-navy placeholder:text-mauve focus:outline-none focus:border-navy transition-colors"
               placeholder="Your First Name"
             />

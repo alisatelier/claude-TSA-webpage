@@ -47,7 +47,7 @@ export default function Header() {
   const accountHref = !isLoggedIn && pathname === "/loyalty" ? "/account" : "/loyalty";
 
   return (
-    <header className="sticky top-0 z-5 bg-navy w-full">
+    <header className="sticky top-0 z-40 bg-navy w-full">
       {/* Glowing bottom divider */}
       <div className="absolute bottom-0 left-0 right-0 h-px bg-white/20 shadow-[0_0_8px_2px_rgba(255,255,255,0.15)]" />
       <div className="w-full px-4 sm:px-6 lg:px-8">
@@ -69,7 +69,7 @@ export default function Header() {
           </Link>
 
           {/* Mobile: centered title */}
-          <span className="font-heading text-white text-2xl sm:hidden absolute left-1/2 -translate-x-1/2"> {/* NEVER CHANGE THE SPIIT ATELIE. THERE ARE SPECIAL CHARACTERS*/}
+          <span className="font-heading text-white text-2xl sm:hidden absolute left-[60px]"> {/* NEVER CHANGE THE SPIIT ATELIE. THERE ARE SPECIAL CHARACTERS*/}
             THE SPIIT ATELIE
           </span>
 
@@ -145,9 +145,9 @@ export default function Header() {
                   {accountDropdown && (
                     <div className="absolute top-full right-0 pt-2 w-52">
                       <div className="bg-navy rounded-lg shadow-lg border border-white/10 py-2">
-                        <span className="block px-4 py-2.5 font-heading text-sm text-white/80 hover:text-light-blush hover:bg-white/5 transition-colors cursor-default">
+                        <Link href="/account/orders" className="block px-4 py-2.5 font-heading text-sm text-white/80 hover:text-light-blush hover:bg-white/5 transition-colors cursor-default">
                           My Orders
-                        </span>
+                        </Link>
                         <Link
                           href="/wishlist"
                           className="flex items-center gap-2 px-4 py-2.5 font-heading text-sm text-white/80 hover:text-light-blush hover:bg-white/5 transition-colors"
@@ -215,11 +215,12 @@ export default function Header() {
             </div>
           </div>
 
-          {/* Mobile: hamburger + cart */}
-          <div className="flex items-center gap-2 lg:hidden">
+          {/* Mobile: currency + cart + hamburger */}
+          <div className="flex items-center gap-1 lg:hidden">
+            <CurrencySelector variant="compact" />
             <Link
               href="/cart"
-              className="p-2 text-white hover:text-light-blush transition-colors relative"
+              className="p-1.5 text-white hover:text-light-blush transition-colors relative"
               aria-label="Cart"
             >
               <FontAwesomeIcon icon={faBagShopping} className="w-5 h-5" />
@@ -230,7 +231,7 @@ export default function Header() {
               )}
             </Link>
             <button
-              className="p-2 text-white"
+              className="p-1.5 text-white"
               onClick={() => setMobileOpen(!mobileOpen)}
               aria-label="Toggle menu"
             >
@@ -273,12 +274,6 @@ export default function Header() {
               </div>
             ))}
 
-            {/* Currency selector */}
-            <div className="pt-4 border-t border-white/10">
-              <p className="font-heading text-white/40 text-xs uppercase tracking-wider mb-2">Currency</p>
-              <CurrencySelector variant="mobile" />
-            </div>
-
             {/* Account section */}
             <div className="pt-4 border-t border-white/10">
               {isLoggedIn ? (
@@ -291,9 +286,11 @@ export default function Header() {
                     Account
                   </Link>
                   <div className="pl-4 space-y-2">
-                    <span className="block font-heading text-white/60 text-sm py-1 cursor-default">
+                     <Link 
+                    href = "/account/orders"
+                    className="block font-heading text-white/60 text-sm py-1 cursor-default">
                       My Orders
-                    </span>
+                    </Link>
                     <Link
                       href="/wishlist"
                       className="flex items-center gap-2 font-heading text-white/60 text-sm py-1 hover:text-light-blush transition-colors"

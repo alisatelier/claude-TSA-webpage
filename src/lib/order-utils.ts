@@ -5,16 +5,21 @@ export function formatOrderNumber(n: number): string {
   return `#${String(n).padStart(6, "0")}`;
 }
 
-export function resolveProduct(productId: string): {
+export function resolveProduct(productId: string, variation?: string): {
   name: string;
   image: string;
   isService: boolean;
 } {
   const product = products.find((p) => p.id === productId);
   if (product) {
+    // Use variation-specific image, then _default variation, then base images
+    let image = product.variationImages?.["_default"]?.[0] ?? product.images[0] ?? "";
+    if (variation && product.variationImages?.[variation]?.[0]) {
+      image = product.variationImages[variation][0];
+    }
     return {
       name: product.name,
-      image: product.images[0] ?? "",
+      image,
       isService: false,
     };
   }
