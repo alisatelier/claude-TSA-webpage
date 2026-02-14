@@ -1,10 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
+import { useSession, signIn, signOut } from "next-auth/react";
 import { calculateTier, type Tier } from "./loyalty-utils";
-
-const STORAGE_KEY = "spirit-atelier-auth";
-const REVIEWS_STORAGE_KEY = "spirit-atelier-reviews";
 
 export interface UserReview {
   id: string;
@@ -45,368 +43,375 @@ export interface User {
   loyalty: LoyaltyState;
 }
 
-interface StoredAuth {
-  isLoggedIn: boolean;
-  user: User;
-}
-
 interface AuthContextType {
   user: User | null;
   isLoggedIn: boolean;
   tier: Tier;
-  login: (email: string, password: string) => boolean;
-  register: (name: string, email: string, password: string, referralCode?: string, birthdayMonth?: number) => boolean;
+  login: (email: string, password: string) => Promise<boolean>;
+  register: (name: string, email: string, password: string, referralCode?: string, birthdayMonth?: number) => Promise<boolean>;
   logout: () => void;
   addCredits: (amount: number, action: string) => void;
-  deductCredits: (amount: number, action: string) => boolean;
+  deductCredits: (amount: number, action: string) => Promise<boolean>;
   recordPurchase: (productIds: string[], totalSpent: number, currency?: string) => void;
-  submitReview: (productId: string, rating: number, text: string) => boolean;
-  setBirthdayMonth: (month: number) => void;
-  claimBirthdayCredits: () => boolean;
+  submitReview: (productId: string, rating: number, text: string) => Promise<boolean>;
+  setBirthdayMonth: (month: number) => Promise<void>;
+  claimBirthdayCredits: () => Promise<boolean>;
+  refreshLoyalty: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-function generateReferralCode(name: string): string {
-  const cleanName = name.toUpperCase().replace(/[^A-Z]/g, "").slice(0, 4) || "USER";
-  const hex = Math.random().toString(16).substring(2, 6).toUpperCase();
-  return `REF-${cleanName}-${hex}`;
-}
-
-function createDefaultLoyalty(referralCode: string, referredBy: string | null): LoyaltyState {
-  return {
-    currentCredits: 0,
-    lifetimeCredits: 0,
-    pointsHistory: [],
-    referralCode,
-    referralCount: 0,
-    reviewedProducts: [],
-    purchasedProducts: [],
-    birthdayMonth: null,
-    birthdayClaimed: null,
-    joinDate: new Date().toISOString(),
-    firstPurchaseCompleted: false,
-    referredBy,
-    lockedCurrency: null,
-  };
-}
-
-function getAllUsers(): Record<string, User> {
-  if (typeof window === "undefined") return {};
-  try {
-    const raw = localStorage.getItem("spirit-atelier-users");
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
-  }
-}
-
-function saveUser(user: User) {
-  const users = getAllUsers();
-  users[user.email] = user;
-  localStorage.setItem("spirit-atelier-users", JSON.stringify(users));
-}
-
-function findUserByReferralCode(code: string): User | null {
-  const users = getAllUsers();
-  return Object.values(users).find((u) => u.loyalty.referralCode === code) || null;
-}
-
-function saveReview(review: UserReview) {
-  const reviews = getUserReviews();
-  reviews.push(review);
-  localStorage.setItem(REVIEWS_STORAGE_KEY, JSON.stringify(reviews));
-}
-
-export function getUserReviews(productId?: string): UserReview[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(REVIEWS_STORAGE_KEY);
-    const all: UserReview[] = raw ? JSON.parse(raw) : [];
-    return productId ? all.filter((r) => r.productId === productId) : all;
-  } catch {
-    return [];
-  }
-}
+const defaultLoyalty: LoyaltyState = {
+  currentCredits: 0,
+  lifetimeCredits: 0,
+  pointsHistory: [],
+  referralCode: "",
+  referralCount: 0,
+  reviewedProducts: [],
+  purchasedProducts: [],
+  birthdayMonth: null,
+  birthdayClaimed: null,
+  joinDate: new Date().toISOString(),
+  firstPurchaseCompleted: false,
+  referredBy: null,
+  lockedCurrency: null,
+};
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const { data: session, status } = useSession();
+  const [loyaltyData, setLoyaltyData] = useState<LoyaltyState>(defaultLoyalty);
+  const [loyaltyLoaded, setLoyaltyLoaded] = useState(false);
+  const migrationDone = useRef(false);
 
-  // Hydrate from localStorage
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const stored: StoredAuth = JSON.parse(raw);
-        if (stored.isLoggedIn && stored.user) {
-          setUser(stored.user);
-          setIsLoggedIn(true);
-        }
+  const isLoggedIn = status === "authenticated" && !!session?.user;
+  const sessionUser = session?.user;
+
+  const user: User | null = isLoggedIn && sessionUser
+    ? {
+        name: sessionUser.name || "",
+        email: sessionUser.email || "",
+        loyalty: loyaltyData,
       }
-    } catch {
-      // ignore
-    }
-    setMounted(true);
-  }, []);
-
-  // Sync to localStorage
-  useEffect(() => {
-    if (!mounted) return;
-    if (isLoggedIn && user) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ isLoggedIn: true, user }));
-      saveUser(user);
-    } else {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ isLoggedIn: false, user: null }));
-    }
-  }, [user, isLoggedIn, mounted]);
+    : null;
 
   const tier = user ? calculateTier(user.loyalty.lifetimeCredits) : "Seeker";
 
-  const addCredits = useCallback((amount: number, action: string) => {
-    setUser((prev) => {
-      if (!prev) return prev;
-      const newCurrent = prev.loyalty.currentCredits + amount;
-      const newLifetime = prev.loyalty.lifetimeCredits + amount;
-      const entry: PointsHistoryEntry = {
-        date: new Date().toISOString(),
-        action,
-        credits: amount,
-        runningBalance: newCurrent,
-      };
-      return {
-        ...prev,
-        loyalty: {
-          ...prev.loyalty,
-          currentCredits: newCurrent,
-          lifetimeCredits: newLifetime,
-          pointsHistory: [entry, ...prev.loyalty.pointsHistory],
-        },
-      };
-    });
-  }, []);
-
-  const deductCredits = useCallback((amount: number, action: string): boolean => {
-    let success = false;
-    setUser((prev) => {
-      if (!prev || prev.loyalty.currentCredits < amount || amount <= 0) return prev;
-      success = true;
-      const newCurrent = Math.max(0, prev.loyalty.currentCredits - amount);
-      const entry: PointsHistoryEntry = {
-        date: new Date().toISOString(),
-        action,
-        credits: -amount,
-        runningBalance: newCurrent,
-      };
-      return {
-        ...prev,
-        loyalty: {
-          ...prev.loyalty,
-          currentCredits: newCurrent,
-          pointsHistory: [entry, ...prev.loyalty.pointsHistory],
-        },
-      };
-    });
-    return success;
-  }, []);
-
-  const login = useCallback((email: string, _password: string): boolean => {
-    const users = getAllUsers();
-    const existing = users[email];
-    if (!existing) return false;
-    setUser(existing);
-    setIsLoggedIn(true);
-    return true;
-  }, []);
-
-  const register = useCallback((name: string, email: string, _password: string, referralCode?: string, birthdayMonth?: number): boolean => {
-    const users = getAllUsers();
-    if (users[email]) return false;
-
-    const code = generateReferralCode(name);
-    const referredBy = referralCode || null;
-    const loyalty = createDefaultLoyalty(code, referredBy);
-
-    if (birthdayMonth && birthdayMonth >= 1 && birthdayMonth <= 12) {
-      loyalty.birthdayMonth = birthdayMonth;
-    }
-
-    // Welcome credits
-    const welcomeAmount = 50;
-    loyalty.currentCredits += welcomeAmount;
-    loyalty.lifetimeCredits += welcomeAmount;
-    loyalty.pointsHistory.push({
-      date: new Date().toISOString(),
-      action: "Welcome bonus",
-      credits: welcomeAmount,
-      runningBalance: loyalty.currentCredits,
-    });
-
-    // Referral bonus for new user
-    if (referralCode) {
-      const referrer = findUserByReferralCode(referralCode);
-      if (referrer) {
-        const referralBonus = 200;
-        loyalty.currentCredits += referralBonus;
-        loyalty.lifetimeCredits += referralBonus;
-        loyalty.pointsHistory.push({
-          date: new Date().toISOString(),
-          action: "Referral bonus (referred by friend)",
-          credits: referralBonus,
-          runningBalance: loyalty.currentCredits,
+  // Fetch loyalty data from API
+  const fetchLoyalty = useCallback(async () => {
+    try {
+      const res = await fetch("/api/user/loyalty");
+      if (res.ok) {
+        const data = await res.json();
+        setLoyaltyData({
+          currentCredits: data.currentCredits,
+          lifetimeCredits: data.lifetimeCredits,
+          pointsHistory: data.pointsHistory,
+          referralCode: data.referralCode,
+          referralCount: data.referralCount,
+          reviewedProducts: data.reviewedProducts,
+          purchasedProducts: data.purchasedProducts,
+          birthdayMonth: data.birthdayMonth,
+          birthdayClaimed: data.birthdayClaimed,
+          joinDate: data.joinDate,
+          firstPurchaseCompleted: data.firstPurchaseCompleted,
+          referredBy: data.referredBy,
+          lockedCurrency: data.lockedCurrency,
         });
-
-        // Award referrer too
-        const referrerBonus = 200;
-        referrer.loyalty.currentCredits += referrerBonus;
-        referrer.loyalty.lifetimeCredits += referrerBonus;
-        referrer.loyalty.referralCount += 1;
-        referrer.loyalty.pointsHistory = [
-          {
-            date: new Date().toISOString(),
-            action: `Referral reward (${name} joined)`,
-            credits: referrerBonus,
-            runningBalance: referrer.loyalty.currentCredits,
-          },
-          ...referrer.loyalty.pointsHistory,
-        ];
-        saveUser(referrer);
+        setLoyaltyLoaded(true);
       }
+    } catch {
+      // silently fail
     }
+  }, []);
 
-    const newUser: User = { name, email, loyalty };
-    saveUser(newUser);
-    setUser(newUser);
-    setIsLoggedIn(true);
-    return true;
+  // Lazy migration from localStorage
+  const migrateLocalStorage = useCallback(async () => {
+    if (migrationDone.current) return;
+    migrationDone.current = true;
+
+    try {
+      const usersRaw = localStorage.getItem("spirit-atelier-users");
+      const reviewsRaw = localStorage.getItem("spirit-atelier-reviews");
+
+      if (!usersRaw && !reviewsRaw) return;
+
+      const users = usersRaw ? JSON.parse(usersRaw) : {};
+      const email = sessionUser?.email;
+      if (!email) return;
+
+      const localUser = users[email];
+      if (!localUser) return;
+
+      const allReviews: UserReview[] = reviewsRaw ? JSON.parse(reviewsRaw) : [];
+      const userReviews = allReviews.filter((r) => r.userEmail === email);
+
+      await fetch("/api/user/migrate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          loyalty: localUser.loyalty,
+          reviews: userReviews.map((r) => ({
+            productId: r.productId,
+            rating: r.rating,
+            text: r.text,
+            createdAt: r.createdAt,
+          })),
+        }),
+      });
+
+      // Clear localStorage keys
+      localStorage.removeItem("spirit-atelier-users");
+      localStorage.removeItem("spirit-atelier-reviews");
+      localStorage.removeItem("spirit-atelier-auth");
+
+      // Refresh loyalty data after migration
+      await fetchLoyalty();
+    } catch {
+      // silently fail migration
+    }
+  }, [sessionUser?.email, fetchLoyalty]);
+
+  // Load loyalty data when session becomes authenticated
+  useEffect(() => {
+    if (isLoggedIn) {
+      fetchLoyalty().then(() => {
+        migrateLocalStorage();
+      });
+    } else {
+      setLoyaltyData(defaultLoyalty);
+      setLoyaltyLoaded(false);
+      migrationDone.current = false;
+    }
+  }, [isLoggedIn, fetchLoyalty, migrateLocalStorage]);
+
+  const login = useCallback(async (email: string, password: string): Promise<boolean> => {
+    const result = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
+    return result?.ok ?? false;
+  }, []);
+
+  const register = useCallback(async (
+    name: string,
+    email: string,
+    password: string,
+    referralCode?: string,
+    birthdayMonth?: number,
+  ): Promise<boolean> => {
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password, referralCode, birthdayMonth }),
+      });
+
+      if (!res.ok) return false;
+
+      // Auto-login after registration
+      const loginResult = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      return loginResult?.ok ?? false;
+    } catch {
+      return false;
+    }
   }, []);
 
   const logout = useCallback(() => {
-    setUser(null);
-    setIsLoggedIn(false);
+    signOut({ redirect: false });
   }, []);
+
+  const addCredits = useCallback((amount: number, action: string) => {
+    // Optimistic update
+    setLoyaltyData((prev) => {
+      const newCurrent = prev.currentCredits + amount;
+      const newLifetime = prev.lifetimeCredits + amount;
+      return {
+        ...prev,
+        currentCredits: newCurrent,
+        lifetimeCredits: newLifetime,
+        pointsHistory: [
+          { date: new Date().toISOString(), action, credits: amount, runningBalance: newCurrent },
+          ...prev.pointsHistory,
+        ],
+      };
+    });
+
+    // Fire-and-forget API call
+    fetch("/api/user/credits", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ amount, action, type: "add" }),
+    }).catch(() => {});
+  }, []);
+
+  const deductCredits = useCallback(async (amount: number, action: string): Promise<boolean> => {
+    if (loyaltyData.currentCredits < amount || amount <= 0) return false;
+
+    // Optimistic update
+    setLoyaltyData((prev) => {
+      const newCurrent = Math.max(0, prev.currentCredits - amount);
+      return {
+        ...prev,
+        currentCredits: newCurrent,
+        pointsHistory: [
+          { date: new Date().toISOString(), action, credits: -amount, runningBalance: newCurrent },
+          ...prev.pointsHistory,
+        ],
+      };
+    });
+
+    try {
+      const res = await fetch("/api/user/credits", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount, action, type: "deduct" }),
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  }, [loyaltyData.currentCredits]);
 
   const recordPurchase = useCallback((productIds: string[], totalSpent: number, currency?: string) => {
-    setUser((prev) => {
-      if (!prev) return prev;
-      const creditsEarned = Math.floor(totalSpent);
-      const newPurchased = [...new Set([...prev.loyalty.purchasedProducts, ...productIds])];
-      const newCurrent = prev.loyalty.currentCredits + creditsEarned;
-      const newLifetime = prev.loyalty.lifetimeCredits + creditsEarned;
+    const creditsEarned = Math.floor(totalSpent);
 
-      const entries: PointsHistoryEntry[] = [];
-      entries.push({
-        date: new Date().toISOString(),
-        action: `Purchase ($${totalSpent.toFixed(2)})`,
-        credits: creditsEarned,
-        runningBalance: newCurrent,
-      });
-
-      // Lock currency on first purchase
-      const newLockedCurrency = prev.loyalty.lockedCurrency ?? (currency || null);
+    // Optimistic update
+    setLoyaltyData((prev) => {
+      const newPurchased = [...new Set([...prev.purchasedProducts, ...productIds])];
+      const newCurrent = prev.currentCredits + creditsEarned;
+      const newLifetime = prev.lifetimeCredits + creditsEarned;
+      const newLockedCurrency = prev.lockedCurrency ?? (currency || null);
 
       return {
         ...prev,
-        loyalty: {
-          ...prev.loyalty,
-          currentCredits: newCurrent,
-          lifetimeCredits: newLifetime,
-          purchasedProducts: newPurchased,
-          firstPurchaseCompleted: true,
-          lockedCurrency: newLockedCurrency,
-          pointsHistory: [...entries, ...prev.loyalty.pointsHistory],
-        },
+        currentCredits: newCurrent,
+        lifetimeCredits: newLifetime,
+        purchasedProducts: newPurchased,
+        firstPurchaseCompleted: true,
+        lockedCurrency: newLockedCurrency,
+        pointsHistory: [
+          {
+            date: new Date().toISOString(),
+            action: `Purchase ($${totalSpent.toFixed(2)})`,
+            credits: creditsEarned,
+            runningBalance: newCurrent,
+          },
+          ...prev.pointsHistory,
+        ],
       };
     });
+
+    // Fire-and-forget API call
+    fetch("/api/user/purchase", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productIds, totalSpent, currency }),
+    }).catch(() => {});
   }, []);
 
-  const submitReview = useCallback((productId: string, rating: number, text: string): boolean => {
+  const submitReview = useCallback(async (productId: string, rating: number, text: string): Promise<boolean> => {
     if (text.length < 100) return false;
-    let success = false;
-    setUser((prev) => {
-      if (!prev) return prev;
-      if (!prev.loyalty.purchasedProducts.includes(productId)) return prev;
-      if (prev.loyalty.reviewedProducts.includes(productId)) return prev;
-      success = true;
-      const reviewCredits = 100;
-      const newCurrent = prev.loyalty.currentCredits + reviewCredits;
-      const newLifetime = prev.loyalty.lifetimeCredits + reviewCredits;
-      const entry: PointsHistoryEntry = {
-        date: new Date().toISOString(),
-        action: "Review submitted",
-        credits: reviewCredits,
-        runningBalance: newCurrent,
-      };
-      return {
-        ...prev,
-        loyalty: {
-          ...prev.loyalty,
+    if (!loyaltyData.purchasedProducts.includes(productId)) return false;
+    if (loyaltyData.reviewedProducts.includes(productId)) return false;
+
+    try {
+      const res = await fetch("/api/user/review", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId, rating, text }),
+      });
+
+      if (!res.ok) return false;
+
+      // Update local state
+      setLoyaltyData((prev) => {
+        const reviewCredits = 100;
+        const newCurrent = prev.currentCredits + reviewCredits;
+        const newLifetime = prev.lifetimeCredits + reviewCredits;
+        return {
+          ...prev,
           currentCredits: newCurrent,
           lifetimeCredits: newLifetime,
-          reviewedProducts: [...prev.loyalty.reviewedProducts, productId],
-          pointsHistory: [entry, ...prev.loyalty.pointsHistory],
-        },
-      };
-    });
-
-    // Store review in localStorage OUTSIDE the state updater
-    // (React Strict Mode can call updaters twice, which would duplicate the side effect)
-    if (success) {
-      saveReview({
-        id: `review-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-        userEmail: user?.email || "",
-        userName: user?.name || "",
-        productId,
-        rating,
-        text,
-        createdAt: new Date().toISOString(),
+          reviewedProducts: [...prev.reviewedProducts, productId],
+          pointsHistory: [
+            {
+              date: new Date().toISOString(),
+              action: "Review submitted",
+              credits: reviewCredits,
+              runningBalance: newCurrent,
+            },
+            ...prev.pointsHistory,
+          ],
+        };
       });
-    }
-    return success;
-  }, [user]);
 
-  const setBirthdayMonth = useCallback((month: number) => {
-    setUser((prev) => {
-      if (!prev) return prev;
-      return { ...prev, loyalty: { ...prev.loyalty, birthdayMonth: month } };
-    });
+      return true;
+    } catch {
+      return false;
+    }
+  }, [loyaltyData.purchasedProducts, loyaltyData.reviewedProducts]);
+
+  const setBirthdayMonth = useCallback(async (month: number): Promise<void> => {
+    setLoyaltyData((prev) => ({ ...prev, birthdayMonth: month }));
+
+    await fetch("/api/user/birthday", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ month }),
+    }).catch(() => {});
   }, []);
 
-  const claimBirthdayCredits = useCallback((): boolean => {
-    let success = false;
-    setUser((prev) => {
-      if (!prev) return prev;
-      const now = new Date();
-      const currentMonth = now.getMonth() + 1;
-      const currentYear = now.getFullYear();
-      if (prev.loyalty.birthdayMonth !== currentMonth) return prev;
-      if (prev.loyalty.birthdayClaimed === currentYear) return prev;
-      success = true;
-      const bdayCredits = 150;
-      const newCurrent = prev.loyalty.currentCredits + bdayCredits;
-      const newLifetime = prev.loyalty.lifetimeCredits + bdayCredits;
-      const entry: PointsHistoryEntry = {
-        date: now.toISOString(),
-        action: "Birthday credits",
-        credits: bdayCredits,
-        runningBalance: newCurrent,
-      };
-      return {
-        ...prev,
-        loyalty: {
-          ...prev.loyalty,
+  const claimBirthdayCredits = useCallback(async (): Promise<boolean> => {
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1;
+    const currentYear = now.getFullYear();
+    if (loyaltyData.birthdayMonth !== currentMonth) return false;
+    if (loyaltyData.birthdayClaimed === currentYear) return false;
+
+    try {
+      const res = await fetch("/api/user/birthday", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ claim: true }),
+      });
+
+      if (!res.ok) return false;
+
+      setLoyaltyData((prev) => {
+        const bdayCredits = 150;
+        const newCurrent = prev.currentCredits + bdayCredits;
+        const newLifetime = prev.lifetimeCredits + bdayCredits;
+        return {
+          ...prev,
           currentCredits: newCurrent,
           lifetimeCredits: newLifetime,
           birthdayClaimed: currentYear,
-          pointsHistory: [entry, ...prev.loyalty.pointsHistory],
-        },
-      };
-    });
-    return success;
-  }, []);
+          pointsHistory: [
+            {
+              date: now.toISOString(),
+              action: "Birthday credits",
+              credits: bdayCredits,
+              runningBalance: newCurrent,
+            },
+            ...prev.pointsHistory,
+          ],
+        };
+      });
 
-  // Prevent SSR mismatch — render children with default context until mounted
+      return true;
+    } catch {
+      return false;
+    }
+  }, [loyaltyData.birthdayMonth, loyaltyData.birthdayClaimed]);
+
+  const mounted = status !== "loading" || loyaltyLoaded;
+
   const contextValue: AuthContextType = {
     user: mounted ? user : null,
     isLoggedIn: mounted ? isLoggedIn : false,
@@ -420,6 +425,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     submitReview,
     setBirthdayMonth,
     claimBirthdayCredits,
+    refreshLoyalty: fetchLoyalty,
   };
 
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;

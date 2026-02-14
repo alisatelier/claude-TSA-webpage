@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
+import { useSession } from "next-auth/react";
 
 const HOLDS_STORAGE_KEY = "spirit-atelier-booking-holds";
 const BOOKINGS_STORAGE_KEY = "spirit-atelier-bookings";
@@ -48,9 +49,9 @@ interface CreateHoldParams {
 interface BookingContextType {
   holds: BookingHold[];
   bookings: BookingSession[];
-  createHold: (params: CreateHoldParams) => string | null;
+  createHold: (params: CreateHoldParams) => Promise<string | null>;
   releaseHold: (holdId: string) => void;
-  confirmBooking: (holdId: string) => BookingSession | null;
+  confirmBooking: (holdId: string) => Promise<BookingSession | null>;
   getHoldById: (holdId: string) => BookingHold | null;
   isSlotTaken: (serviceId: string, date: string, time: string) => boolean;
   getActiveHold: () => BookingHold | null;
@@ -59,58 +60,69 @@ interface BookingContextType {
 
 const BookingContext = createContext<BookingContextType | undefined>(undefined);
 
-function loadHolds(): BookingHold[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(HOLDS_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function loadBookings(): BookingSession[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(BOOKINGS_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function generateId(): string {
-  return `hold-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-}
-
 export function BookingProvider({ children }: { children: React.ReactNode }) {
+  const { data: session } = useSession();
   const [holds, setHolds] = useState<BookingHold[]>([]);
   const [bookings, setBookings] = useState<BookingSession[]>([]);
   const [mounted, setMounted] = useState(false);
   const holdsRef = useRef(holds);
   holdsRef.current = holds;
+  const migrationDone = useRef(false);
 
-  // Hydrate from localStorage
+  // Hydrate holds from local state (holds are always client-managed for UX)
   useEffect(() => {
     const now = Date.now();
-    const storedHolds = loadHolds().filter((h) => h.expiresAt > now);
-    const storedBookings = loadBookings();
-    setHolds(storedHolds);
-    setBookings(storedBookings);
+    try {
+      const raw = localStorage.getItem(HOLDS_STORAGE_KEY);
+      const storedHolds: BookingHold[] = raw ? JSON.parse(raw) : [];
+      setHolds(storedHolds.filter((h) => h.expiresAt > now));
+    } catch {
+      // ignore
+    }
     setMounted(true);
   }, []);
 
-  // Sync holds to localStorage
+  // Migrate localStorage confirmed bookings to DB on first login
+  useEffect(() => {
+    if (!session?.user || migrationDone.current) return;
+    migrationDone.current = true;
+
+    try {
+      const raw = localStorage.getItem(BOOKINGS_STORAGE_KEY);
+      if (!raw) return;
+      const localBookings: BookingSession[] = JSON.parse(raw);
+      if (localBookings.length === 0) return;
+
+      fetch("/api/bookings/migrate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bookings: localBookings.map((b) => ({
+            serviceId: b.serviceId,
+            selectedDate: b.selectedDate,
+            selectedTime: b.selectedTime,
+            userName: b.userName,
+            userEmail: b.userEmail,
+            userNotes: b.userNotes,
+            addOn: b.addOn,
+            totalPrice: b.totalPrice,
+            createdAt: b.createdAt,
+          })),
+        }),
+      }).then(() => {
+        localStorage.removeItem(BOOKINGS_STORAGE_KEY);
+        setBookings([]);
+      }).catch(() => {});
+    } catch {
+      // ignore
+    }
+  }, [session?.user]);
+
+  // Sync holds to localStorage (client-side timer state)
   useEffect(() => {
     if (!mounted) return;
     localStorage.setItem(HOLDS_STORAGE_KEY, JSON.stringify(holds));
   }, [holds, mounted]);
-
-  // Sync bookings to localStorage
-  useEffect(() => {
-    if (!mounted) return;
-    localStorage.setItem(BOOKINGS_STORAGE_KEY, JSON.stringify(bookings));
-  }, [bookings, mounted]);
 
   // Cleanup expired holds every 10 seconds
   useEffect(() => {
@@ -129,6 +141,7 @@ export function BookingProvider({ children }: { children: React.ReactNode }) {
   const isSlotTaken = useCallback(
     (serviceId: string, date: string, time: string): boolean => {
       const now = Date.now();
+      // Check local holds
       const heldSlot = holds.some(
         (h) =>
           h.serviceId === serviceId &&
@@ -137,6 +150,8 @@ export function BookingProvider({ children }: { children: React.ReactNode }) {
           h.expiresAt > now
       );
       if (heldSlot) return true;
+
+      // Check local bookings (for guest/cached)
       const bookedSlot = bookings.some(
         (b) =>
           b.serviceId === serviceId &&
@@ -154,77 +169,90 @@ export function BookingProvider({ children }: { children: React.ReactNode }) {
   }, [holds]);
 
   const createHold = useCallback(
-    (params: CreateHoldParams): string | null => {
+    async (params: CreateHoldParams): Promise<string | null> => {
       const now = Date.now();
-      // One-hold-per-user rule
+      // One-hold-per-user rule (client-side check)
       const existingActive = holdsRef.current.find((h) => h.expiresAt > now);
       if (existingActive) return null;
 
-      // Check slot availability
-      const slotHeld = holdsRef.current.some(
-        (h) =>
-          h.serviceId === params.serviceId &&
-          h.selectedDate === params.selectedDate &&
-          h.selectedTime === params.selectedTime &&
-          h.expiresAt > now
-      );
-      if (slotHeld) return null;
+      try {
+        const res = await fetch("/api/bookings/hold", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(params),
+        });
 
-      const slotBooked = bookings.some(
-        (b) =>
-          b.serviceId === params.serviceId &&
-          b.selectedDate === params.selectedDate &&
-          b.selectedTime === params.selectedTime
-      );
-      if (slotBooked) return null;
+        if (!res.ok) return null;
 
-      const hold: BookingHold = {
-        id: generateId(),
-        serviceId: params.serviceId,
-        selectedDate: params.selectedDate,
-        selectedTime: params.selectedTime,
-        expiresAt: now + HOLD_DURATION_MS,
-        status: "held",
-        userName: params.userName,
-        userEmail: params.userEmail,
-        userNotes: params.userNotes,
-        addOn: params.addOn,
-        totalPrice: params.totalPrice,
-      };
+        const data = await res.json();
+        const hold: BookingHold = {
+          id: data.holdId,
+          serviceId: params.serviceId,
+          selectedDate: params.selectedDate,
+          selectedTime: params.selectedTime,
+          expiresAt: data.expiresAt,
+          status: "held",
+          userName: params.userName,
+          userEmail: params.userEmail,
+          userNotes: params.userNotes,
+          addOn: params.addOn,
+          totalPrice: params.totalPrice,
+        };
 
-      setHolds((prev) => [...prev, hold]);
-      return hold.id;
+        setHolds((prev) => [...prev, hold]);
+        return hold.id;
+      } catch {
+        return null;
+      }
     },
-    [bookings]
+    []
   );
 
   const releaseHold = useCallback((holdId: string) => {
     setHolds((prev) => prev.filter((h) => h.id !== holdId));
+
+    // Release on server
+    fetch(`/api/bookings/hold?holdId=${encodeURIComponent(holdId)}`, {
+      method: "DELETE",
+    }).catch(() => {});
   }, []);
 
   const confirmBooking = useCallback(
-    (holdId: string): BookingSession | null => {
+    async (holdId: string): Promise<BookingSession | null> => {
       const hold = holdsRef.current.find((h) => h.id === holdId);
       if (!hold) return null;
       if (hold.expiresAt <= Date.now()) return null;
 
-      const session: BookingSession = {
-        id: `booking-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-        serviceId: hold.serviceId,
-        selectedDate: hold.selectedDate,
-        selectedTime: hold.selectedTime,
-        status: "confirmed",
-        userName: hold.userName,
-        userEmail: hold.userEmail,
-        userNotes: hold.userNotes,
-        addOn: hold.addOn,
-        totalPrice: hold.totalPrice,
-        createdAt: new Date().toISOString(),
-      };
+      try {
+        const res = await fetch("/api/bookings/confirm", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ holdId }),
+        });
 
-      setHolds((prev) => prev.filter((h) => h.id !== holdId));
-      setBookings((prev) => [...prev, session]);
-      return session;
+        if (!res.ok) return null;
+
+        const data = await res.json();
+        const bookingSession: BookingSession = {
+          id: data.bookingId,
+          serviceId: hold.serviceId,
+          selectedDate: hold.selectedDate,
+          selectedTime: hold.selectedTime,
+          status: "confirmed",
+          userName: hold.userName,
+          userEmail: hold.userEmail,
+          userNotes: hold.userNotes,
+          addOn: hold.addOn,
+          totalPrice: hold.totalPrice,
+          createdAt: data.createdAt,
+        };
+
+        setHolds((prev) => prev.filter((h) => h.id !== holdId));
+        setBookings((prev) => [...prev, bookingSession]);
+        return bookingSession;
+      } catch {
+        return null;
+      }
     },
     []
   );

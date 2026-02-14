@@ -46,6 +46,8 @@ model User {
   transactionLog        TransactionLog[]
   orders                Order[]
   ritualCreditLogs      RitualCreditLog[]
+  preferredCurrency     String?
+  cart                  Cart?
 }
 
 model Account {
@@ -97,6 +99,7 @@ model Loyalty {
   birthdayClaimed       Int?
   firstPurchaseCompleted Boolean @default(false)
   referredBy            String?
+  lockedCurrency        String?
   joinDate              DateTime @default(now())
 }
 
@@ -187,4 +190,40 @@ model ServiceBooking {
 
   @@index([serviceId, selectedDate, selectedTime])
   @@index([status])
+}
+
+model DownloadLog {
+  id        String   @id @default(cuid())
+  email     String
+  fileName  String
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
+
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String     @unique
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+  updatedAt DateTime   @updatedAt
+}
+
+model CartItem {
+  id           String  @id @default(cuid())
+  cartId       String
+  cart         Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId    String
+  name         String
+  price        Float
+  cadPrice     Float?
+  quantity     Int
+  variation    String?
+  image        String
+  isService    Boolean @default(false)
+  holdId       String?
+  selectedDate String?
+  selectedTime String?
+
+  @@unique([cartId, productId, variation])
 }

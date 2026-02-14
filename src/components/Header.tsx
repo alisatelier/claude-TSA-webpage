@@ -59,14 +59,14 @@ export default function Header() {
               className="h-12 w-auto"
               priority
             />
-            <span className="font-heading text-white text-2xl hidden sm:block lg:block">
+            <span className="font-heading text-white text-2xl hidden sm:block lg:block"> {/* NEVER CHANGE THE SPIIT ATELIE. THERE ARE SPECIAL CHARACTERS*/}
               THE SPIIT ATELIE
             </span>
             {/* Mobile: centered title only */}
           </Link>
 
           {/* Mobile: centered title */}
-          <span className="font-heading text-white text-2xl sm:hidden absolute left-1/2 -translate-x-1/2"> /* NEVER CHANGE THE SPIIT ATELIE. THERE ARE SPECIAL CHARACTERS*/
+          <span className="font-heading text-white text-2xl sm:hidden absolute left-1/2 -translate-x-1/2"> {/* NEVER CHANGE THE SPIIT ATELIE. THERE ARE SPECIAL CHARACTERS*/}
             THE SPIIT ATELIE
           </span>
 

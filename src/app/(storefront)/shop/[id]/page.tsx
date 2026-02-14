@@ -6,7 +6,7 @@ import { useState, useMemo, useEffect } from "react";
 import { products, reviews } from "@/lib/data";
 import { useCart } from "@/lib/CartContext";
 import { useCurrency } from "@/lib/CurrencyContext";
-import { useAuth, getUserReviews, type UserReview } from "@/lib/AuthContext";
+import { useAuth, type UserReview } from "@/lib/AuthContext";
 import { StarRating } from "@/components/ProductCard";
 import ProductCard from "@/components/ProductCard";
 import ImageCarousel from "@/components/ImageCarousel";
@@ -29,10 +29,13 @@ export default function ProductPage() {
   const [addedToCart, setAddedToCart] = useState(false);
   const [clientUserReviews, setClientUserReviews] = useState<UserReview[]>([]);
 
-  // Load user reviews client-side only to avoid hydration mismatch
+  // Load user reviews from API
   useEffect(() => {
     if (product) {
-      setClientUserReviews(getUserReviews(product.id));
+      fetch(`/api/reviews?productId=${encodeURIComponent(product.id)}`)
+        .then((res) => res.ok ? res.json() : { reviews: [] })
+        .then((data) => setClientUserReviews(data.reviews ?? []))
+        .catch(() => setClientUserReviews([]));
     }
   }, [product]);
 

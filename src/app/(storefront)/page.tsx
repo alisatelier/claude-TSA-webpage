@@ -54,7 +54,8 @@ export default function HomePage() {
             className="mx-auto mb-8 h-28 w-auto"
             priority
           />
-          <h1 className="font-heading text-5xl md:text-7xl text-white mb-4 leading-tight">/* DO NOT CHANGE THE SPIIT ATELIE  THERE ARE SPECIAL CHARACTERS */
+          {/*} DO NOT CHANGE THE SPIIT ATELIE  THERE ARE SPECIAL CHARACTERS */}
+          <h1 className="font-heading text-5xl md:text-7xl text-white mb-4 leading-tight">
             THE SPIIT ATELIE    
                   </h1>
           <p className="font-accent italic text-white/80 text-xl md:text-2xl mb-10">

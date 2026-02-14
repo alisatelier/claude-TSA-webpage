@@ -231,11 +231,11 @@ export default function CartPage() {
       .filter((i) => i.holdId)
       .map((i) => ({ holdId: i.holdId!, name: i.name, date: i.selectedDate || "", time: i.selectedTime || "" }));
 
-    setTimeout(() => {
+    setTimeout(async () => {
       // Confirm all service bookings
       const confirmedBookings: Array<{ serviceName: string; date: string; time: string }> = [];
       for (const { holdId, name, date, time } of serviceHoldIds) {
-        const session = confirmBooking(holdId);
+        const session = await confirmBooking(holdId);
         if (session) {
           confirmedBookings.push({ serviceName: name, date, time });
         }

@@ -100,10 +100,10 @@ export default function RewardsPage() {
     }
   };
 
-  const handleSubmitReview = (e: React.FormEvent) => {
+  const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!reviewProduct) return;
-    const success = submitReview(reviewProduct, reviewRating, reviewText);
+    const success = await submitReview(reviewProduct, reviewRating, reviewText);
     if (success) {
       setReviewSubmitted(true);
       setReviewProduct("");
@@ -118,14 +118,14 @@ export default function RewardsPage() {
   const selectedProductName =
     reviewableProducts.find((p) => p.id === reviewProduct)?.name || "";
 
-  const handleSetBirthday = () => {
+  const handleSetBirthday = async () => {
     if (selectedMonth > 0) {
-      setBirthdayMonth(selectedMonth);
+      await setBirthdayMonth(selectedMonth);
     }
   };
 
-  const handleClaimBirthday = () => {
-    const success = claimBirthdayCredits();
+  const handleClaimBirthday = async () => {
+    const success = await claimBirthdayCredits();
     if (success) {
       setBirthdayClaimed(true);
       setTimeout(() => setBirthdayClaimed(false), 3000);

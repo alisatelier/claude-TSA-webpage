@@ -48,7 +48,7 @@ export default function ServicesPage() {
     setAddedToCart(false);
   }, []);
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!currentService) return;
     setHoldError("");
 
@@ -59,7 +59,7 @@ export default function ServicesPage() {
       return;
     }
 
-    const holdId = createHold({
+    const holdId = await createHold({
       serviceId: currentService.id,
       selectedDate,
       selectedTime,

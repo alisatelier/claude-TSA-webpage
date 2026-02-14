@@ -83,7 +83,16 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // ignore
     }
-  }, [isLocked]);
+
+    // Persist to DB for logged-in users
+    if (isLoggedIn) {
+      fetch("/api/user/currency", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currency: code }),
+      }).catch(() => {});
+    }
+  }, [isLocked, isLoggedIn]);
 
   const formatPrice = useCallback(
     (amount: number): string => {
