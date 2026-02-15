@@ -30,17 +30,6 @@ export interface Service {
   icon: string;
 }
 
-export interface BlogPost {
-  id: string;
-  title: string;
-  category: string;
-  excerpt: string;
-  content: string;
-  image: string;
-  author: string;
-  featured: boolean;
-}
-
 export interface Review {
   id: string;
   productId: string;
@@ -289,75 +278,6 @@ export const services: Service[] = [
     ],
     addOn: { name: "Digital Summary of Your Cast & Spread, With Key Insights", price: 33, prices: { CAD: 33, USD: 22, GBP: 22, AUD: 33, EUR: 22 } },
     icon: "combined",
-  },
-];
-
-export const blogPosts: BlogPost[] = [
-  {
-    id: "choose-first-divination-tool",
-    title: "How to Choose Your First Divination Tool",
-    category: "Divination Wisdom",
-    excerpt:
-      "Choosing your first divination tool is less about finding the right one and more about allowing the right one to find you. Here is how to begin.",
-    content: "",
-    image: "/images/blog/divination-tool.jpg",
-    author: "The Spirit Atelier",
-    featured: true,
-  },
-  {
-    id: "creating-sacred-space",
-    title: "Creating a Sacred Space: A Beginner's Guide",
-    category: "Rituals & Practices",
-    excerpt:
-      "Your sacred space does not need to be elaborate. It simply needs to be yours. Learn how to create a space that supports your practice.",
-    content: "",
-    image: "/images/blog/sacred-space.jpg",
-    author: "The Spirit Atelier",
-    featured: false,
-  },
-  {
-    id: "art-of-ritual",
-    title: "The Art of Ritual: Daily Practices for Grounding",
-    category: "Rituals & Practices",
-    excerpt:
-      "Ritual does not require perfection. It requires presence. Discover simple daily practices that anchor you in intention and awareness.",
-    content: "",
-    image: "/images/blog/daily-ritual.jpg",
-    author: "The Spirit Atelier",
-    featured: false,
-  },
-  {
-    id: "moon-phases-manifestation",
-    title: "Moon Phases and Manifestation",
-    category: "Seasonal Guides",
-    excerpt:
-      "The moon has guided seekers for millennia. Learn how to align your intentions with lunar cycles for deeper manifestation practice.",
-    content: "",
-    image: "/images/blog/moon-phases.jpg",
-    author: "The Spirit Atelier",
-    featured: false,
-  },
-  {
-    id: "tarot-self-reflection",
-    title: "Tarot for Self-Reflection: Getting Started",
-    category: "Divination Wisdom",
-    excerpt:
-      "Tarot is not about predicting the future. It is about understanding the present. Here is how to begin using tarot as a mirror.",
-    content: "",
-    image: "/images/blog/tarot-reflection.jpg",
-    author: "The Spirit Atelier",
-    featured: false,
-  },
-  {
-    id: "power-of-journaling",
-    title: "The Power of Journaling in Your Practice",
-    category: "Rituals & Practices",
-    excerpt:
-      "Writing is one of the oldest forms of self-communion. Explore how journaling deepens your spiritual practice and reveals hidden patterns.",
-    content: "",
-    image: "/images/blog/journaling.jpg",
-    author: "The Spirit Atelier",
-    featured: false,
   },
 ];
 

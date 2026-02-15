@@ -29,20 +29,33 @@ export function emailLayoutShell(options: LayoutOptions = {}): string {
 <body style="margin:0;padding:0;background-color:#535B73 ; font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;">
   ${preheaderHtml}
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#FFFFFF;">
-    <tr>
-      <td align="center" style="padding:40px 20px;">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
-          <!-- Header -->
-         <tr>
-  <td align="center" style="background-color:#535B73; padding:40px 20px; border-radius:16px;">
-  <img 
-    src="/images/the-spirit-atelier-email.png"
-    alt="The Spirit Atelier"
-    width="300"
-    style="display:block; max-width:300px; width:100%; height:auto;"
-  />
+   <tr>
+  <td align="center" 
+      style="
+        background-color:#535B73; 
+        padding:24px 20px;
+      ">
+
+    <img 
+      src="https://www.thespiritatelier.ca/images/the-spirit-atelier-email.png"
+      alt="The Spirit Atelier"
+      width="260"
+      style="
+        display:block;
+        width:100%;
+        max-width:260px;
+        height:auto;
+        margin:0 auto;
+      "
+    />
+
     <hr 
-      style="border:none; border-top:1px solid #FEDDE8; margin:16px auto 0 auto; width:80px;"
+      style="
+        border:none;
+        border-top:1px solid #FEDDE8;
+        margin:16px auto 0 auto;
+        width:60px;
+      "
     />
 
   </td>

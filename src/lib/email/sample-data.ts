@@ -83,6 +83,7 @@ const statusUpgrade: StatusUpgradeData = {
     "Recognition in a Dedicated Instagram Story",
   ],
   credits: 500,
+  lifetimeCredits: 750,
 };
 
 export const sampleData: Record<string, TemplateData> = {

@@ -166,6 +166,7 @@ async function buildTemplateDataForUser(
         newTier: tier,
         benefits: getTierBenefits(tier),
         credits: user.loyalty?.currentCredits ?? 0,
+        lifetimeCredits: user.loyalty?.lifetimeCredits ?? 0,
       };
     }
 

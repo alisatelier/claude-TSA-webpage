@@ -73,6 +73,7 @@ export interface StatusUpgradeData {
   newTier: string;
   benefits: string[];
   credits: number;
+  lifetimeCredits: number;
 }
 
 export type TemplateData =
@@ -115,14 +116,16 @@ function render(
   body: string,
   variables: Record<string, string>,
   subject: string,
-  preheader: string
+  preheader: string,
 ): RenderedEmail {
   const filledBody = fillPlaceholders(body, variables);
   return {
     subject: fillPlaceholders(subject, variables),
     body,
     variables,
-    html: emailLayout(filledBody, { preheader: fillPlaceholders(preheader, variables) }),
+    html: emailLayout(filledBody, {
+      preheader: fillPlaceholders(preheader, variables),
+    }),
   };
 }
 
@@ -167,7 +170,9 @@ function buildProductCard(data: WishlistBackInStockData): string {
       ${data.productName}
     </p>
 
-    ${variationLine ? `
+    ${
+      variationLine
+        ? `
       <p style="
         margin:0 0 12px 0;
         font-size:14px;
@@ -175,7 +180,9 @@ function buildProductCard(data: WishlistBackInStockData): string {
       ">
         ${variationLine}
       </p>
-    ` : ''}
+    `
+        : ""
+    }
 
     <!-- Price -->
     <p style="
@@ -191,7 +198,9 @@ function buildProductCard(data: WishlistBackInStockData): string {
 `;
 }
 
-function renderWishlistBackInStock(data: WishlistBackInStockData): RenderedEmail {
+function renderWishlistBackInStock(
+  data: WishlistBackInStockData,
+): RenderedEmail {
   const variables: Record<string, string> = {
     firstName: data.firstName,
     productName: data.productName,
@@ -205,7 +214,12 @@ function renderWishlistBackInStock(data: WishlistBackInStockData): RenderedEmail
        <p style="margin:0 0 16px;font-size:14px;color:#A69FA6;text-align:center;">It may not last long — claim yours before it's gone.</p>
        ${btn("View Product", "{{productUrl}}")}`;
 
-  return render(body, variables, "{{productName}} Is Back in Stock", "{{productName}} is available again");
+  return render(
+    body,
+    variables,
+    "{{productName}} Is Back in Stock",
+    "{{productName}} is available again",
+  );
 }
 
 function renderLoyaltyWelcome(data: LoyaltyWelcomeData): RenderedEmail {
@@ -225,7 +239,12 @@ function renderLoyaltyWelcome(data: LoyaltyWelcomeData): RenderedEmail {
        </div>
        ${btn("Explore Rewards")}`;
 
-  return render(body, variables, "Your Ritual Credits Await", "You have {{credits}} credits waiting");
+  return render(
+    body,
+    variables,
+    "Your Ritual Credits Await",
+    "You have {{credits}} credits waiting",
+  );
 }
 
 function buildOrderItemsTable(items: OrderItem[], total: number): string {
@@ -234,16 +253,18 @@ function buildOrderItemsTable(items: OrderItem[], total: number): string {
       (item) =>
         `<tr>
           <td style="padding:8px 0;border-bottom:1px solid #F2E9E9;width:48px;vertical-align:middle;">
-            ${item.image
-              ? `<img src="${item.image}" alt="${item.name}" width="48" height="48" style="display:block;border-radius:4px;object-fit:cover;" />`
-              : `<div style="width:48px;height:48px;border-radius:4px;background-color:#F2E9E9;"></div>`}
+            ${
+              item.image
+                ? `<img src="${item.image}" alt="${item.name}" width="48" height="48" style="display:block;border-radius:4px;object-fit:cover;" />`
+                : `<div style="width:48px;height:48px;border-radius:4px;background-color:#F2E9E9;"></div>`
+            }
           </td>
           <td style="padding:8px 0 8px 12px;border-bottom:1px solid #F2E9E9;color:#535B73;font-size:14px;vertical-align:middle;">
             ${item.name}${item.variation ? `<br/><span style="color:#A69FA6;font-size:12px;">${item.variation}</span>` : ""}
           </td>
           <td style="padding:8px 0;border-bottom:1px solid #F2E9E9;color:#535B73;font-size:14px;text-align:center;vertical-align:middle;">${item.quantity}</td>
           <td style="padding:8px 0;border-bottom:1px solid #F2E9E9;color:#535B73;font-size:14px;text-align:right;vertical-align:middle;">${fmt(item.price)}</td>
-        </tr>`
+        </tr>`,
     )
     .join("");
 
@@ -275,7 +296,12 @@ function renderOrderConfirmation(data: OrderConfirmationData): RenderedEmail {
        {{orderItems}}
        ${btn("View Order")}`;
 
-  return render(body, variables, "Order {{orderNumber}} Confirmed", "Order {{orderNumber}} confirmed");
+  return render(
+    body,
+    variables,
+    "Order {{orderNumber}} Confirmed",
+    "Order {{orderNumber}} confirmed",
+  );
 }
 
 function renderOrderShipped(data: OrderShippedData): RenderedEmail {
@@ -295,10 +321,17 @@ function renderOrderShipped(data: OrderShippedData): RenderedEmail {
        </div>
        ${btn("Track Your Order", "{{trackingUrl}}")}`;
 
-  return render(body, variables, "Your Order Has Shipped", "Order #{{orderNumber}} has shipped");
+  return render(
+    body,
+    variables,
+    "Your Order Has Shipped",
+    "Order #{{orderNumber}} has shipped",
+  );
 }
 
-function renderServiceBookingConfirmation(data: ServiceBookingConfirmationData): RenderedEmail {
+function renderServiceBookingConfirmation(
+  data: ServiceBookingConfirmationData,
+): RenderedEmail {
   const variables: Record<string, string> = {
     firstName: data.firstName,
     serviceName: data.serviceName,
@@ -329,7 +362,12 @@ function renderServiceBookingConfirmation(data: ServiceBookingConfirmationData):
        </table>
        <p style="margin:0;color:#A69FA6;font-size:13px;">We look forward to seeing you.</p>`;
 
-  return render(body, variables, "Your Booking Is Confirmed", "{{serviceName}} — {{date}} at {{time}}");
+  return render(
+    body,
+    variables,
+    "Your Booking Is Confirmed",
+    "{{serviceName}} — {{date}} at {{time}}",
+  );
 }
 
 function renderServiceReminder(data: ServiceReminderData): RenderedEmail {
@@ -360,7 +398,12 @@ function renderServiceReminder(data: ServiceReminderData): RenderedEmail {
        ${data.preparationNote ? prepBlock : ""}
        <p style="margin:0;color:#A69FA6;font-size:13px;">See you soon.</p>`;
 
-  return render(body, variables, "Your Session Is Tomorrow", "{{serviceName}} — tomorrow at {{time}}");
+  return render(
+    body,
+    variables,
+    "Your Session Is Tomorrow",
+    "{{serviceName}} — tomorrow at {{time}}",
+  );
 }
 
 function renderBirthdayMonth(data: BirthdayMonthData): RenderedEmail {
@@ -378,7 +421,12 @@ function renderBirthdayMonth(data: BirthdayMonthData): RenderedEmail {
        <p style="margin:0 0 16px;">Use them on anything in the shop or toward a service booking this month.</p>
        ${btn("Claim Your Gift")}`;
 
-  return render(body, variables, "A Birthday Gift Awaits You", "{{credits}} birthday credits are waiting for you");
+  return render(
+    body,
+    variables,
+    "A Birthday Gift Awaits You",
+    "{{credits}} birthday credits are waiting for you",
+  );
 }
 
 function renderReferralCompleted(data: ReferralCompletedData): RenderedEmail {
@@ -398,28 +446,85 @@ function renderReferralCompleted(data: ReferralCompletedData): RenderedEmail {
        <p style="margin:0 0 16px;">Keep sharing your referral code to earn more rewards.</p>
        ${btn("View Your Credits")}`;
 
-  return render(body, variables, "You Earned {{creditsEarned}} Ritual Credits", "+{{creditsEarned}} credits from your referral");
+  return render(
+    body,
+    variables,
+    "You Earned {{creditsEarned}} Ritual Credits",
+    "+{{creditsEarned}} credits from your referral",
+  );
 }
 
-function buildBenefitsBlock(tier: string, benefits: string[]): string {
-  const threshold = tier === "Elder" ? "1,500+" : tier === "Keeper" ? "500+" : "0+";
+function buildBenefitsBlock(
+  tier: string,
+  benefits: string[],
+  lifetimeCredits: number,
+): string {
+  const nextTierLine =
+    tier === "Keeper"
+      ? `<p style="margin:6px 0 18px;font-size:12px;color:#A69FA6;">
+           ${Math.max(0, 1500 - lifetimeCredits).toLocaleString()} credits until Elder
+         </p>`
+      : "";
 
   const benefitRows = benefits
     .map(
       (b) =>
         `<tr>
-          <td style="padding:6px 0 6px 20px;color:#535B73;font-size:14px;line-height:1.5;">&#8226; ${b}</td>
-        </tr>`
+          <td style="padding:8px 0;color:#535B73;font-size:14px;line-height:1.6;">
+            &#8226; ${b}
+          </td>
+        </tr>`,
     )
     .join("");
 
-  return `<div style="background-color:#F2E9E9;border-radius:8px;padding:24px;margin:0 0 24px;">
-    <p style="margin:0 0 4px;font-size:20px;font-weight:bold;color:#535B73;letter-spacing:1px;">${tier}</p>
-    <p style="margin:0 0 16px;font-size:13px;color:#A69FA6;">${threshold} Lifetime Credits Earned</p>
-    <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%; color:#535b73; ">
+  return `
+  <div style="
+    background-color:#ffffff;
+    border:1px solid #FEDDE8;
+    border-radius:16px;
+    padding:28px 24px;
+    margin:0 auto 24px auto;
+    max-width:460px;
+    text-align:left;
+  ">
+
+    <!-- Tier Name -->
+    <p style="
+      margin:0 0 6px 0;
+      font-size:20px;
+      font-weight:600;
+      color:#535B73;
+      letter-spacing:1px;
+      text-transform:uppercase;
+    ">
+      ${tier}
+    </p>
+
+    <!-- Lifetime Credits -->
+    <p style="
+      margin:0 0 ${nextTierLine ? "0" : "20px"};
+      font-size:13px;
+      color:#A69FA6;
+    ">
+      ${lifetimeCredits.toLocaleString()} Lifetime Credits Earned
+    </p>
+
+    ${nextTierLine}
+
+    <!-- Divider -->
+    <hr style="
+      border:none;
+      border-top:1px solid #F2E9E9;
+      margin:18px 0 16px 0;
+    ">
+
+    <!-- Benefits -->
+    <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;">
       ${benefitRows}
     </table>
-  </div>`;
+
+  </div>
+  `;
 }
 
 function renderStatusUpgrade(data: StatusUpgradeData): RenderedEmail {
@@ -427,7 +532,12 @@ function renderStatusUpgrade(data: StatusUpgradeData): RenderedEmail {
     firstName: data.firstName,
     newTier: data.newTier,
     credits: String(data.credits),
-    benefits: buildBenefitsBlock(data.newTier, data.benefits),
+    lifetimeCredits: String(data.lifetimeCredits),
+    benefits: buildBenefitsBlock(
+      data.newTier,
+      data.benefits,
+      data.lifetimeCredits,
+    ),
   };
 
   const body = `<p style="margin:0 0 16px;">Dear {{firstName}},</p>
@@ -436,7 +546,12 @@ function renderStatusUpgrade(data: StatusUpgradeData): RenderedEmail {
        ${btn("Explore Your Rewards")}
        <p style="margin:0;color:#A69FA6;font-size:13px;">Thank you for being part of our community.</p>`;
 
-  return render(body, variables, "You've Reached {{newTier}} Status", "You're now a {{newTier}} member");
+  return render(
+    body,
+    variables,
+    "You've Reached {{newTier}} Status",
+    "You're now a {{newTier}} member",
+  );
 }
 
 // ── Template Registry ──────────────────────────────────────────────
@@ -449,11 +564,11 @@ export interface TemplateMeta {
 }
 
 export const TEMPLATES: TemplateMeta[] = [
-
   {
     id: "loyalty-welcome",
     name: "Loyalty Welcome",
-    description: "Welcome bonus and referral code for the Ritual Rewards programme.",
+    description:
+      "Welcome bonus and referral code for the Ritual Rewards programme.",
     trigger: "First loyalty enrolment",
   },
   {
@@ -489,19 +604,22 @@ export const TEMPLATES: TemplateMeta[] = [
   {
     id: "birthday-month",
     name: "Birthday Month",
-    description: "Birthday credits gift at the start of the customer's birth month.",
+    description:
+      "Birthday credits gift at the start of the customer's birth month.",
     trigger: "Start of birthday month",
   },
   {
     id: "referral-completed",
     name: "Referral Completed",
-    description: "Notification that a referred friend made their first purchase.",
+    description:
+      "Notification that a referred friend made their first purchase.",
     trigger: "Referred user completes first order",
   },
   {
     id: "status-upgrade",
     name: "Status Upgrade",
-    description: "Congratulations email when a customer reaches a new loyalty tier.",
+    description:
+      "Congratulations email when a customer reaches a new loyalty tier.",
     trigger: "Tier threshold reached",
   },
 ];
@@ -523,20 +641,28 @@ export const DEFAULT_SUBJECTS: Record<string, string> = {
 // ── Dispatcher ─────────────────────────────────────────────────────
 
 const renderers: Record<string, (data: never) => RenderedEmail> = {
-  "wishlist-back-in-stock": renderWishlistBackInStock as (data: never) => RenderedEmail,
+  "wishlist-back-in-stock": renderWishlistBackInStock as (
+    data: never,
+  ) => RenderedEmail,
   "loyalty-welcome": renderLoyaltyWelcome as (data: never) => RenderedEmail,
-  "order-confirmation": renderOrderConfirmation as (data: never) => RenderedEmail,
+  "order-confirmation": renderOrderConfirmation as (
+    data: never,
+  ) => RenderedEmail,
   "order-shipped": renderOrderShipped as (data: never) => RenderedEmail,
-  "service-booking-confirmation": renderServiceBookingConfirmation as (data: never) => RenderedEmail,
+  "service-booking-confirmation": renderServiceBookingConfirmation as (
+    data: never,
+  ) => RenderedEmail,
   "service-reminder": renderServiceReminder as (data: never) => RenderedEmail,
   "birthday-month": renderBirthdayMonth as (data: never) => RenderedEmail,
-  "referral-completed": renderReferralCompleted as (data: never) => RenderedEmail,
+  "referral-completed": renderReferralCompleted as (
+    data: never,
+  ) => RenderedEmail,
   "status-upgrade": renderStatusUpgrade as (data: never) => RenderedEmail,
 };
 
 export function renderTemplate(
   templateId: string,
-  data: TemplateData
+  data: TemplateData,
 ): RenderedEmail {
   const renderer = renderers[templateId];
   if (!renderer) throw new Error(`Unknown template: ${templateId}`);

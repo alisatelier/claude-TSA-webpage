@@ -66,7 +66,7 @@ export async function triggerWishlistBackInStockEmail(
       productImage: resolved.image,
       variation,
       price: product?.price ?? 0,
-      productUrl: `/shop/${productId}`,
+      productUrl: `https://www.thespiritatelier.ca/shop/${productId}`,
     },
     user.email
   );
@@ -238,6 +238,7 @@ export async function triggerStatusUpgradeEmail(userId: string, newTier: string)
       newTier,
       benefits,
       credits: user.loyalty?.currentCredits ?? 0,
+      lifetimeCredits: user.loyalty?.lifetimeCredits ?? 0,
     },
     user.email
   );
