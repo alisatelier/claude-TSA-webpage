@@ -232,7 +232,7 @@ export default function LoyaltyPage() {
         <div className="max-w-3xl mx-auto border-t border-cream pt-8">
           <p className="text-xs text-mauve/70 text-center leading-relaxed">
             Ritual Credits apply to subtotal before tax. Credits hold no cash
-            value and cannot be transferred. The Spirit Atelier reserves the
+            value and cannot be transferred. 200 refer a friend credits can only be earned once. The Spirit Atelier reserves the
             right to modify program terms at any time.
           </p>
         </div>

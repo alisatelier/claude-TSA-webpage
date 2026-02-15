@@ -149,7 +149,7 @@ export default function Header() {
                           My Orders
                         </Link>
                         <Link
-                          href="/wishlist"
+                          href="/account/wishlist"
                           className="flex items-center gap-2 px-4 py-2.5 font-heading text-sm text-white/80 hover:text-light-blush hover:bg-white/5 transition-colors"
                         >
                           My Wishlist
@@ -292,7 +292,7 @@ export default function Header() {
                       My Orders
                     </Link>
                     <Link
-                      href="/wishlist"
+                      href="/account/wishlist"
                       className="flex items-center gap-2 font-heading text-white/60 text-sm py-1 hover:text-light-blush transition-colors"
                       onClick={() => setMobileOpen(false)}
                     >

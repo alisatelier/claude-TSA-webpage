@@ -70,7 +70,7 @@ export default function AccountPage() {
         title: "My Wishlist",
         desc: "Items you have saved for later",
         icon: faHeart,
-        href: "/wishlist",
+        href: "/account/wishlist",
       },
       {
         title: "Rewards",
@@ -99,7 +99,7 @@ export default function AccountPage() {
           <div className="max-w-5xl mx-auto">
             <div className="bg-cream rounded-xl p-8 mb-8 text-center">
               <h2 className="font-heading text-3xl text-navy mb-2">
-                Hello, {user.name || "Seeker"}
+                Hello, {user.name || "Seeker"}!
               </h2>
               <p className="text-mauve font-accent italic">
                 For You, On Your Journey

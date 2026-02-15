@@ -269,7 +269,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       if (isLoggedIn) {
         showToast({
           message: "Added to your Wishlist",
-          link: { href: "/wishlist", label: "View Wishlist" },
+          link: { href: "/account/wishlist", label: "View Wishlist" },
         });
       } else {
         showToast({
