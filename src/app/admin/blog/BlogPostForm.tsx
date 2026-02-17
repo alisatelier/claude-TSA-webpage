@@ -8,6 +8,7 @@ import { createBlogPost, updateBlogPost } from "./actions";
 const CATEGORIES = [
   "Rituals & Practices",
   "Divination Wisdom",
+  "Cosmic Insights",
   "Seasonal Guides",
   "Community Stories",
   "Product Spotlights",

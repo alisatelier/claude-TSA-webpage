@@ -32,7 +32,7 @@ export default async function AdminBlogPage({
   const [posts, total] = await Promise.all([
     prisma.blogPost.findMany({
       where,
-      orderBy: { createdAt: "desc" },
+      orderBy: { sortOrder: "asc" },
       skip: (page - 1) * PER_PAGE,
       take: PER_PAGE,
     }),
@@ -47,6 +47,7 @@ export default async function AdminBlogPage({
   const categories = [
     "Rituals & Practices",
     "Divination Wisdom",
+    "Cosmic Insights",
     "Seasonal Guides",
     "Community Stories",
     "Product Spotlights",
@@ -104,7 +105,7 @@ export default async function AdminBlogPage({
                 </td>
               </tr>
             ) : (
-              posts.map((post) => (
+              posts.map((post, index) => (
                 <tr key={post.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3">
                     <Link
@@ -129,7 +130,12 @@ export default async function AdminBlogPage({
                     {post.createdAt.toLocaleDateString()}
                   </td>
                   <td className="px-4 py-3">
-                    <BlogPostActions postId={post.id} isFeatured={post.featured} />
+                    <BlogPostActions
+                      postId={post.id}
+                      isFeatured={post.featured}
+                      isFirst={index === 0 && page === 1}
+                      isLast={index === posts.length - 1 && page === totalPages}
+                    />
                   </td>
                 </tr>
               ))

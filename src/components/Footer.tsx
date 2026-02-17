@@ -69,7 +69,7 @@ export default function Footer() {
                   { href: "/shop", label: "Shop" },
                   { href: "/services", label: "Services" },
                   { href: "/loyalty", label: "Loyalty Program" },
-                  { href: "/blog", label: "Journal" },
+                  { href: "/blog", label: "Guidance" },
                   { href: "/about", label: "About Us" },
                   { href: "/contact", label: "Contact" },
                 ].map((link) => (

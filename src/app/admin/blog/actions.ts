@@ -37,10 +37,14 @@ export async function createBlogPost(data: {
     await prisma.blogPost.updateMany({ where: { featured: true }, data: { featured: false } });
   }
 
-  await prisma.blogPost.create({ data });
+  // New posts go to the top of the list
+  const topPost = await prisma.blogPost.findFirst({ orderBy: { sortOrder: "asc" } });
+  const newSortOrder = topPost ? topPost.sortOrder - 1 : 0;
+
+  await prisma.blogPost.create({ data: { ...data, sortOrder: newSortOrder } });
 
   revalidatePath("/admin/blog");
-  revalidatePath("/blog");
+  revalidatePath("/blog", "layout");
   return {};
 }
 
@@ -80,7 +84,7 @@ export async function updateBlogPost(
   await prisma.blogPost.update({ where: { id }, data });
 
   revalidatePath("/admin/blog");
-  revalidatePath("/blog");
+  revalidatePath("/blog", "layout");
   return {};
 }
 
@@ -90,7 +94,7 @@ export async function deleteBlogPost(id: string) {
   await prisma.blogPost.delete({ where: { id } });
 
   revalidatePath("/admin/blog");
-  revalidatePath("/blog");
+  revalidatePath("/blog", "layout");
   return {};
 }
 
@@ -104,6 +108,35 @@ export async function toggleFeatured(id: string, featured: boolean) {
   await prisma.blogPost.update({ where: { id }, data: { featured } });
 
   revalidatePath("/admin/blog");
-  revalidatePath("/blog");
+  revalidatePath("/blog", "layout");
+  return {};
+}
+
+export async function moveBlogPost(id: string, direction: "up" | "down") {
+  await requireAdmin();
+
+  const post = await prisma.blogPost.findUnique({ where: { id } });
+  if (!post) return { error: "Post not found" };
+
+  // "up" means lower sortOrder (closer to top), "down" means higher
+  const neighbor = await prisma.blogPost.findFirst({
+    where: {
+      sortOrder: direction === "up"
+        ? { lt: post.sortOrder }
+        : { gt: post.sortOrder },
+    },
+    orderBy: { sortOrder: direction === "up" ? "desc" : "asc" },
+  });
+
+  if (!neighbor) return {};
+
+  // Swap sortOrder values
+  await prisma.$transaction([
+    prisma.blogPost.update({ where: { id: post.id }, data: { sortOrder: neighbor.sortOrder } }),
+    prisma.blogPost.update({ where: { id: neighbor.id }, data: { sortOrder: post.sortOrder } }),
+  ]);
+
+  revalidatePath("/admin/blog");
+  revalidatePath("/blog", "layout");
   return {};
 }

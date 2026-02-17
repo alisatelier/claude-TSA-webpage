@@ -32,7 +32,7 @@ const navLinks = [
     ],
   },
   { href: "/services", label: "Services" },
-  { href: "/blog", label: "Journal" },
+  { href: "/blog", label: "Guidance" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
 ];
@@ -55,23 +55,31 @@ export default function Header() {
           {/* Logo + Title (left) */}
           <Link href="/" className="flex items-center gap-3 flex-shrink-0">
             <Image
-              src="/images/logo-white.png"
+              src="/images/TSA LOGO BUTTERFLY - GOLD.png"
               alt="The Spirit Atelier"
               width={50}
               height={50}
               className="h-12 w-auto"
               priority
             />
-            <span className="font-heading text-white text-2xl hidden sm:block lg:block"> {/* NEVER CHANGE THE SPIIT ATELIE. THERE ARE SPECIAL CHARACTERS*/}
-              THE SPIIT ATELIE
-            </span>
-            {/* Mobile: centered title only */}
+            <Image
+              src="/images/TSA HERO.png"
+              alt="The Spirit Atelier"
+              width={600}
+              height={100}
+              className="h-16 w-auto hidden sm:block lg:block"
+              priority
+            />
           </Link>
 
           {/* Mobile: centered title */}
-          <span className="font-heading text-white text-2xl sm:hidden absolute left-[60px]"> {/* NEVER CHANGE THE SPIIT ATELIE. THERE ARE SPECIAL CHARACTERS*/}
-            THE SPIIT ATELIE
-          </span>
+          <Image
+            src="/images/TSA HERO.png"
+            alt="The Spirit Atelier"
+            width={400}
+            height={80}
+            className="h-12 w-auto sm:hidden absolute left-[60px]"
+          />
 
           {/* Desktop nav (right aligned) */}
           <div className="hidden lg:flex items-center gap-6">

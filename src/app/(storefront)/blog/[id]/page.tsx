@@ -28,7 +28,7 @@ export default async function BlogPostPage({
         <div className="max-w-7xl mx-auto flex items-center gap-2 text-sm text-mauve">
           <Link href="/" className="hover:text-navy transition-colors">Home</Link>
           <span>/</span>
-          <Link href="/blog" className="hover:text-navy transition-colors">Journal</Link>
+          <Link href="/blog" className="hover:text-navy transition-colors">Guidance</Link>
           <span>/</span>
           <span className="text-navy">{post.title}</span>
         </div>
@@ -36,7 +36,7 @@ export default async function BlogPostPage({
 
       <article className="py-16 px-4">
         <div className="max-w-3xl mx-auto">
-          <div className="aspect-[16/9] rounded-xl bg-gradient-to-br from-cream to-light-blush mb-8 flex items-center justify-center relative overflow-hidden">
+          <div className="aspect-[1080/1350] rounded-xl bg-gradient-to-br from-cream to-light-blush mb-8 flex items-center justify-center relative overflow-hidden">
             {post.image ? (
               <Image
                 src={post.image}
