@@ -2,8 +2,24 @@
 
 import { useState } from "react";
 import { faqCategories } from "@/lib/data";
+import JsonLd from "@/components/JsonLd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronDown } from "@fortawesome/free-solid-svg-icons";
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqCategories.flatMap((cat) =>
+    cat.questions.map((item) => ({
+      "@type": "Question",
+      name: item.q,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.a,
+      },
+    }))
+  ),
+};
 
 export default function FAQPage() {
   const [openItems, setOpenItems] = useState<string[]>([]);
@@ -22,6 +38,7 @@ export default function FAQPage() {
 
   return (
     <>
+      <JsonLd data={faqJsonLd} />
       <section className="bg-navy py-16 px-4">
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="font-heading text-5xl md:text-6xl text-white mb-3">FAQ</h1>

@@ -114,13 +114,16 @@ export default async function AdminBookingsPage({
               <th className="text-left px-4 py-3 font-medium text-gray-600">
                 Price
               </th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">
+                Meet
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {bookings.length === 0 ? (
               <tr>
                 <td
-                  colSpan={7}
+                  colSpan={8}
                   className="px-4 py-8 text-center text-gray-500"
                 >
                   No bookings found
@@ -146,6 +149,20 @@ export default async function AdminBookingsPage({
                   </td>
                   <td className="px-4 py-3">
                     ${booking.totalPrice.toFixed(2)}
+                  </td>
+                  <td className="px-4 py-3">
+                    {booking.googleMeetLink ? (
+                      <a
+                        href={booking.googleMeetLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 text-xs font-medium"
+                      >
+                        Join
+                      </a>
+                    ) : (
+                      <span className="text-gray-400">--</span>
+                    )}
                   </td>
                 </tr>
               ))

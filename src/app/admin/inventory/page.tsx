@@ -8,6 +8,10 @@ export default async function AdminInventoryPage() {
   const session = await auth();
   if (session?.user?.role !== "ADMIN") redirect("/admin/login");
 
+  // Clean up legacy bare "Imperfect" stock rows — stock is now tracked
+  // per-color as "Imperfect - {color}" (e.g. "Imperfect - Sunset")
+  await prisma.productStock.deleteMany({ where: { variation: "Imperfect" } });
+
   const allStock = await prisma.productStock.findMany({
     orderBy: [{ productId: "asc" }, { variation: "asc" }],
   });
@@ -19,6 +23,36 @@ export default async function AdminInventoryPage() {
       variation: s.variation ?? "_default",
       stock: s.stock,
     });
+  }
+
+  // Expand expected variations so every product shows all rows in admin,
+  // including per-color imperfect sub-variants (e.g. "Imperfect - Sunset")
+  for (const product of products) {
+    const entries = stockByProduct[product.id] || [];
+    const existingKeys = new Set(entries.map((e) => e.variation));
+
+    const colorVariations = product.variations.filter((v) => v !== "Imperfect");
+    const hasImperfect = product.variations.includes("Imperfect");
+
+    // Build the full list of expected variation keys
+    const expectedKeys: string[] = [];
+    if (product.variations.length === 0) {
+      expectedKeys.push("_default");
+    } else {
+      for (const v of colorVariations) expectedKeys.push(v);
+      if (hasImperfect) {
+        for (const v of colorVariations) expectedKeys.push(`Imperfect - ${v}`);
+      }
+    }
+
+    // Merge missing keys with stock 0
+    for (const key of expectedKeys) {
+      if (!existingKeys.has(key)) {
+        entries.push({ variation: key, stock: 0 });
+      }
+    }
+
+    stockByProduct[product.id] = entries;
   }
 
   return (
@@ -40,7 +74,12 @@ export default async function AdminInventoryPage() {
 
           // Map each stock entry to include its variation image
           const entriesWithImages = entries.map((entry) => {
-            const varImages = product.variationImages[entry.variation];
+            let varImages = product.variationImages[entry.variation];
+            // For imperfect sub-variants like "Imperfect - Black | Gold",
+            // fall back to the "Imperfect" key in variationImages
+            if (!varImages && entry.variation.startsWith("Imperfect - ")) {
+              varImages = product.variationImages["Imperfect"];
+            }
             const defaultImages = product.variationImages["_default"];
             const image = varImages?.[0] || defaultImages?.[0] || product.images[0] || null;
             return { ...entry, image };

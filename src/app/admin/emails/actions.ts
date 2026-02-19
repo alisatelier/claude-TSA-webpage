@@ -170,6 +170,147 @@ async function buildTemplateDataForUser(
       };
     }
 
+    case "admin-new-order": {
+      const order = await prisma.order.findFirst({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+        include: { items: true },
+      });
+      if (!order) return null;
+      return {
+        customerName: user.name ?? "Unknown",
+        customerEmail: user.email ?? "N/A",
+        orderNumber: formatOrderNumber(order.orderNumber),
+        orderItems: order.items.map((item) => ({
+          name: item.name,
+          quantity: item.quantity,
+          price: item.unitPrice / 100,
+          variation: item.variation ?? undefined,
+          image: item.image || resolveProduct(item.productId, item.variation ?? undefined).image,
+        })),
+        total: order.totalAmount / 100,
+      };
+    }
+
+    case "admin-new-booking": {
+      const booking = await prisma.serviceBooking.findFirst({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+      });
+      if (!booking) return null;
+      const service = services.find((s) => s.id === booking.serviceId);
+      return {
+        customerName: user.name ?? "Unknown",
+        customerEmail: user.email ?? "N/A",
+        serviceName: service?.name ?? booking.serviceId,
+        date: booking.selectedDate,
+        time: booking.selectedTime,
+        totalPrice: booking.totalPrice,
+        notes: booking.userNotes || undefined,
+        meetLink: booking.googleMeetLink ?? undefined,
+      };
+    }
+
+    case "admin-booking-reminder": {
+      const reminderBooking2 = await prisma.serviceBooking.findFirst({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+      });
+      if (!reminderBooking2) return null;
+      const reminderService2 = services.find((s) => s.id === reminderBooking2.serviceId);
+      return {
+        customerName: user.name ?? "Unknown",
+        customerEmail: user.email ?? "N/A",
+        serviceName: reminderService2?.name ?? reminderBooking2.serviceId,
+        date: reminderBooking2.selectedDate,
+        time: reminderBooking2.selectedTime,
+        meetLink: reminderBooking2.googleMeetLink ?? undefined,
+      };
+    }
+
+    case "admin-instagram-handle": {
+      const tier = user.loyalty
+        ? calculateTier(user.loyalty.lifetimeCredits)
+        : "Seeker";
+      return {
+        customerName: user.name ?? "Unknown",
+        customerEmail: user.email ?? "N/A",
+        tier,
+        instagramHandle: user.loyalty?.instagramHandle ?? "preview.handle",
+      };
+    }
+
+    case "booking-cancellation": {
+      const booking = await prisma.serviceBooking.findFirst({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+      });
+      if (!booking) return null;
+      const service = services.find((s) => s.id === booking.serviceId);
+      return {
+        firstName,
+        serviceName: service?.name ?? booking.serviceId,
+        date: booking.selectedDate,
+        time: booking.selectedTime,
+        totalPrice: booking.totalPrice,
+      };
+    }
+
+    case "booking-reschedule": {
+      const booking = await prisma.serviceBooking.findFirst({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+      });
+      if (!booking) return null;
+      const service = services.find((s) => s.id === booking.serviceId);
+      return {
+        firstName,
+        serviceName: service?.name ?? booking.serviceId,
+        oldDate: "Saturday, 15 March 2025",
+        oldTime: "2:00 PM",
+        newDate: booking.selectedDate,
+        newTime: booking.selectedTime,
+        totalPrice: booking.totalPrice,
+        meetLink: booking.googleMeetLink ?? undefined,
+      };
+    }
+
+    case "admin-booking-cancellation": {
+      const booking = await prisma.serviceBooking.findFirst({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+      });
+      if (!booking) return null;
+      const service = services.find((s) => s.id === booking.serviceId);
+      return {
+        customerName: user.name ?? "Unknown",
+        customerEmail: user.email ?? "N/A",
+        serviceName: service?.name ?? booking.serviceId,
+        date: booking.selectedDate,
+        time: booking.selectedTime,
+        totalPrice: booking.totalPrice,
+      };
+    }
+
+    case "admin-booking-reschedule": {
+      const booking = await prisma.serviceBooking.findFirst({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+      });
+      if (!booking) return null;
+      const service = services.find((s) => s.id === booking.serviceId);
+      return {
+        customerName: user.name ?? "Unknown",
+        customerEmail: user.email ?? "N/A",
+        serviceName: service?.name ?? booking.serviceId,
+        oldDate: "Saturday, 15 March 2025",
+        oldTime: "2:00 PM",
+        newDate: booking.selectedDate,
+        newTime: booking.selectedTime,
+        totalPrice: booking.totalPrice,
+      };
+    }
+
     default:
       return null;
   }

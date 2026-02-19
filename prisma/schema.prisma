@@ -47,6 +47,8 @@ model User {
   orders                Order[]
   ritualCreditLogs      RitualCreditLog[]
   preferredCurrency     String?
+  emailLoyalty          Boolean  @default(true)
+  emailNewsletters      Boolean  @default(true)
   cart                  Cart?
 }
 
@@ -100,6 +102,7 @@ model Loyalty {
   firstPurchaseCompleted Boolean @default(false)
   referredBy            String?
   lockedCurrency        String?
+  instagramHandle       String?
   joinDate              DateTime @default(now())
 }
 
@@ -144,8 +147,8 @@ model Wishlist {
 
 model Order {
   id                    String      @id @default(cuid())
-  userId                String
-  user                  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId                String?
+  user                  User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   orderNumber           Int         @unique
   status                OrderStatus @default(PROCESSING)
@@ -196,6 +199,8 @@ model ServiceBooking {
   addOn                 Boolean       @default(false)
   totalPrice            Float
   expiresAt             DateTime?
+  googleCalendarEventId String?
+  googleMeetLink        String?
   createdAt             DateTime      @default(now())
 
   @@index([serviceId, selectedDate, selectedTime])
@@ -271,6 +276,13 @@ model EmailTemplateOverride {
   createdAt   DateTime @default(now())
 
   @@index([templateId])
+}
+
+model ScheduleSettings {
+  id                 String @id @default("default")
+  leadTimeDays       Int    @default(7)
+  maxRangeDays       Int    @default(42)
+  maxBookingsPerWeek Int    @default(3)
 }
 
 model BlogPost {

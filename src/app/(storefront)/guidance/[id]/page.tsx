@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
+import JsonLd from "@/components/JsonLd";
 
 export default async function BlogPostPage({
   params,
@@ -16,6 +17,17 @@ export default async function BlogPostPage({
 
   if (!post) notFound();
 
+  const articleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: post.title,
+    author: { "@type": "Person", name: post.author },
+    datePublished: post.createdAt.toISOString(),
+    ...(post.image && { image: `https://thespiritatelier.ca${post.image}` }),
+    description: post.excerpt,
+    publisher: { "@id": "https://thespiritatelier.ca/#organization" },
+  };
+
   const related = await prisma.blogPost.findMany({
     where: { published: true, NOT: { id: post.id } },
     orderBy: { createdAt: "desc" },
@@ -24,11 +36,12 @@ export default async function BlogPostPage({
 
   return (
     <>
+      <JsonLd data={articleJsonLd} />
       <div className="bg-cream py-3 px-4">
         <div className="max-w-7xl mx-auto flex items-center gap-2 text-sm text-mauve">
           <Link href="/" className="hover:text-navy transition-colors">Home</Link>
           <span>/</span>
-          <Link href="/blog" className="hover:text-navy transition-colors">Guidance</Link>
+          <Link href="/guidance" className="hover:text-navy transition-colors">Guidance</Link>
           <span>/</span>
           <span className="text-navy">{post.title}</span>
         </div>
@@ -91,7 +104,7 @@ export default async function BlogPostPage({
                   </div>
                   <div className="p-5">
                     <h3 className="font-heading text-lg text-navy mb-2">{r.title}</h3>
-                    <Link href={`/blog/${r.slug}`} className="text-navy font-medium text-sm tracking-wider uppercase hover:text-mauve transition-colors">
+                    <Link href={`/guidance/${r.slug}`} className="text-navy font-medium text-sm tracking-wider uppercase hover:text-mauve transition-colors">
                       Read More
                     </Link>
                   </div>

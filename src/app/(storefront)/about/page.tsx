@@ -2,6 +2,16 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import JsonLd from "@/components/JsonLd";
+
+const aboutJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "AboutPage",
+  name: "About The Spirit Atelier",
+  description: "The story behind the craft — handcrafted spiritual tools designed to support your journey with clarity, beauty, and intention.",
+  url: "https://thespiritatelier.ca/about",
+  mainEntity: { "@id": "https://thespiritatelier.ca/#organization" },
+};
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faUsers,
@@ -16,6 +26,7 @@ export default function AboutPage() {
 
   return (
     <>
+      <JsonLd data={aboutJsonLd} />
       {/* HERO */}
       <section className="bg-navy py-20 px-4">
         <div className="max-w-7xl mx-auto text-center">

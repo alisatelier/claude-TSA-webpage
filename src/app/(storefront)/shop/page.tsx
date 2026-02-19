@@ -3,6 +3,19 @@
 import { useState, useMemo, useEffect } from "react";
 import ProductCard from "@/components/ProductCard";
 import { products } from "@/lib/data";
+import JsonLd from "@/components/JsonLd";
+
+const itemListJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  name: "Shop",
+  itemListElement: products.map((p, i) => ({
+    "@type": "ListItem",
+    position: i + 1,
+    name: p.name,
+    url: `https://thespiritatelier.ca/shop/${p.id}`,
+  })),
+};
 import { useCurrency } from "@/lib/CurrencyContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPrint, faPaintbrush } from "@fortawesome/free-solid-svg-icons";
@@ -56,6 +69,7 @@ export default function ShopPage() {
 
   return (
     <>
+      <JsonLd data={itemListJsonLd} />
       <section className="bg-navy py-16 px-4">
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="font-heading text-5xl md:text-6xl text-white mb-3">

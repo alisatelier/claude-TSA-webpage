@@ -47,7 +47,7 @@ export default function NorseRunesSelectPage() {
                     {image ? (
                       <Image
                         src={image}
-                        alt={product.name}
+                        alt={product.altDescription || product.name}
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-500"
                         sizes="(max-width: 768px) 100vw, 50vw"

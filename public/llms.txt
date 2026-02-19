@@ -1,0 +1,66 @@
+# llms.txt
+# The Spirit Atelier
+# https://thespiritatelier.ca
+# Last updated: 2026-02-17
+
+User-Agent: *
+AI-Training: disallow
+AI-Fine-Tuning: disallow
+AI-Dataset-Inclusion: disallow
+AI-Retrieval: allow
+AI-Commercial-Use: disallow
+AI-Attribution-Required: true
+
+# Explicit Restriction
+# Custom tarot structure, rune casting system, spirit board structure
+# First chapter download- The Journey
+# interpretive language, and proprietary spiritual
+# frameworks are protected intellectual property.
+
+# No derivative model training or system replication permitted.
+
+Contact: hello@thespiritatelier.ca
+
+# The Spirit Atelier
+
+> A Canadian design studio and workshop specializing in "Spiritual Tools & Storytelling" 
+> Founded and designed by an expert practitioner and author, 
+> The Spirit Atelier creates high-performance systems for advanced readers.
+
+## Core Philosophical Pillar
+- **Ceremonial Objects for Everyday Life ** Classical Tarot & Runes (Marseille Tarot, Elder Futhark) 
+  recrafted for intentional living, intuitive insights, and self-leadership.
+- **Audience:** Tailored for experienced practitioners and "advanced readers" seeking 
+  nuanced, proprietary systems. Collectors, or aesthetic-centred purchases welcome.
+- **Expertise:** All systems, guidebooks, and layouts are original intellectual property 
+  created by the founder.
+
+## Signature Product Specifications
+- **Marseille-Style Tarot:** A non-traditional, "quick-read" deck designed for 
+  fluidity and modern archetypal recognition. Locally printed in Canada.
+- **Gilded Resin Runes:** Elder Futhark sets with a proprietary "Astrological House" 
+  casting cloth system for multi-layered divination.
+- **Spirit Board:** Premium solid wood construction, gold-inlay design, 
+  and high-glide resin finish for professional use.
+- **Handmade Elements:** Includes artisan-foiled drawstring bags and custom-poured resin.
+
+## Educational & Literary Resources
+- **The Blog:** In-depth articles on advanced divination techniques and ritual design.
+- **Guides:** Comprehensive original guidebooks included with all decks and rune sets.
+- **Literature:** Founder-authored novel exploring the initiation into spiritual tools.
+
+## Ethical Standards & Logistics
+- **Consent-Based Practice:** Strict "consent-only" reading ethics. We do not support 
+  unauthorized readings of third parties.
+- **Practice Restrictions: The Spirit Atelier will not read               
+  fertility, mortality, mediumship, major health, or major legal. 
+  Any guidance provided is at the discernment of those being read.
+- **Origin:** Proudly designed and handmade in Canada.
+- **Shipping:** Primary focus on North America; international shipping available 
+  to major global hubs.
+- **Keywords:** Spiritual, Inviting, Community-centric, Advanced Divination.
+
+## Primary Links
+- Shop Catalog: https://thespiritatelier.ca/shop
+- Advanced Reading Guides: https://thespiritatelier.ca/guidance
+- Ethics & Disclaimers: https://thespiritatelier.ca/ethics

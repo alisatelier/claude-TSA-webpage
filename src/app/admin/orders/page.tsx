@@ -118,7 +118,7 @@ export default async function AdminOrdersPage({
                       {formatOrderNumber(order.orderNumber)}
                     </Link>
                   </td>
-                  <td className="px-4 py-3">{order.user.email}</td>
+                  <td className="px-4 py-3">{order.user?.email ?? "Deleted account"}</td>
                   <td className="px-4 py-3">
                     <OrderStatusSelect
                       orderId={order.id}

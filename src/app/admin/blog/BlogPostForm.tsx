@@ -139,7 +139,7 @@ export default function BlogPostForm({ post }: { post?: BlogPostData }) {
           Slug
         </label>
         <div className="flex items-center">
-          <span className="text-sm text-gray-500 mr-1">/blog/</span>
+          <span className="text-sm text-gray-500 mr-1">/guidance/</span>
           <input
             id="slug"
             type="text"

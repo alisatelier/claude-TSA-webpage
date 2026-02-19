@@ -1,6 +1,16 @@
+import JsonLd from "@/components/JsonLd";
+
+const privacyJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  name: "Privacy Policy",
+  url: "https://thespiritatelier.ca/privacy",
+};
+
 export default function PrivacyPage() {
   return (
     <>
+      <JsonLd data={privacyJsonLd} />
       <section className="bg-navy py-16 px-4">
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="font-heading text-5xl md:text-6xl text-white mb-3">Privacy Policy</h1>

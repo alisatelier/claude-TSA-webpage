@@ -12,11 +12,19 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const session = await auth();
-  const isAuthenticated = !!session?.user;
+  const isAdmin = session?.user?.role === "ADMIN";
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-gray-50 font-sans">
+        {children}
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-50 font-sans">
-      {isAuthenticated && <AdminSidebar />}
+      <AdminSidebar />
       <main className="flex-1 p-6">{children}</main>
     </div>
   );

@@ -8,6 +8,14 @@ import type {
   BirthdayMonthData,
   ReferralCompletedData,
   StatusUpgradeData,
+  AdminNewOrderData,
+  AdminNewBookingData,
+  AdminBookingReminderData,
+  AdminInstagramHandleData,
+  BookingCancellationData,
+  BookingRescheduleData,
+  AdminBookingCancellationData,
+  AdminBookingRescheduleData,
   TemplateData,
 } from "./templates";
 import { resolveProduct } from "@/lib/order-utils";
@@ -78,12 +86,84 @@ const statusUpgrade: StatusUpgradeData = {
   firstName: "Sophia",
   newTier: "Keeper",
   benefits: [
-    "All Seeker benefits",
     "24-Hour Early Access to Limited Drops",
     "Recognition in a Dedicated Instagram Story",
   ],
   credits: 500,
   lifetimeCredits: 750,
+};
+
+const adminNewOrder: AdminNewOrderData = {
+  customerName: "Sophia",
+  customerEmail: "sophia@test.com",
+  orderNumber: "SA-20250214-001",
+  orderItems: [
+    { name: "Whims & Whispers Journal", quantity: 1, price: 33.0, variation: "Grey", image: resolveProduct("whims-whispers-journal", "Grey").image },
+    { name: "Norse Runes", quantity: 1, price: 55.0, variation: "Black | Gold", image: resolveProduct("norse-runes", "Black | Gold").image },
+  ],
+  total: 88.0,
+};
+
+const adminNewBooking: AdminNewBookingData = {
+  customerName: "Sophia",
+  customerEmail: "sophia@test.com",
+  serviceName: "Intuitive Energy Reading",
+  date: "Saturday, 15 March 2025",
+  time: "2:00 PM",
+  totalPrice: 120.0,
+};
+
+const adminBookingReminder: AdminBookingReminderData = {
+  customerName: "Sophia",
+  customerEmail: "sophia@test.com",
+  serviceName: "Intuitive Energy Reading",
+  date: "Saturday, 15 March 2025",
+  time: "2:00 PM",
+};
+
+const adminInstagramHandle: AdminInstagramHandleData = {
+  customerName: "Sophia",
+  customerEmail: "sophia@test.com",
+  tier: "Keeper",
+  instagramHandle: "sophia.spirit",
+};
+
+const bookingCancellation: BookingCancellationData = {
+  firstName: "Sophia",
+  serviceName: "Intuitive Energy Reading",
+  date: "Saturday, 15 March 2025",
+  time: "2:00 PM",
+  totalPrice: 120.0,
+};
+
+const bookingReschedule: BookingRescheduleData = {
+  firstName: "Sophia",
+  serviceName: "Intuitive Energy Reading",
+  oldDate: "Saturday, 15 March 2025",
+  oldTime: "2:00 PM",
+  newDate: "Tuesday, 18 March 2025",
+  newTime: "4:00 PM",
+  totalPrice: 120.0,
+};
+
+const adminBookingCancellation: AdminBookingCancellationData = {
+  customerName: "Sophia",
+  customerEmail: "sophia@test.com",
+  serviceName: "Intuitive Energy Reading",
+  date: "Saturday, 15 March 2025",
+  time: "2:00 PM",
+  totalPrice: 120.0,
+};
+
+const adminBookingReschedule: AdminBookingRescheduleData = {
+  customerName: "Sophia",
+  customerEmail: "sophia@test.com",
+  serviceName: "Intuitive Energy Reading",
+  oldDate: "Saturday, 15 March 2025",
+  oldTime: "2:00 PM",
+  newDate: "Tuesday, 18 March 2025",
+  newTime: "4:00 PM",
+  totalPrice: 120.0,
 };
 
 export const sampleData: Record<string, TemplateData> = {
@@ -96,4 +176,12 @@ export const sampleData: Record<string, TemplateData> = {
   "birthday-month": birthdayMonth,
   "referral-completed": referralCompleted,
   "status-upgrade": statusUpgrade,
+  "admin-new-order": adminNewOrder,
+  "admin-new-booking": adminNewBooking,
+  "admin-booking-reminder": adminBookingReminder,
+  "admin-instagram-handle": adminInstagramHandle,
+  "booking-cancellation": bookingCancellation,
+  "booking-reschedule": bookingReschedule,
+  "admin-booking-cancellation": adminBookingCancellation,
+  "admin-booking-reschedule": adminBookingReschedule,
 };

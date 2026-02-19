@@ -67,6 +67,7 @@ export async function GET() {
     referredBy: loyalty.referredBy,
     referredByName,
     lockedCurrency: loyalty.lockedCurrency,
+    instagramHandle: loyalty.instagramHandle ?? null,
     preferredCurrency: user?.preferredCurrency ?? null,
   });
 }

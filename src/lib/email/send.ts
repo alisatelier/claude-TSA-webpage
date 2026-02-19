@@ -1,8 +1,16 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: Number(process.env.SMTP_PORT ?? 465),
+  secure: true,
+  auth: {
+    user: process.env.SMTP_USERNAME,
+    pass: process.env.SMTP_PASSWORD,
+  },
+});
 
-const FROM = "The Spirit Atelier <onboarding@resend.dev>";
+const FROM = "The Spirit Atelier <hello@thespiritatelier.ca>";
 const TEST_RECIPIENT = process.env.ADMIN_EMAIL ?? "ali.buchwald@proton.me";
 
 export async function sendEmail({
@@ -15,20 +23,15 @@ export async function sendEmail({
   html: string;
 }): Promise<{ success: boolean; error?: string }> {
   try {
-    const { error } = await resend.emails.send({
+    await transporter.sendMail({
       from: FROM,
       to: to ?? TEST_RECIPIENT,
       subject,
       html,
     });
-
-    if (error) {
-      console.error("[sendEmail] Resend error:", error);
-      return { success: false, error: error.message };
-    }
     return { success: true };
   } catch (err) {
-    console.error("[sendEmail] Unexpected error:", err);
+    console.error("[sendEmail] SMTP error:", err);
     return { success: false, error: err instanceof Error ? err.message : "Unknown error" };
   }
 }

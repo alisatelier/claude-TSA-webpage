@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
+import JsonLd from "@/components/JsonLd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faImage, faArrowRight } from "@fortawesome/free-solid-svg-icons";
 
@@ -34,8 +35,22 @@ export default async function BlogPage({
   const featured = !activeCategory ? posts.find((p) => p.featured) : undefined;
   const rest = posts.filter((p) => p !== featured);
 
+  const collectionJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "Guidance",
+    description: "Insights, guides, and reflections for your practice",
+    url: "https://thespiritatelier.ca/guidance",
+    hasPart: posts.map((p) => ({
+      "@type": "Article",
+      headline: p.title,
+      url: `https://thespiritatelier.ca/guidance/${p.slug}`,
+    })),
+  };
+
   return (
     <>
+      <JsonLd data={collectionJsonLd as Record<string, unknown>} />
       <section className="bg-navy py-16 px-4">
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="font-heading text-5xl md:text-6xl text-white mb-3">Guidance</h1>
@@ -46,7 +61,7 @@ export default async function BlogPage({
       <section className="py-8 px-4 border-b border-cream">
         <div className="max-w-7xl mx-auto flex flex-wrap gap-2 justify-center">
           <a
-            href="/blog"
+            href="/guidance"
             className={`px-4 py-2 rounded-full text-sm transition-colors ${!activeCategory ? "bg-navy text-white" : "bg-cream text-navy hover:bg-navy hover:text-white"}`}
           >
             All
@@ -54,7 +69,7 @@ export default async function BlogPage({
           {CATEGORIES.map((cat) => (
             <a
               key={cat}
-              href={`/blog?category=${encodeURIComponent(cat)}`}
+              href={`/guidance?category=${encodeURIComponent(cat)}`}
               className={`px-4 py-2 rounded-full text-sm transition-colors ${activeCategory === cat ? "bg-navy text-white" : "bg-cream text-navy hover:bg-navy hover:text-white"}`}
             >
               {cat}
@@ -85,7 +100,7 @@ export default async function BlogPage({
                   <span className="px-3 py-1 bg-navy/10 text-navy text-xs font-medium tracking-wider uppercase rounded-full w-fit mb-4">{featured.category}</span>
                   <h2 className="font-heading text-3xl text-navy mb-4">{featured.title}</h2>
                   <p className="text-navy/70 text-sm leading-relaxed mb-6">{featured.excerpt}</p>
-                  <Link href={`/blog/${featured.slug}`} className="text-navy font-medium text-sm tracking-wider uppercase hover:text-mauve transition-colors inline-flex items-center gap-2">
+                  <Link href={`/guidance/${featured.slug}`} className="text-navy font-medium text-sm tracking-wider uppercase hover:text-mauve transition-colors inline-flex items-center gap-2">
                     Read More
                     <FontAwesomeIcon icon={faArrowRight} className="w-4 h-4" />
                   </Link>
@@ -100,7 +115,7 @@ export default async function BlogPage({
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {rest.map((post) => (
-              <Link key={post.id} href={`/blog/${post.slug}`} className="block h-full">
+              <Link key={post.id} href={`/guidance/${post.slug}`} className="block h-full">
                 <article className="h-full flex flex-col bg-white rounded-xl overflow-hidden shadow-[0_4px_12px_rgba(83,91,115,0.08)] hover:shadow-[0_8px_24px_rgba(83,91,115,0.15)] transition-all duration-300">
                   <div className="aspect-[4/3] bg-gradient-to-br from-cream to-light-blush flex items-center justify-center relative flex-shrink-0">
                     {post.image ? (

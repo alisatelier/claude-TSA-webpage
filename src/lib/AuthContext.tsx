@@ -38,6 +38,7 @@ export interface LoyaltyState {
   referredBy: string | null;
   referredByName: string | null;
   lockedCurrency: string | null;
+  instagramHandle: string | null;
 }
 
 export interface User {
@@ -79,6 +80,7 @@ const defaultLoyalty: LoyaltyState = {
   referredBy: null,
   referredByName: null,
   lockedCurrency: null,
+  instagramHandle: null,
 };
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -121,6 +123,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           referredBy: data.referredBy,
           referredByName: data.referredByName ?? null,
           lockedCurrency: data.lockedCurrency,
+          instagramHandle: data.instagramHandle ?? null,
         });
         setLoyaltyLoaded(true);
       }

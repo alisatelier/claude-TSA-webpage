@@ -3,10 +3,14 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import WeeklyScheduleEditor from "./WeeklyScheduleEditor";
 import DateBlockList from "./DateBlockList";
+import BookingWindowEditor from "./BookingWindowEditor";
+import { getScheduleSettings } from "./actions";
 
 export default async function AdminSchedulePage() {
   const session = await auth();
   if (session?.user?.role !== "ADMIN") redirect("/admin/login");
+
+  const scheduleSettings = await getScheduleSettings();
 
   const allBlocks = await prisma.scheduleBlock.findMany({
     orderBy: { createdAt: "desc" },
@@ -32,6 +36,18 @@ export default async function AdminSchedulePage() {
   return (
     <div>
       <h1 className="text-2xl font-semibold text-gray-900 mb-6">Schedule Settings</h1>
+
+      <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+        <h2 className="text-lg font-medium text-gray-900 mb-4">Booking Window</h2>
+        <p className="text-sm text-gray-500 mb-4">
+          Control how far in advance customers can book, and the maximum booking range.
+        </p>
+        <BookingWindowEditor
+          leadTimeDays={scheduleSettings.leadTimeDays}
+          maxRangeDays={scheduleSettings.maxRangeDays}
+          maxBookingsPerWeek={scheduleSettings.maxBookingsPerWeek}
+        />
+      </div>
 
       <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
         <h2 className="text-lg font-medium text-gray-900 mb-4">Weekly Schedule</h2>

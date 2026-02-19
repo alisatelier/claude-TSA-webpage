@@ -1,6 +1,16 @@
+import JsonLd from "@/components/JsonLd";
+
+const shippingJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  name: "Shipping & Returns",
+  url: "https://thespiritatelier.ca/shipping-returns",
+};
+
 export default function ShippingReturnsPage() {
   return (
     <>
+      <JsonLd data={shippingJsonLd} />
       <section className="bg-navy py-16 px-4">
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="font-heading text-5xl md:text-6xl text-white mb-3">

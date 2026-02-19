@@ -11,6 +11,7 @@ import { StarRating } from "@/components/ProductCard";
 import ProductCard from "@/components/ProductCard";
 import ImageCarousel from "@/components/ImageCarousel";
 import ChapterDownloadForm from "@/components/ChapterDownloadForm";
+import JsonLd from "@/components/JsonLd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHeart, faChevronDown, faStar } from "@fortawesome/free-solid-svg-icons";
 import { faHeart as faHeartRegular } from "@fortawesome/free-regular-svg-icons";
@@ -189,7 +190,7 @@ export default function ProductPage() {
     if (product.variations.length === 0) {
       return stockData["_default"] ?? 0;
     }
-    const key = isImperfect ? "Imperfect" : selectedVariation;
+    const key = isImperfect ? `Imperfect - ${selectedVariation}` : selectedVariation;
     if (key && stockData[key] !== undefined) return stockData[key];
     // Sum all variations as fallback
     return Object.values(stockData).reduce((sum, v) => sum + v, 0);
@@ -252,8 +253,25 @@ export default function ProductPage() {
     { key: "shipping", label: "Shipping Info" },
   ];
 
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.shortDescription,
+    image: product.images[0] ? `https://thespiritatelier.ca${product.images[0]}` : undefined,
+    brand: { "@type": "Brand", name: "The Spirit Atelier" },
+    offers: {
+      "@type": "Offer",
+      price: product.prices.CAD,
+      priceCurrency: "CAD",
+      availability: "https://schema.org/InStock",
+      url: `https://thespiritatelier.ca/shop/${product.id}`,
+    },
+  };
+
   return (
     <>
+      <JsonLd data={productJsonLd} />
       <div className="bg-cream py-3 px-4">
         <div className="max-w-7xl mx-auto flex items-center gap-2 text-sm text-mauve">
           <Link href="/" className="hover:text-navy transition-colors">Home</Link>
@@ -271,7 +289,7 @@ export default function ProductPage() {
               <ImageCarousel
                 images={currentImages}
                 allImages={allImages}
-                alt={product.name}
+                alt={`${product.altDescription || product.name}${selectedVariation ? ` in ${selectedVariation}` : ""}`}
                 variationSelected={variationSelected}
               />
               <p className="text-xs text-mauve/60 mt-2 text-center italic">Photo Credit: Logee Photos</p>

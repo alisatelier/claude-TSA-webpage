@@ -20,9 +20,9 @@ export default function AccountPage() {
     email: "",
     password: "",
     name: "",
-    initial: "",
+    lastName: "",
     referralCode: "",
-    birthdayMonth: 0,
+    birthdayMonth: "",
   });
   const [error, setError] = useState("");
 
@@ -36,16 +36,14 @@ export default function AccountPage() {
         setError("No account found with that email. Please register first.");
       }
     } else {
-      const formattedName = formData.initial
-        ? `${formData.name}. ${formData.initial}`
-        : formData.name;
+      const formattedName = `${formData.name.trim()} ${formData.lastName.trim()}`;
 
       const success = await register(
         formattedName,
         formData.email,
         formData.password,
         formData.referralCode || undefined,
-        formData.birthdayMonth || undefined,
+        Number(formData.birthdayMonth) || undefined,
       );
       if (!success) {
         setError("An account with that email already exists. Try signing in.");
@@ -61,8 +59,8 @@ export default function AccountPage() {
       href: string;
     }[] = [
       {
-        title: "My Orders",
-        desc: "View order history and tracking",
+        title: "Orders & Bookings",
+        desc: "View orders, bookings, and tracking",
         icon: faClipboardList,
         href: "/account/orders",
       },
@@ -82,7 +80,7 @@ export default function AccountPage() {
         title: "Settings",
         desc: "Update your profile and preferences",
         icon: faGear,
-        href: "",
+        href: "/account/settings",
       },
     ];
 
@@ -99,7 +97,7 @@ export default function AccountPage() {
           <div className="max-w-5xl mx-auto">
             <div className="bg-cream rounded-xl p-8 mb-8 text-center">
               <h2 className="font-heading text-3xl text-navy mb-2">
-                Hello, {user.name || "Seeker"}!
+                Hello, {user.name ? user.name.split(" ")[0] : "Seeker"}!
               </h2>
               <p className="text-mauve font-accent italic">
                 For You, On Your Journey
@@ -203,7 +201,7 @@ export default function AccountPage() {
                 <>
                   <div>
                     <label className="block text-sm font-semibold text-navy mb-2 uppercase tracking-wider">
-                      Name
+                      First Name
                     </label>
                     <input
                       type="text"
@@ -215,28 +213,25 @@ export default function AccountPage() {
                       }}
                       className="w-full px-4 py-3 border border-navy/20 rounded-lg text-navy placeholder:text-mauve focus:outline-none focus:border-navy transition-colors"
                       placeholder="Your First Name"
+                      required
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-semibold text-navy mb-2 uppercase tracking-wider">
-                      Initial{" "}
-                      <span className="text-mauve font-normal normal-case">
-                        (Optional: max 1 character)
-                      </span>
+                      Last Name
                     </label>
                     <input
                       type="text"
-                      value={formData.initial}
-                      maxLength={1}
+                      value={formData.lastName}
                       onChange={(e) => {
-                        const value = e.target.value
-                          .toUpperCase()
-                          .replace(/[^A-Z]/g, "");
-                        setFormData({ ...formData, initial: value });
+                        const val = e.target.value;
+                        const capitalized = val.charAt(0).toUpperCase() + val.slice(1);
+                        setFormData({ ...formData, lastName: capitalized });
                       }}
-                      className="w-full px-4 py-3 border border-navy/20 rounded-lg text-navy placeholder:text-mauve focus:outline-none focus:border-navy transition-colors uppercase"
-                      placeholder="Your Initial"
+                      className="w-full px-4 py-3 border border-navy/20 rounded-lg text-navy placeholder:text-mauve focus:outline-none focus:border-navy transition-colors"
+                      placeholder="Your Last Name"
+                      required
                     />
                   </div>
                 </>
@@ -274,10 +269,7 @@ export default function AccountPage() {
               {!isLogin && (
                 <div>
                   <label className="block text-sm font-semibold text-navy mb-2 uppercase tracking-wider">
-                    Birthday Month{" "}
-                    <span className="text-mauve font-normal normal-case">
-                      (optional)
-                    </span>
+                    Birthday Month
                   </label>
                   <select
                     value={formData.birthdayMonth}
@@ -288,8 +280,9 @@ export default function AccountPage() {
                       })
                     }
                     className="w-full px-4 py-3 border border-navy/20 rounded-lg text-navy focus:outline-none focus:border-navy transition-colors"
+                    required
                   >
-                    <option value={0}>Select your birthday month...</option>
+                    <option value="">Select your birthday month...</option>
                     {[
                       "January",
                       "February",

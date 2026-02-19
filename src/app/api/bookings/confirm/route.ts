@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { triggerServiceBookingConfirmationEmail } from "@/lib/email/trigger";
+import { triggerServiceBookingConfirmationEmail, triggerAdminNewBookingEmail } from "@/lib/email/trigger";
+import { createCalendarEvent } from "@/lib/google-calendar";
 
 export async function POST(request: Request) {
   const session = await auth();
@@ -40,8 +41,12 @@ export async function POST(request: Request) {
     },
   });
 
-  // Fire-and-forget booking confirmation email
-  triggerServiceBookingConfirmationEmail(confirmed.id);
+  // Create calendar event, then send confirmation email (so Meet link is available)
+  (async () => {
+    await createCalendarEvent(confirmed.id);
+    triggerServiceBookingConfirmationEmail(confirmed.id);
+    triggerAdminNewBookingEmail(confirmed.id);
+  })();
 
   return NextResponse.json({
     bookingId: confirmed.id,

@@ -15,6 +15,7 @@ import {
   faUserPlus,
   faCake,
 } from "@fortawesome/free-solid-svg-icons";
+import { faInstagram } from "@fortawesome/free-brands-svg-icons";
 
 const MONTHS = [
   "January",
@@ -39,6 +40,7 @@ export default function RewardsPage() {
     submitReview,
     setBirthdayMonth,
     claimBirthdayCredits,
+    refreshLoyalty,
   } = useAuth();
   const [copied, setCopied] = useState(false);
   const [reviewProduct, setReviewProduct] = useState("");
@@ -47,6 +49,10 @@ export default function RewardsPage() {
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
   const [birthdayClaimed, setBirthdayClaimed] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(0);
+  const [igHandle, setIgHandle] = useState("");
+  const [igEditing, setIgEditing] = useState(false);
+  const [igSubmitting, setIgSubmitting] = useState(false);
+  const [igSaved, setIgSaved] = useState(false);
 
   if (!isLoggedIn || !user) {
     return (
@@ -129,6 +135,28 @@ export default function RewardsPage() {
     if (success) {
       setBirthdayClaimed(true);
       setTimeout(() => setBirthdayClaimed(false), 3000);
+    }
+  };
+
+  const handleInstagramSubmit = async () => {
+    if (!igHandle.trim() || igSubmitting) return;
+    setIgSubmitting(true);
+    try {
+      const res = await fetch("/api/user/instagram", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ handle: igHandle }),
+      });
+      if (res.ok) {
+        await refreshLoyalty();
+        setIgEditing(false);
+        setIgSaved(true);
+        setTimeout(() => setIgSaved(false), 3000);
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setIgSubmitting(false);
     }
   };
 
@@ -237,55 +265,18 @@ export default function RewardsPage() {
               {reviewableProducts.length > 0 ? (
                 <form onSubmit={handleSubmitReview} className="space-y-3">
                   <div className="relative">
-                      <button
-                        type="button"
-                        onClick={() => setDropdownOpen(!dropdownOpen)}
-                        className="w-full px-4 py-3 bg-white border border-navy/20 rounded-xl text-sm text-navy flex justify-between items-center hover:border-blush transition-colors"
-                      >
-                        <span>
-                          {selectedProductName ||
-                            "Select a product to review..."}
-                        </span>
-                        <svg
-                          className={`w-4 h-4 text-mauve transition-transform ${
-                            dropdownOpen ? "rotate-180" : ""
-                          }`}
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={1.5}
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M19 9l-7 7-7-7"
-                          />
-                        </svg>
-                      </button>
-
-                      {dropdownOpen && (
-                        <div className="absolute z-20 mt-2 w-full bg-white border border-cream rounded-xl shadow-[0_8px_30px_rgba(83,91,115,0.12)] max-h-60 overflow-y-auto animate-fade-in">
-                          {reviewableProducts.map((p) => (
-                            <button
-                              key={p.id}
-                              type="button"
-                              onClick={() => {
-                                setReviewProduct(p.id);
-                                setDropdownOpen(false);
-                              }}
-                              className="w-full px-4 py-3 text-left text-sm text-navy hover:bg-cream transition-colors"
-                            >
-                              {p.name}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                  
-
-                    {/* Custom Chevron */}
-                    <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-mauve">
+                    <button
+                      type="button"
+                      onClick={() => setDropdownOpen(!dropdownOpen)}
+                      className="w-full px-4 py-3 bg-white border border-navy/20 rounded-xl text-sm text-navy flex justify-between items-center hover:border-blush transition-colors"
+                    >
+                      <span>
+                        {selectedProductName || "Select a product to review..."}
+                      </span>
                       <svg
-                        className="w-4 h-4"
+                        className={`w-4 h-4 text-mauve transition-transform ${
+                          dropdownOpen ? "rotate-180" : ""
+                        }`}
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -297,7 +288,25 @@ export default function RewardsPage() {
                           d="M19 9l-7 7-7-7"
                         />
                       </svg>
-                    </div>
+                    </button>
+
+                    {dropdownOpen && (
+                      <div className="absolute z-20 mt-2 w-full bg-white border border-cream rounded-xl shadow-[0_8px_30px_rgba(83,91,115,0.12)] max-h-60 overflow-y-auto animate-fade-in">
+                        {reviewableProducts.map((p) => (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => {
+                              setReviewProduct(p.id);
+                              setDropdownOpen(false);
+                            }}
+                            className="w-full px-4 py-3 text-left text-sm text-navy hover:bg-cream transition-colors"
+                          >
+                            {p.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -323,11 +332,19 @@ export default function RewardsPage() {
                       placeholder="Share your experience (minimum 100 characters)..."
                       className="w-full px-4 py-3 border border-navy/20 rounded-lg text-navy text-sm placeholder:text-mauve focus:outline-none focus:border-navy resize-none h-24"
                     />
-                    <p className={`text-xs mt-1 ${reviewText.length >= 100 ? "text-teal-400" : "text-mauve"}`}>
-                      {reviewText.length}/100 characters{reviewText.length < 100 ? ` (${100 - reviewText.length} more needed)` : " — requirement met"}
+                    <p
+                      className={`text-xs mt-1 ${reviewText.length >= 100 ? "text-teal-400" : "text-mauve"}`}
+                    >
+                      {reviewText.length}/100 characters
+                      {reviewText.length < 100
+                        ? ` (${100 - reviewText.length} more needed)`
+                        : " — requirement met"}
                     </p>
                   </div>
-
+                  <p className="text-xs text-mauve/60 mb-4">
+                    Your name will appear as First Name + Last Initial for
+                    privacy
+                  </p>
                   <button
                     type="submit"
                     disabled={!reviewProduct || reviewText.length < 100}
@@ -403,7 +420,14 @@ export default function RewardsPage() {
               </p>
               {user.loyalty.referredByName && (
                 <p className="text-sm text-navy/60 mt-2">
-                  Referred by <span className="font-medium text-navy">{user.loyalty.referredByName}</span>
+                  Referred by{" "}
+                  <span className="font-medium text-navy">
+                    {(() => {
+                      const parts = user.loyalty.referredByName.split(" ");
+                      if (parts.length < 2) return parts[0];
+                      return `${parts[0]} ${parts[parts.length - 1].charAt(0)}.`;
+                    })()}
+                  </span>
                 </p>
               )}
             </div>
@@ -477,6 +501,85 @@ export default function RewardsPage() {
                 </p>
               )}
             </div>
+
+            {/* Instagram Recognition — Keeper & Elder only */}
+            {(tier === "Keeper" || tier === "Elder") && (
+              <div className="bg-white rounded-xl p-6 shadow-[0_4px_12px_rgba(83,91,115,0.08)]">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-navy/10 rounded-full flex items-center justify-center">
+                    <FontAwesomeIcon
+                      icon={faInstagram}
+                      className="w-5 h-5 text-navy"
+                    />
+                  </div>
+                  <div>
+                    <h3 className="font-heading text-lg text-navy">
+                      Instagram Recognition
+                    </h3>
+                    <p className="text-sm text-mauve">
+                      {tier === "Elder"
+                        ? "Get featured in a dedicated feed post"
+                        : "Get featured in a dedicated Instagram story"}
+                    </p>
+                  </div>
+                </div>
+
+                {user.loyalty.instagramHandle && !igEditing ? (
+                  <div>
+                    <p className="text-sm text-navy">
+                      Your Instagram:{" "}
+                      <span className="font-medium">
+                        @{user.loyalty.instagramHandle}
+                      </span>
+                    </p>
+                    <button
+                      onClick={() => {
+                        setIgHandle(user.loyalty.instagramHandle ?? "");
+                        setIgEditing(true);
+                      }}
+                      className="text-sm text-mauve underline underline-offset-2 hover:text-navy transition-colors mt-1"
+                    >
+                      Update handle
+                    </button>
+                    {igSaved && (
+                      <p className="text-sm text-teal-400 font-medium mt-2">
+                        Handle saved!
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-mauve text-sm">
+                        @
+                      </span>
+                      <input
+                        type="text"
+                        value={igHandle}
+                        onChange={(e) => setIgHandle(e.target.value)}
+                        placeholder="yourhandle"
+                        className="w-full pl-8 pr-4 py-3 border border-navy/20 rounded-lg text-navy text-sm placeholder:text-mauve focus:outline-none focus:border-navy"
+                      />
+                    </div>
+                    <button
+                      onClick={handleInstagramSubmit}
+                      disabled={!igHandle.trim() || igSubmitting}
+                      className="px-6 py-3 bg-navy text-white text-sm font-medium rounded-lg hover:bg-navy/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {igSubmitting ? "Saving..." : "Submit"}
+                    </button>
+                    {igEditing && (
+                      <button
+                        onClick={() => setIgEditing(false)}
+                        className="text-sm text-mauve hover:text-navy transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </section>

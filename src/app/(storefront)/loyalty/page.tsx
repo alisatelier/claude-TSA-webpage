@@ -1,8 +1,18 @@
 import Link from "next/link";
+import JsonLd from "@/components/JsonLd";
+
+const loyaltyJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  name: "Ritual Credits Loyalty Program",
+  description: "Earn Ritual Credits with every purchase, review, and referral. Redeem toward future tools, readings, and offerings from The Spirit Atelier.",
+  url: "https://thespiritatelier.ca/loyalty",
+};
 
 export default function LoyaltyPage() {
   return (
     <>
+      <JsonLd data={loyaltyJsonLd} />
       {/* Hero */}
       <section className="bg-navy py-20 px-4">
         <div className="max-w-7xl mx-auto text-center">

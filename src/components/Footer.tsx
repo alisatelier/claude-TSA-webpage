@@ -27,7 +27,7 @@ export default function Footer() {
           <div className="text-center lg:text-left flex flex-col items-center lg:items-start">
             <Image
               src="/images/logo-white.png"
-              alt="The Spirit Atelier"
+              alt="The Spirit Atelier — handcrafted spiritual tools and divination practice"
               width={60}
               height={60}
               className="h-14 w-auto mb-4"
@@ -69,7 +69,7 @@ export default function Footer() {
                   { href: "/shop", label: "Shop" },
                   { href: "/services", label: "Services" },
                   { href: "/loyalty", label: "Loyalty Program" },
-                  { href: "/blog", label: "Guidance" },
+                  { href: "/guidance", label: "Guidance" },
                   { href: "/about", label: "About Us" },
                   { href: "/contact", label: "Contact" },
                 ].map((link) => (
@@ -91,6 +91,7 @@ export default function Footer() {
                 {[
                   { href: "/faq", label: "FAQ" },
                   { href: "/shipping-returns", label: "Shipping & Returns" },
+                  { href: "/ethics", label: "Our Ethics" },
                   { href: "/privacy", label: "Privacy Policy" },
                   { href: "/terms", label: "Terms of Service" },
                 ].map((link) => (

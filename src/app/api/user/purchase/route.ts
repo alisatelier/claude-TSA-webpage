@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { calculateTier } from "@/lib/loyalty-utils";
 import {
   triggerOrderConfirmationEmail,
+  triggerAdminNewOrderEmail,
   triggerReferralCompletedEmail,
   triggerStatusUpgradeEmail,
 } from "@/lib/email/trigger";
@@ -143,6 +144,7 @@ export async function POST(request: Request) {
 
   // Fire-and-forget email triggers
   triggerOrderConfirmationEmail(order.id);
+  triggerAdminNewOrderEmail(order.id);
 
   // Check for referral reward trigger
   if (!loyalty.firstPurchaseCompleted && loyalty.referredBy) {

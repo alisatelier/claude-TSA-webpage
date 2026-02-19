@@ -15,6 +15,58 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
+  // Validate date against booking window settings
+  const settings = await prisma.scheduleSettings.upsert({
+    where: { id: "default" },
+    update: {},
+    create: { id: "default" },
+  });
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const minDate = new Date(today);
+  minDate.setDate(minDate.getDate() + settings.leadTimeDays);
+  const maxDate = new Date(today);
+  maxDate.setDate(maxDate.getDate() + settings.maxRangeDays);
+
+  const requested = new Date(selectedDate + "T00:00:00");
+  if (requested < minDate || requested > maxDate) {
+    return NextResponse.json(
+      { error: `Date must be between ${settings.leadTimeDays} and ${settings.maxRangeDays} days from today` },
+      { status: 400 },
+    );
+  }
+
+  // Enforce max bookings per week
+  // Week runs Monday–Sunday around the requested date
+  const reqDay = requested.getDay(); // 0=Sun..6=Sat
+  const mondayOffset = reqDay === 0 ? -6 : 1 - reqDay;
+  const weekStart = new Date(requested);
+  weekStart.setDate(weekStart.getDate() + mondayOffset);
+  const weekStartStr = weekStart.toISOString().slice(0, 10);
+
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekEnd.getDate() + 6);
+  const weekEndStr = weekEnd.toISOString().slice(0, 10);
+
+  const weekBookingCount = await prisma.serviceBooking.count({
+    where: {
+      selectedDate: { gte: weekStartStr, lte: weekEndStr },
+      OR: [
+        { status: "CONFIRMED" },
+        { status: "COMPLETED" },
+        { status: "HELD", expiresAt: { gt: now } },
+      ],
+    },
+  });
+
+  if (weekBookingCount >= settings.maxBookingsPerWeek) {
+    return NextResponse.json(
+      { error: "This week is fully booked" },
+      { status: 409 },
+    );
+  }
+
   // Check one-hold-per-user: find any active hold for this user/session
   const now = new Date();
   const activeHold = await prisma.serviceBooking.findFirst({

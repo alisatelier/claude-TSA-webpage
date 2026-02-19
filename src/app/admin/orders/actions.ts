@@ -87,7 +87,7 @@ export async function exportOrderCsv(filters?: {
   const header = "Order #,Email,Status,Total,Refund,Tracking,Date";
   const rows = orders.map(
     (o) =>
-      `${o.orderNumber},${o.user.email},${o.status},${(o.totalAmount / 100).toFixed(2)},${(o.refundAmount / 100).toFixed(2)},${o.trackingNumber ?? ""},${o.createdAt.toISOString()}`
+      `${o.orderNumber},${o.user?.email ?? "Deleted account"},${o.status},${(o.totalAmount / 100).toFixed(2)},${(o.refundAmount / 100).toFixed(2)},${o.trackingNumber ?? ""},${o.createdAt.toISOString()}`
   );
   return [header, ...rows].join("\n");
 }

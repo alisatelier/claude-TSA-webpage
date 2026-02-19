@@ -1,6 +1,16 @@
+import JsonLd from "@/components/JsonLd";
+
+const termsJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  name: "Terms of Service",
+  url: "https://thespiritatelier.ca/terms",
+};
+
 export default function TermsPage() {
   return (
     <>
+      <JsonLd data={termsJsonLd} />
       <section className="bg-navy py-16 px-4">
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="font-heading text-5xl md:text-6xl text-white mb-3">
@@ -71,7 +81,7 @@ export default function TermsPage() {
               Pricing &amp; Payment
             </h2>
             <p>
-              All prices are listed in USD unless otherwise stated. We reserve
+              All prices are listed in CAD unless otherwise stated, or selected. We reserve
               the right to modify pricing at any time without prior notice.
               Payment is processed securely through third-party payment
               providers. We do not store full payment details.

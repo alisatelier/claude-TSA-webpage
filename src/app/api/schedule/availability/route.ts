@@ -45,6 +45,39 @@ export async function GET(request: Request) {
     return NextResponse.json({ availableSlots: [], blockedSlots: ALL_SLOTS });
   }
 
+  // Check weekly booking cap
+  const settings = await prisma.scheduleSettings.upsert({
+    where: { id: "default" },
+    update: {},
+    create: { id: "default" },
+  });
+
+  const reqDay = dateObj.getDay(); // 0=Sun..6=Sat
+  const mondayOffset = reqDay === 0 ? -6 : 1 - reqDay;
+  const weekStart = new Date(dateObj);
+  weekStart.setDate(weekStart.getDate() + mondayOffset);
+  const weekStartStr = weekStart.toISOString().slice(0, 10);
+
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekEnd.getDate() + 6);
+  const weekEndStr = weekEnd.toISOString().slice(0, 10);
+
+  const now = new Date();
+  const weekBookingCount = await prisma.serviceBooking.count({
+    where: {
+      selectedDate: { gte: weekStartStr, lte: weekEndStr },
+      OR: [
+        { status: "CONFIRMED" },
+        { status: "COMPLETED" },
+        { status: "HELD", expiresAt: { gt: now } },
+      ],
+    },
+  });
+
+  if (weekBookingCount >= settings.maxBookingsPerWeek) {
+    return NextResponse.json({ availableSlots: [], blockedSlots: ALL_SLOTS, weekFull: true });
+  }
+
   const availableSlots = ALL_SLOTS.filter((s) => !blockedSlots.has(s));
 
   return NextResponse.json({

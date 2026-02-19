@@ -69,7 +69,7 @@ export default async function AdminOrderDetailPage({
                 refundAmount: order.refundAmount,
                 trackingNumber: order.trackingNumber,
                 createdAt: order.createdAt.toISOString(),
-                customer: { name: order.user.name ?? "", email: order.user.email },
+                customer: { name: order.user?.name ?? "Deleted account", email: order.user?.email ?? "—" },
                 items: resolvedItems.map((item) => ({
                   name: item.name,
                   variation: item.variation ?? null,
@@ -97,17 +97,21 @@ export default async function AdminOrderDetailPage({
           <div>
             <dt className="text-gray-500">Customer</dt>
             <dd className="font-medium">
-              <Link
-                href={`/admin/users/${order.user.id}`}
-                className="text-slate-700 hover:text-slate-900 underline"
-              >
-                {order.user.name ?? "—"}
-              </Link>
+              {order.user ? (
+                <Link
+                  href={`/admin/users/${order.user.id}`}
+                  className="text-slate-700 hover:text-slate-900 underline"
+                >
+                  {order.user.name ?? "—"}
+                </Link>
+              ) : (
+                <span className="text-gray-400">Deleted account</span>
+              )}
             </dd>
           </div>
           <div>
             <dt className="text-gray-500">Email</dt>
-            <dd className="font-medium">{order.user.email}</dd>
+            <dd className="font-medium">{order.user?.email ?? "—"}</dd>
           </div>
           <div>
             <dt className="text-gray-500">Total</dt>

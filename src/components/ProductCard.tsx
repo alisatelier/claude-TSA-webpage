@@ -180,7 +180,7 @@ export default function ProductCard({ product, syncIndex, averageRating, savedVa
     <div className="group bg-white rounded-xl overflow-hidden shadow-[0_4px_12px_rgba(83,91,115,0.08)] hover:shadow-[0_8px_24px_rgba(83,91,115,0.15)] transition-all duration-300 h-full flex flex-col">
       {/* Image Carousel */}
       <Link href={productHref} className="block relative aspect-square overflow-hidden bg-cream flex-shrink-0">
-        <ProductCardCarousel images={displayImages} alt={product.name} syncIndex={syncIndex} />
+        <ProductCardCarousel images={displayImages} alt={product.altDescription || product.name} syncIndex={syncIndex} />
       </Link>
 
       {/* Details */}

@@ -46,6 +46,7 @@ export interface ServiceBookingConfirmationData {
   date: string;
   time: string;
   totalPrice: number;
+  meetLink?: string;
 }
 
 export interface ServiceReminderData {
@@ -54,6 +55,7 @@ export interface ServiceReminderData {
   date: string;
   time: string;
   preparationNote?: string;
+  meetLink?: string;
 }
 
 export interface BirthdayMonthData {
@@ -76,6 +78,80 @@ export interface StatusUpgradeData {
   lifetimeCredits: number;
 }
 
+export interface AdminNewOrderData {
+  customerName: string;
+  customerEmail: string;
+  orderNumber: string;
+  orderItems: OrderItem[];
+  total: number;
+}
+
+export interface AdminNewBookingData {
+  customerName: string;
+  customerEmail: string;
+  serviceName: string;
+  date: string;
+  time: string;
+  totalPrice: number;
+  notes?: string;
+  meetLink?: string;
+}
+
+export interface AdminBookingReminderData {
+  customerName: string;
+  customerEmail: string;
+  serviceName: string;
+  date: string;
+  time: string;
+  meetLink?: string;
+}
+
+export interface AdminInstagramHandleData {
+  customerName: string;
+  customerEmail: string;
+  tier: string;
+  instagramHandle: string;
+}
+
+export interface BookingCancellationData {
+  firstName: string;
+  serviceName: string;
+  date: string;
+  time: string;
+  totalPrice: number;
+}
+
+export interface BookingRescheduleData {
+  firstName: string;
+  serviceName: string;
+  oldDate: string;
+  oldTime: string;
+  newDate: string;
+  newTime: string;
+  totalPrice: number;
+  meetLink?: string;
+}
+
+export interface AdminBookingCancellationData {
+  customerName: string;
+  customerEmail: string;
+  serviceName: string;
+  date: string;
+  time: string;
+  totalPrice: number;
+}
+
+export interface AdminBookingRescheduleData {
+  customerName: string;
+  customerEmail: string;
+  serviceName: string;
+  oldDate: string;
+  oldTime: string;
+  newDate: string;
+  newTime: string;
+  totalPrice: number;
+}
+
 export type TemplateData =
   | WishlistBackInStockData
   | LoyaltyWelcomeData
@@ -85,7 +161,15 @@ export type TemplateData =
   | ServiceReminderData
   | BirthdayMonthData
   | ReferralCompletedData
-  | StatusUpgradeData;
+  | StatusUpgradeData
+  | AdminNewOrderData
+  | AdminNewBookingData
+  | AdminBookingReminderData
+  | AdminInstagramHandleData
+  | BookingCancellationData
+  | BookingRescheduleData
+  | AdminBookingCancellationData
+  | AdminBookingRescheduleData;
 
 export interface RenderedEmail {
   subject: string;
@@ -329,37 +413,50 @@ function renderOrderShipped(data: OrderShippedData): RenderedEmail {
   );
 }
 
+function buildBookingCard(opts: {
+  rows: string;
+}): string {
+  return `<div style="background-color:#ffffff;border:1px solid #535B73;border-radius:12px;padding:20px 24px;margin:0 0 24px;">
+       <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;">
+         ${opts.rows}
+       </table>
+     </div>`;
+}
+
+function bookingRow(label: string, value: string, bold = false): string {
+  return `<tr>
+           <td style="padding:8px 0;color:#A69FA6;font-size:13px;width:100px;">${label}</td>
+           <td style="padding:8px 0;color:#535B73;font-size:15px;${bold ? "font-weight:bold;" : ""}">${value}</td>
+         </tr>`;
+}
+
 function renderServiceBookingConfirmation(
   data: ServiceBookingConfirmationData,
 ): RenderedEmail {
+  const meetRow = data.meetLink
+    ? bookingRow("Video Call", `<a href="${data.meetLink}" style="color:#535B73;">Join Google Meet</a>`)
+    : "";
+
   const variables: Record<string, string> = {
     firstName: data.firstName,
     serviceName: data.serviceName,
     date: data.date,
     time: data.time,
     totalPrice: fmt(data.totalPrice),
+    meetLink: data.meetLink ?? "",
+    bookingCard: buildBookingCard({
+      rows:
+        bookingRow("Service", data.serviceName, true) +
+        bookingRow("Date", data.date) +
+        bookingRow("Time", data.time) +
+        meetRow +
+        bookingRow("Total", fmt(data.totalPrice), true),
+    }),
   };
 
   const body = `<p style="margin:0 0 16px;">Dear {{firstName}},</p>
        <p style="margin:0 0 16px;">Your booking has been confirmed. Here are the details:</p>
-       <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px;width:100%;">
-         <tr>
-           <td style="padding:8px 0;color:#A69FA6;font-size:13px;width:100px;">Service</td>
-           <td style="padding:8px 0;color:#535B73;font-size:15px;font-weight:bold;">{{serviceName}}</td>
-         </tr>
-         <tr>
-           <td style="padding:8px 0;color:#A69FA6;font-size:13px;">Date</td>
-           <td style="padding:8px 0;color:#535B73;font-size:15px;">{{date}}</td>
-         </tr>
-         <tr>
-           <td style="padding:8px 0;color:#A69FA6;font-size:13px;">Time</td>
-           <td style="padding:8px 0;color:#535B73;font-size:15px;">{{time}}</td>
-         </tr>
-         <tr>
-           <td style="padding:8px 0;color:#A69FA6;font-size:13px;">Total</td>
-           <td style="padding:8px 0;color:#535B73;font-size:15px;font-weight:bold;">{{totalPrice}}</td>
-         </tr>
-       </table>
+       {{bookingCard}}
        <p style="margin:0;color:#A69FA6;font-size:13px;">We look forward to seeing you.</p>`;
 
   return render(
@@ -371,12 +468,24 @@ function renderServiceBookingConfirmation(
 }
 
 function renderServiceReminder(data: ServiceReminderData): RenderedEmail {
+  const meetRow = data.meetLink
+    ? bookingRow("Video Call", `<a href="${data.meetLink}" style="color:#535B73;">Join Google Meet</a>`)
+    : "";
+
   const variables: Record<string, string> = {
     firstName: data.firstName,
     serviceName: data.serviceName,
     date: data.date,
     time: data.time,
     preparationNote: data.preparationNote ?? "",
+    meetLink: data.meetLink ?? "",
+    bookingCard: buildBookingCard({
+      rows:
+        bookingRow("Service", data.serviceName, true) +
+        bookingRow("Date", data.date) +
+        bookingRow("Time", data.time) +
+        meetRow,
+    }),
   };
 
   const prepBlock = `<div style="background-color:#F2E9E9;padding:16px;border-radius:4px;margin:0 0 16px;">
@@ -385,16 +494,7 @@ function renderServiceReminder(data: ServiceReminderData): RenderedEmail {
 
   const body = `<p style="margin:0 0 16px;">Dear {{firstName}},</p>
        <p style="margin:0 0 16px;">This is a gentle reminder that your <strong>{{serviceName}}</strong> session is tomorrow.</p>
-       <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px;width:100%;">
-         <tr>
-           <td style="padding:8px 0;color:#A69FA6;font-size:13px;width:100px;">Date</td>
-           <td style="padding:8px 0;color:#535B73;font-size:15px;">{{date}}</td>
-         </tr>
-         <tr>
-           <td style="padding:8px 0;color:#A69FA6;font-size:13px;">Time</td>
-           <td style="padding:8px 0;color:#535B73;font-size:15px;">{{time}}</td>
-         </tr>
-       </table>
+       {{bookingCard}}
        ${data.preparationNote ? prepBlock : ""}
        <p style="margin:0;color:#A69FA6;font-size:13px;">See you soon.</p>`;
 
@@ -528,6 +628,7 @@ function buildBenefitsBlock(
 }
 
 function renderStatusUpgrade(data: StatusUpgradeData): RenderedEmail {
+  const rewardsUrl = "https://www.thespiritatelier.ca/account/rewards";
   const variables: Record<string, string> = {
     firstName: data.firstName,
     newTier: data.newTier,
@@ -538,12 +639,13 @@ function renderStatusUpgrade(data: StatusUpgradeData): RenderedEmail {
       data.benefits,
       data.lifetimeCredits,
     ),
+    rewardsUrl,
   };
 
   const body = `<p style="margin:0 0 16px;">Dear {{firstName}},</p>
        <p style="margin:0 0 16px;">Congratulations — you've been upgraded to <strong>{{newTier}}</strong> status!</p>
        {{benefits}}
-       ${btn("Explore Your Rewards")}
+       ${btn("Explore Your Rewards", "{{rewardsUrl}}")}
        <p style="margin:0;color:#A69FA6;font-size:13px;">Thank you for being part of our community.</p>`;
 
   return render(
@@ -554,6 +656,276 @@ function renderStatusUpgrade(data: StatusUpgradeData): RenderedEmail {
   );
 }
 
+function renderBookingCancellation(
+  data: BookingCancellationData,
+): RenderedEmail {
+  const variables: Record<string, string> = {
+    firstName: data.firstName,
+    serviceName: data.serviceName,
+    date: data.date,
+    time: data.time,
+    totalPrice: fmt(data.totalPrice),
+    bookingCard: buildBookingCard({
+      rows:
+        bookingRow("Service", data.serviceName, true) +
+        bookingRow("Date", data.date) +
+        bookingRow("Time", data.time) +
+        bookingRow("Total", fmt(data.totalPrice), true),
+    }),
+  };
+
+  const body = `<p style="margin:0 0 16px;">Dear {{firstName}},</p>
+       <p style="margin:0 0 16px;">Your booking has been cancelled as requested. Here are the details of the cancelled session:</p>
+       {{bookingCard}}
+       <p style="margin:0;color:#A69FA6;font-size:13px;">If you'd like to rebook, you can do so from your account at any time.</p>`;
+
+  return render(
+    body,
+    variables,
+    "Your Booking Has Been Cancelled",
+    "{{serviceName}} — {{date}} at {{time}} has been cancelled",
+  );
+}
+
+function renderBookingReschedule(
+  data: BookingRescheduleData,
+): RenderedEmail {
+  const meetRow = data.meetLink
+    ? bookingRow("Video Call", `<a href="${data.meetLink}" style="color:#535B73;">Join Google Meet</a>`)
+    : "";
+
+  const variables: Record<string, string> = {
+    firstName: data.firstName,
+    serviceName: data.serviceName,
+    oldDate: data.oldDate,
+    oldTime: data.oldTime,
+    newDate: data.newDate,
+    newTime: data.newTime,
+    totalPrice: fmt(data.totalPrice),
+    meetLink: data.meetLink ?? "",
+    bookingCard: buildBookingCard({
+      rows:
+        bookingRow("Service", data.serviceName, true) +
+        bookingRow("New Date", data.newDate) +
+        bookingRow("New Time", data.newTime) +
+        meetRow +
+        bookingRow("Total", fmt(data.totalPrice), true),
+    }),
+  };
+
+  const body = `<p style="margin:0 0 16px;">Dear {{firstName}},</p>
+       <p style="margin:0 0 16px;">Your booking has been rescheduled. Here are your updated details:</p>
+       {{bookingCard}}
+       <p style="margin:0 0 16px;color:#A69FA6;font-size:13px;">Previously: {{oldDate}} at {{oldTime}}</p>
+       <p style="margin:0;color:#A69FA6;font-size:13px;">We look forward to seeing you.</p>`;
+
+  return render(
+    body,
+    variables,
+    "Your Booking Has Been Rescheduled",
+    "{{serviceName}} — now {{newDate}} at {{newTime}}",
+  );
+}
+
+// ── Admin Template Render Functions ────────────────────────────────
+
+function adminInfoRow(label: string, value: string): string {
+  return `<tr>
+    <td style="padding:6px 12px 6px 0;color:#A69FA6;font-size:13px;white-space:nowrap;">${label}</td>
+    <td style="padding:6px 0;color:#535B73;font-size:14px;">${value}</td>
+  </tr>`;
+}
+
+function adminInfoTable(rows: string): string {
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 16px;width:100%;">${rows}</table>`;
+}
+
+function renderAdminNewOrder(data: AdminNewOrderData): RenderedEmail {
+  const variables: Record<string, string> = {
+    customerName: data.customerName,
+    customerEmail: data.customerEmail,
+    orderNumber: data.orderNumber,
+    orderItems: buildOrderItemsTable(data.orderItems, data.total),
+    total: fmt(data.total),
+  };
+
+  const body = `<p style="margin:0 0 16px;font-size:15px;font-weight:bold;color:#535B73;">New Order Received</p>
+       ${adminInfoTable(
+         adminInfoRow("Customer", "{{customerName}}") +
+         adminInfoRow("Email", "{{customerEmail}}") +
+         adminInfoRow("Order #", "{{orderNumber}}")
+       )}
+       {{orderItems}}`;
+
+  return render(
+    body,
+    variables,
+    "New Order #{{orderNumber}} — {{customerName}}",
+    "New order from {{customerName}}",
+  );
+}
+
+function renderAdminNewBooking(data: AdminNewBookingData): RenderedEmail {
+  const variables: Record<string, string> = {
+    customerName: data.customerName,
+    customerEmail: data.customerEmail,
+    serviceName: data.serviceName,
+    date: data.date,
+    time: data.time,
+    totalPrice: fmt(data.totalPrice),
+    notes: data.notes ?? "",
+    meetLink: data.meetLink ?? "",
+  };
+
+  const meetRow = data.meetLink
+    ? adminInfoRow("Video Call", `<a href="{{meetLink}}" style="color:#535B73;">Join Google Meet</a>`)
+    : "";
+
+  const notesBlock = data.notes
+    ? `<div style="background-color:#F2E9E9;padding:12px;border-radius:4px;margin:0 0 16px;">
+         <p style="margin:0;color:#535B73;font-size:13px;"><strong>Notes:</strong> {{notes}}</p>
+       </div>`
+    : "";
+
+  const body = `<p style="margin:0 0 16px;font-size:15px;font-weight:bold;color:#535B73;">New Booking Confirmed</p>
+       ${adminInfoTable(
+         adminInfoRow("Customer", "{{customerName}}") +
+         adminInfoRow("Email", "{{customerEmail}}") +
+         adminInfoRow("Service", "{{serviceName}}") +
+         adminInfoRow("Date", "{{date}}") +
+         adminInfoRow("Time", "{{time}}") +
+         meetRow +
+         adminInfoRow("Total", "{{totalPrice}}")
+       )}
+       ${notesBlock}`;
+
+  return render(
+    body,
+    variables,
+    "New Booking — {{serviceName}} — {{customerName}}",
+    "{{customerName}} booked {{serviceName}}",
+  );
+}
+
+function renderAdminBookingReminder(data: AdminBookingReminderData): RenderedEmail {
+  const variables: Record<string, string> = {
+    customerName: data.customerName,
+    customerEmail: data.customerEmail,
+    serviceName: data.serviceName,
+    date: data.date,
+    time: data.time,
+    meetLink: data.meetLink ?? "",
+  };
+
+  const meetRow = data.meetLink
+    ? adminInfoRow("Video Call", `<a href="{{meetLink}}" style="color:#535B73;">Join Google Meet</a>`)
+    : "";
+
+  const body = `<p style="margin:0 0 16px;font-size:15px;font-weight:bold;color:#535B73;">Booking Tomorrow</p>
+       <p style="margin:0 0 16px;color:#535B73;font-size:14px;">A session is scheduled for tomorrow:</p>
+       ${adminInfoTable(
+         adminInfoRow("Customer", "{{customerName}}") +
+         adminInfoRow("Email", "{{customerEmail}}") +
+         adminInfoRow("Service", "{{serviceName}}") +
+         adminInfoRow("Date", "{{date}}") +
+         adminInfoRow("Time", "{{time}}") +
+         meetRow
+       )}`;
+
+  return render(
+    body,
+    variables,
+    "Reminder: {{serviceName}} Tomorrow — {{customerName}}",
+    "{{serviceName}} session tomorrow with {{customerName}}",
+  );
+}
+
+function renderAdminInstagramHandle(data: AdminInstagramHandleData): RenderedEmail {
+  const variables: Record<string, string> = {
+    customerName: data.customerName,
+    customerEmail: data.customerEmail,
+    tier: data.tier,
+    instagramHandle: data.instagramHandle,
+  };
+
+  const body = `<p style="margin:0 0 16px;font-size:15px;font-weight:bold;color:#535B73;">Instagram Handle Submitted</p>
+       ${adminInfoTable(
+         adminInfoRow("Customer", "{{customerName}}") +
+         adminInfoRow("Email", "{{customerEmail}}") +
+         adminInfoRow("Tier", "{{tier}}") +
+         adminInfoRow("Instagram", "@{{instagramHandle}}")
+       )}`;
+
+  return render(
+    body,
+    variables,
+    "Instagram Handle — {{customerName}} (@{{instagramHandle}})",
+    "{{customerName}} submitted @{{instagramHandle}}",
+  );
+}
+
+function renderAdminBookingCancellation(data: AdminBookingCancellationData): RenderedEmail {
+  const variables: Record<string, string> = {
+    customerName: data.customerName,
+    customerEmail: data.customerEmail,
+    serviceName: data.serviceName,
+    date: data.date,
+    time: data.time,
+    totalPrice: fmt(data.totalPrice),
+  };
+
+  const body = `<p style="margin:0 0 16px;font-size:15px;font-weight:bold;color:#535B73;">Booking Cancelled</p>
+       <p style="margin:0 0 16px;color:#535B73;font-size:14px;">A customer has cancelled their booking:</p>
+       ${adminInfoTable(
+         adminInfoRow("Customer", "{{customerName}}") +
+         adminInfoRow("Email", "{{customerEmail}}") +
+         adminInfoRow("Service", "{{serviceName}}") +
+         adminInfoRow("Date", "{{date}}") +
+         adminInfoRow("Time", "{{time}}") +
+         adminInfoRow("Total", "{{totalPrice}}")
+       )}`;
+
+  return render(
+    body,
+    variables,
+    "Booking Cancelled — {{serviceName}} — {{customerName}}",
+    "{{customerName}} cancelled {{serviceName}}",
+  );
+}
+
+function renderAdminBookingReschedule(data: AdminBookingRescheduleData): RenderedEmail {
+  const variables: Record<string, string> = {
+    customerName: data.customerName,
+    customerEmail: data.customerEmail,
+    serviceName: data.serviceName,
+    oldDate: data.oldDate,
+    oldTime: data.oldTime,
+    newDate: data.newDate,
+    newTime: data.newTime,
+    totalPrice: fmt(data.totalPrice),
+  };
+
+  const body = `<p style="margin:0 0 16px;font-size:15px;font-weight:bold;color:#535B73;">Booking Rescheduled</p>
+       <p style="margin:0 0 16px;color:#535B73;font-size:14px;">A customer has rescheduled their booking:</p>
+       ${adminInfoTable(
+         adminInfoRow("Customer", "{{customerName}}") +
+         adminInfoRow("Email", "{{customerEmail}}") +
+         adminInfoRow("Service", "{{serviceName}}") +
+         adminInfoRow("Old Date", "{{oldDate}}") +
+         adminInfoRow("Old Time", "{{oldTime}}") +
+         adminInfoRow("New Date", "{{newDate}}") +
+         adminInfoRow("New Time", "{{newTime}}") +
+         adminInfoRow("Total", "{{totalPrice}}")
+       )}`;
+
+  return render(
+    body,
+    variables,
+    "Booking Rescheduled — {{serviceName}} — {{customerName}}",
+    "{{customerName}} rescheduled {{serviceName}}",
+  );
+}
+
 // ── Template Registry ──────────────────────────────────────────────
 
 export interface TemplateMeta {
@@ -561,6 +933,7 @@ export interface TemplateMeta {
   name: string;
   description: string;
   trigger: string;
+  audience?: "admin";
 }
 
 export const TEMPLATES: TemplateMeta[] = [
@@ -622,6 +995,60 @@ export const TEMPLATES: TemplateMeta[] = [
       "Congratulations email when a customer reaches a new loyalty tier.",
     trigger: "Tier threshold reached",
   },
+  {
+    id: "booking-cancellation",
+    name: "Booking Cancellation",
+    description: "Confirmation sent when a customer cancels a booking.",
+    trigger: "Booking cancelled by customer",
+  },
+  {
+    id: "booking-reschedule",
+    name: "Booking Reschedule",
+    description: "Confirmation sent when a customer reschedules a booking.",
+    trigger: "Booking rescheduled by customer",
+  },
+  {
+    id: "admin-new-order",
+    name: "Admin: New Order",
+    description: "Notification sent to admin when a customer places an order.",
+    trigger: "Order placed",
+    audience: "admin",
+  },
+  {
+    id: "admin-new-booking",
+    name: "Admin: New Booking",
+    description: "Notification sent to admin when a booking is confirmed.",
+    trigger: "Booking confirmed",
+    audience: "admin",
+  },
+  {
+    id: "admin-booking-reminder",
+    name: "Admin: Booking Reminder",
+    description: "Reminder sent to admin the day before a booked session.",
+    trigger: "24 hours before booking",
+    audience: "admin",
+  },
+  {
+    id: "admin-instagram-handle",
+    name: "Admin: Instagram Handle",
+    description: "Notification when a customer submits their Instagram handle.",
+    trigger: "Instagram handle submitted",
+    audience: "admin",
+  },
+  {
+    id: "admin-booking-cancellation",
+    name: "Admin: Booking Cancellation",
+    description: "Notification sent to admin when a customer cancels a booking.",
+    trigger: "Booking cancelled by customer",
+    audience: "admin",
+  },
+  {
+    id: "admin-booking-reschedule",
+    name: "Admin: Booking Reschedule",
+    description: "Notification sent to admin when a customer reschedules a booking.",
+    trigger: "Booking rescheduled by customer",
+    audience: "admin",
+  },
 ];
 
 // ── Default Subjects ───────────────────────────────────────────────
@@ -636,6 +1063,14 @@ export const DEFAULT_SUBJECTS: Record<string, string> = {
   "birthday-month": "A Birthday Gift Awaits You",
   "referral-completed": "You Earned {{creditsEarned}} Ritual Credits",
   "status-upgrade": "You've Reached {{newTier}} Status",
+  "admin-new-order": "New Order #{{orderNumber}} — {{customerName}}",
+  "admin-new-booking": "New Booking — {{serviceName}} — {{customerName}}",
+  "admin-booking-reminder": "Reminder: {{serviceName}} Tomorrow — {{customerName}}",
+  "admin-instagram-handle": "Instagram Handle — {{customerName}} (@{{instagramHandle}})",
+  "booking-cancellation": "Your Booking Has Been Cancelled",
+  "booking-reschedule": "Your Booking Has Been Rescheduled",
+  "admin-booking-cancellation": "Booking Cancelled — {{serviceName}} — {{customerName}}",
+  "admin-booking-reschedule": "Booking Rescheduled — {{serviceName}} — {{customerName}}",
 };
 
 // ── Dispatcher ─────────────────────────────────────────────────────
@@ -658,6 +1093,26 @@ const renderers: Record<string, (data: never) => RenderedEmail> = {
     data: never,
   ) => RenderedEmail,
   "status-upgrade": renderStatusUpgrade as (data: never) => RenderedEmail,
+  "admin-new-order": renderAdminNewOrder as (data: never) => RenderedEmail,
+  "admin-new-booking": renderAdminNewBooking as (data: never) => RenderedEmail,
+  "admin-booking-reminder": renderAdminBookingReminder as (
+    data: never,
+  ) => RenderedEmail,
+  "admin-instagram-handle": renderAdminInstagramHandle as (
+    data: never,
+  ) => RenderedEmail,
+  "booking-cancellation": renderBookingCancellation as (
+    data: never,
+  ) => RenderedEmail,
+  "booking-reschedule": renderBookingReschedule as (
+    data: never,
+  ) => RenderedEmail,
+  "admin-booking-cancellation": renderAdminBookingCancellation as (
+    data: never,
+  ) => RenderedEmail,
+  "admin-booking-reschedule": renderAdminBookingReschedule as (
+    data: never,
+  ) => RenderedEmail,
 };
 
 export function renderTemplate(

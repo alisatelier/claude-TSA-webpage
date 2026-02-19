@@ -5,9 +5,9 @@ interface LayoutOptions {
 const UNSUBSCRIBE_BLOCK = `<tr>
             <td align="center" style="padding-top:16px;">
               <p style="margin:0;font-size:11px;color:#A69FA6;">
-                <a href="{{unsubscribe_url}}" style="color:#A69FA6;text-decoration:underline;">Unsubscribe</a>
+                <a href="https://www.thespiritatelier.ca/account/settings" style="color:#A69FA6;text-decoration:underline;">Unsubscribe</a>
                 &nbsp;&middot;&nbsp;
-                <a href="{{preferences_url}}" style="color:#A69FA6;text-decoration:underline;">Email Preferences</a>
+                <a href="https://www.thespiritatelier.ca/account/settings" style="color:#A69FA6;text-decoration:underline;">Email Preferences</a>
               </p>
               <p style="margin:8px 0 0;font-size:11px;color:#c9c3c9;">
                 The Spirit Atelier &middot; Calgary, AB &middot; Canada
@@ -38,7 +38,7 @@ export function emailLayoutShell(options: LayoutOptions = {}): string {
 
     <img 
       src="https://www.thespiritatelier.ca/images/the-spirit-atelier-email.png"
-      alt="The Spirit Atelier"
+      alt="The Spirit Atelier — handcrafted spiritual tools for tarot, runes, and intentional practice"
       width="260"
       style="
         display:block;

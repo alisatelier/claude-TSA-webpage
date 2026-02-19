@@ -12,6 +12,39 @@ async function requireAdmin() {
   return session;
 }
 
+export async function getScheduleSettings() {
+  const settings = await prisma.scheduleSettings.upsert({
+    where: { id: "default" },
+    update: {},
+    create: { id: "default" },
+  });
+  return {
+    leadTimeDays: settings.leadTimeDays,
+    maxRangeDays: settings.maxRangeDays,
+    maxBookingsPerWeek: settings.maxBookingsPerWeek,
+  };
+}
+
+export async function updateScheduleSettings(
+  leadTimeDays: number,
+  maxRangeDays: number,
+  maxBookingsPerWeek: number,
+) {
+  await requireAdmin();
+
+  if (leadTimeDays < 0 || maxRangeDays < 1 || maxBookingsPerWeek < 1) {
+    throw new Error("Invalid settings");
+  }
+
+  await prisma.scheduleSettings.upsert({
+    where: { id: "default" },
+    update: { leadTimeDays, maxRangeDays, maxBookingsPerWeek },
+    create: { id: "default", leadTimeDays, maxRangeDays, maxBookingsPerWeek },
+  });
+
+  revalidatePath("/admin/schedule");
+}
+
 export async function toggleRecurringBlock(
   dayOfWeek: number,
   time: string | null

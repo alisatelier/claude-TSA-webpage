@@ -12,10 +12,10 @@ export default function ChapterDownloadForm() {
   const [email, setEmail] = useState("");
   const [createAccount, setCreateAccount] = useState(false);
   const [name, setName] = useState("");
-  const [initial, setInitial] = useState("");
+  const [lastName, setLastName] = useState("");
   const [password, setPassword] = useState("");
   const [referralCode, setReferralCode] = useState("");
-  const [birthdayMonth, setBirthdayMonth] = useState(0);
+  const [birthdayMonth, setBirthdayMonth] = useState("");
   const [formState, setFormState] = useState<FormState>("idle");
   const [remaining, setRemaining] = useState<number | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
@@ -29,20 +29,18 @@ export default function ChapterDownloadForm() {
 
     // If user wants to create an account and is not logged in
     if (createAccount && !isLoggedIn) {
-      if (!name.trim() || !password.trim()) {
-        setErrorMsg("Name and password are required to create an account.");
+      if (!name.trim() || !lastName.trim() || !password.trim()) {
+        setErrorMsg("First name, last name, and password are required to create an account.");
         setFormState("error");
         return;
       }
-      const formattedName = initial
-        ? `${name.trim()}. ${initial}`
-        : name.trim();
+      const formattedName = `${name.trim()} ${lastName.trim()}`;
       const success = await register(
         formattedName,
         effectiveEmail,
         password,
         referralCode || undefined,
-        birthdayMonth || undefined,
+        Number(birthdayMonth) || undefined,
       );
       if (!success) {
         setErrorMsg("An account with that email already exists. Uncheck the box or sign in first.");
@@ -184,7 +182,7 @@ export default function ChapterDownloadForm() {
           </div>
           <div>
             <label className="block text-sm font-semibold text-navy mb-2 uppercase tracking-wider">
-              Name
+              First Name
             </label>
             <input
               type="text"
@@ -195,27 +193,23 @@ export default function ChapterDownloadForm() {
               }}
               className="w-full px-4 py-3 border border-navy/20 rounded-lg text-navy placeholder:text-mauve focus:outline-none focus:border-navy transition-colors"
               placeholder="Your First Name"
+              required
             />
           </div>
           <div>
             <label className="block text-sm font-semibold text-navy mb-2 uppercase tracking-wider">
-              Initial{" "}
-              <span className="text-mauve font-normal normal-case">
-                (Optional: max 1 character)
-              </span>
+              Last Name
             </label>
             <input
               type="text"
-              value={initial}
-              maxLength={1}
+              value={lastName}
               onChange={(e) => {
-                const value = e.target.value
-                  .toUpperCase()
-                  .replace(/[^A-Z]/g, "");
-                setInitial(value);
+                const val = e.target.value;
+                setLastName(val.charAt(0).toUpperCase() + val.slice(1));
               }}
-              className="w-full px-4 py-3 border border-navy/20 rounded-lg text-navy placeholder:text-mauve focus:outline-none focus:border-navy transition-colors uppercase"
-              placeholder="Your Initial"
+              className="w-full px-4 py-3 border border-navy/20 rounded-lg text-navy placeholder:text-mauve focus:outline-none focus:border-navy transition-colors"
+              placeholder="Your Last Name"
+              required
             />
           </div>
           <div>
@@ -228,21 +222,20 @@ export default function ChapterDownloadForm() {
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-3 border border-navy/20 rounded-lg text-navy placeholder:text-mauve focus:outline-none focus:border-navy transition-colors"
               placeholder="Choose a password"
+              required
             />
           </div>
           <div>
             <label className="block text-sm font-semibold text-navy mb-2 uppercase tracking-wider">
-              Birthday Month{" "}
-              <span className="text-mauve font-normal normal-case">
-                (optional)
-              </span>
+              Birthday Month
             </label>
             <select
               value={birthdayMonth}
-              onChange={(e) => setBirthdayMonth(Number(e.target.value))}
+              onChange={(e) => setBirthdayMonth(e.target.value)}
               className="w-full px-4 py-3 border border-navy/20 rounded-lg text-navy focus:outline-none focus:border-navy transition-colors"
+              required
             >
-              <option value={0}>Select your birthday month...</option>
+              <option value="">Select your birthday month...</option>
               {[
                 "January", "February", "March", "April", "May", "June",
                 "July", "August", "September", "October", "November", "December",

@@ -44,7 +44,7 @@ export async function createBlogPost(data: {
   await prisma.blogPost.create({ data: { ...data, sortOrder: newSortOrder } });
 
   revalidatePath("/admin/blog");
-  revalidatePath("/blog", "layout");
+  revalidatePath("/guidance", "layout");
   return {};
 }
 
@@ -84,7 +84,7 @@ export async function updateBlogPost(
   await prisma.blogPost.update({ where: { id }, data });
 
   revalidatePath("/admin/blog");
-  revalidatePath("/blog", "layout");
+  revalidatePath("/guidance", "layout");
   return {};
 }
 
@@ -94,7 +94,7 @@ export async function deleteBlogPost(id: string) {
   await prisma.blogPost.delete({ where: { id } });
 
   revalidatePath("/admin/blog");
-  revalidatePath("/blog", "layout");
+  revalidatePath("/guidance", "layout");
   return {};
 }
 
@@ -108,7 +108,7 @@ export async function toggleFeatured(id: string, featured: boolean) {
   await prisma.blogPost.update({ where: { id }, data: { featured } });
 
   revalidatePath("/admin/blog");
-  revalidatePath("/blog", "layout");
+  revalidatePath("/guidance", "layout");
   return {};
 }
 
@@ -137,6 +137,6 @@ export async function moveBlogPost(id: string, direction: "up" | "down") {
   ]);
 
   revalidatePath("/admin/blog");
-  revalidatePath("/blog", "layout");
+  revalidatePath("/guidance", "layout");
   return {};
 }

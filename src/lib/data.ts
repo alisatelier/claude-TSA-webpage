@@ -3,6 +3,7 @@ import { CurrencyPrices } from "./CurrencyContext";
 export interface Product {
   id: string;
   name: string;
+  altDescription: string;
   price: number;
   prices: CurrencyPrices;
   shortDescription: string;
@@ -45,6 +46,7 @@ export const products: Product[] = [
   {
      id: "whims-whispers-journal",
     name: "Whims & Whispers Journal",
+    altDescription: "A handcrafted 250-page semi-structured reflection journal by The Spirit Atelier, designed for daily intention-setting, gratitude, and tarot reading integration",
     price: 33,
     prices: { CAD: 33, USD: 22, GBP: 22, AUD: 33, EUR: 22 },
     shortDescription: "For a journaling practice that inspires the best in you.",
@@ -68,6 +70,7 @@ export const products: Product[] = [
   {
     id: "whims-whispers-tarot",
     name: "Whims & Whispers Tarot Deck",
+    altDescription: "A handcrafted 62-card Marseille-style tarot deck by The Spirit Atelier with guidebook and drawstring bag, designed for intuitive clarity and guidance",
     price: 44,
     prices: { CAD: 44, USD: 33, GBP: 22, AUD: 44, EUR: 33 },
     shortDescription:
@@ -92,6 +95,7 @@ export const products: Product[] = [
   {
    id: "whims-whispers-spirit-board",
     name: "Whims & Whispers Spirit Board",
+    altDescription: "A handcrafted ceremonial spirit board by The Spirit Atelier featuring chakras, zodiac symbols, lunar phases, and a circular clock face with planchette and guidebook",
     price: 111,
     prices: { CAD: 111, USD: 88, GBP: 66, AUD: 122, EUR: 77 },
     shortDescription: "For guiding yourself to Spirit, through symbolism.",
@@ -115,6 +119,7 @@ export const products: Product[] = [
   {
      id: "norse-runes",
     name: "Norse Runes",
+    altDescription: "A set of 25 handcrafted Elder Futhark resin runes by The Spirit Atelier with gilded metal finish, guidebook, and drawstring bag for divination and guidance",
     price: 55,
     prices: { CAD: 55, USD: 44, GBP: 33, AUD: 66, EUR: 44 },
     shortDescription: "For receiving ancient wisdom and guidance.",
@@ -155,6 +160,7 @@ export const products: Product[] = [
   {
     id: "norse-runes-cloth",
     name: "Norse Runes & Cloth",
+    altDescription: "A set of 25 handcrafted Elder Futhark resin runes by The Spirit Atelier with twelve-house forecast casting cloth, guidebook, and drawstring bag for structured divination",
     price: 77,
     prices: { CAD: 77, USD: 66, GBP: 44, AUD: 88, EUR: 55 },
     shortDescription:
@@ -195,6 +201,7 @@ export const products: Product[] = [
   {
     id: "my-intuition-made-me-do-it",
     name: "My Intuition Made Me Do It",
+    altDescription: "The novel My Intuition Made Me Do It by A.K. Bird, a roman a clef about spiritual awakening, transformation, and following your intuition",
     price: 22,
     prices: { CAD: 22, USD: 22, GBP: 11, AUD: 22, EUR: 11 },
     shortDescription:
@@ -304,6 +311,16 @@ export const reviews: Review[] = [
   },
   {
     id: "r3",
+    productId: "whims-whispers-spirit-board",
+    productName: "Whims & Whispers Spirit Board",
+    reviewer: "A. K. Bird",
+    rating: 5,
+    text: "I was inspired to create the Spirit Board at the very start of The Spirit Atelier's conception. I wanted to offer a tool that is symbolic rather than summoning, and provides a direct connecting to Spirit. These will forever be in short supply, as they are extremely finicky to make! If you are drawn to this tool, I encourage you to claim it when you can.",
+    verified: true,
+    owner: true,
+  },
+  {
+    id: "r4",
     productId: "norse-runes",
     productName: "Norse Runes",
     reviewer: "A. K. Bird",
@@ -313,22 +330,12 @@ export const reviews: Review[] = [
     owner: true,
   },
   {
-    id: "r4",
+    id: "r5",
     productId: "norse-runes-cloth",
     productName: "Norse Runes & Cloth",
     reviewer: "A. K. Bird",
     rating: 5,
-    text: "Have you ever encountered a casting cloth quite like this? I hadn’t! So I created one. I longed for a way to weave structure, timing, and lived context into traditional rune casting without diminishing its spirit. The Norse were deeply spiritual, holding layered cosmologies much like the interwoven systems we see in modern practice. The twelve astrological houses felt like a natural bridge and a contemporary framework through which ancient rune casting could continue to speak.",
-    verified: true,
-    owner: true,
-  },
-    {
-    id: "r5",
-    productId: "whims-whispers-spirit-board",
-    productName: "Whims & Whispers Spirit Board",
-    reviewer: "A. K. Bird",
-    rating: 5,
-    text: "I was inspired to create the Spirit Board at the very start of The Spirit Atelier's conception. I wanted to offer a tool that is symbolic rather than summoning, and provides a direct connecting to Spirit. These will forever be in short supply, as they are extremely finicky to make! If you are drawn to this tool, I encourage you to claim it when you can.",
+    text: "Have you ever encountered a casting cloth quite like this? I hadn't! So I created one. I longed for a way to weave structure, timing, and lived context into traditional rune casting without diminishing its spirit. The Norse were deeply spiritual, holding layered cosmologies much like the interwoven systems we see in modern practice. The twelve astrological houses felt like a natural bridge and a contemporary framework through which ancient rune casting could continue to speak.",
     verified: true,
     owner: true,
   },

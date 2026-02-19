@@ -1,11 +1,30 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { services } from "@/lib/data";
+import JsonLd from "@/components/JsonLd";
+
+const servicesJsonLd = {
+  "@context": "https://schema.org",
+  "@graph": services.map((s) => ({
+    "@type": "Service",
+    name: s.name,
+    description: s.description,
+    provider: { "@id": "https://thespiritatelier.ca/#organization" },
+    serviceType: "Spiritual Reading",
+    offers: {
+      "@type": "Offer",
+      price: s.startingPrices.CAD,
+      priceCurrency: "CAD",
+    },
+  })),
+};
 import { useCart } from "@/lib/CartContext";
 import { useCurrency } from "@/lib/CurrencyContext";
 import { useBooking } from "@/lib/BookingContext";
+import { useAuth } from "@/lib/AuthContext";
 import BookingTimer from "@/components/BookingTimer";
+import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHeart, faCheck, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { faHeart as faHeartRegular } from "@fortawesome/free-regular-svg-icons";
@@ -14,6 +33,7 @@ export default function ServicesPage() {
   const { toggleWishlist, isWishlisted: checkWishlisted, addToCart, removeFromCart } = useCart();
   const { formatPrice, getProductPrice } = useCurrency();
   const { isSlotTaken, createHold, getActiveHold, releaseHold } = useBooking();
+  const { user, isLoggedIn, register } = useAuth();
 
   const [bookingService, setBookingService] = useState<string | null>(null);
   const [bookingStep, setBookingStep] = useState(0);
@@ -25,6 +45,31 @@ export default function ServicesPage() {
   const [addedToCart, setAddedToCart] = useState(false);
   const [blockedSlots, setBlockedSlots] = useState<Set<string>>(new Set());
   const [loadingSlots, setLoadingSlots] = useState(false);
+  const [ethicsConfirmed, setEthicsConfirmed] = useState(false);
+  const [createAccount, setCreateAccount] = useState(false);
+  const [accountPassword, setAccountPassword] = useState("");
+  const [accountLastName, setAccountLastName] = useState("");
+  const [birthdayMonth, setBirthdayMonth] = useState("");
+  const [referralCode, setReferralCode] = useState("");
+
+  const [dateMin, setDateMin] = useState("");
+  const [dateMax, setDateMax] = useState("");
+
+  useEffect(() => {
+    fetch("/api/schedule/settings")
+      .then((res) => res.ok ? res.json() : null)
+      .then((data) => {
+        if (!data) return;
+        const today = new Date();
+        const min = new Date(today);
+        min.setDate(min.getDate() + data.leadTimeDays);
+        const max = new Date(today);
+        max.setDate(max.getDate() + data.maxRangeDays);
+        setDateMin(min.toISOString().split("T")[0]);
+        setDateMax(max.toISOString().split("T")[0]);
+      })
+      .catch(() => {});
+  }, []);
 
   const timeSlots = ["12:00 PM", "2:00 PM", "4:00 PM", "6:00 PM", "8:00 PM"];
 
@@ -48,11 +93,32 @@ export default function ServicesPage() {
     setAddOnSelected(false);
     setHoldError("");
     setAddedToCart(false);
+    setEthicsConfirmed(false);
+    setCreateAccount(false);
+    setAccountPassword("");
+    setAccountLastName("");
+    setBirthdayMonth("");
+    setReferralCode("");
   }, []);
 
   const handleAddToCart = async () => {
     if (!currentService) return;
     setHoldError("");
+
+    if (createAccount && !isLoggedIn) {
+      const formattedName = `${formData.name.trim()} ${accountLastName.trim()}`;
+      const success = await register(
+        formattedName,
+        formData.email,
+        accountPassword,
+        referralCode || undefined,
+        Number(birthdayMonth) || undefined,
+      );
+      if (!success) {
+        setHoldError("An account with that email already exists.");
+        return;
+      }
+    }
 
     // Check one-hold-per-user
     const existing = getActiveHold();
@@ -111,6 +177,7 @@ export default function ServicesPage() {
 
   return (
     <>
+      <JsonLd data={servicesJsonLd} />
       <section className="bg-navy py-16 px-4">
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="font-heading text-5xl md:text-6xl text-white mb-3">Services</h1>
@@ -195,6 +262,12 @@ export default function ServicesPage() {
         </div>
       </section>
 
+      <div className="pb-16 text-center">
+        <Link href="/ethics" className="text-sm text-mauve hover:text-navy transition-colors underline underline-offset-2">
+          Read about our ethics &amp; boundaries
+        </Link>
+      </div>
+
       {/* Booking Modal */}
       {bookingService && (
         <div className="fixed inset-0 bg-navy/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -268,7 +341,8 @@ export default function ServicesPage() {
                         }
                       }}
                       className="w-full px-4 py-3 border border-navy/20 rounded-lg text-navy focus:outline-none focus:border-navy mb-6"
-                      min={new Date().toISOString().split("T")[0]}
+                      min={dateMin || new Date().toISOString().split("T")[0]}
+                      max={dateMax || undefined}
                     />
                     <h4 className="text-sm font-semibold text-navy mb-4 uppercase tracking-wider">Select a Time</h4>
                     <div className="grid grid-cols-2 gap-2 mb-6">
@@ -321,9 +395,24 @@ export default function ServicesPage() {
                     <div className="space-y-4 mb-6">
                       <input
                         type="text"
-                        placeholder="Full Name"
+                        placeholder="First Name"
                         value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          const capitalized = val.charAt(0).toUpperCase() + val.slice(1);
+                          setFormData({ ...formData, name: capitalized });
+                        }}
+                        className="w-full px-4 py-3 border border-navy/20 rounded-lg text-navy placeholder:text-mauve focus:outline-none focus:border-navy"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Last Name"
+                        value={accountLastName}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          const capitalized = val.charAt(0).toUpperCase() + val.slice(1);
+                          setAccountLastName(capitalized);
+                        }}
                         className="w-full px-4 py-3 border border-navy/20 rounded-lg text-navy placeholder:text-mauve focus:outline-none focus:border-navy"
                       />
                       <input
@@ -333,6 +422,88 @@ export default function ServicesPage() {
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         className="w-full px-4 py-3 border border-navy/20 rounded-lg text-navy placeholder:text-mauve focus:outline-none focus:border-navy"
                       />
+
+                      {!isLoggedIn && (
+                        <>
+                          <label className="flex items-start gap-3 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={createAccount}
+                              onChange={(e) => setCreateAccount(e.target.checked)}
+                              className="mt-1 w-4 h-4 accent-navy"
+                            />
+                            <span className="text-sm text-navy/70">
+                              Create account and start earning{" "}
+                              <Link href="/loyalty" target="_blank" className="underline hover:text-navy transition-colors">
+                                Ritual Credits
+                              </Link>
+                            </span>
+                          </label>
+
+                          {createAccount && (
+                            <div className="space-y-4 animate-slide-up">
+                              <div>
+                                <label className="block text-sm font-semibold text-navy mb-2 uppercase tracking-wider">
+                                  Password
+                                </label>
+                                <input
+                                  type="password"
+                                  value={accountPassword}
+                                  onChange={(e) => setAccountPassword(e.target.value)}
+                                  className="w-full px-4 py-3 border border-navy/20 rounded-lg text-navy placeholder:text-mauve focus:outline-none focus:border-navy transition-colors"
+                                  placeholder="Choose a password"
+                                  required
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-semibold text-navy mb-2 uppercase tracking-wider">
+                                  Birthday Month
+                                </label>
+                                <select
+                                  value={birthdayMonth}
+                                  onChange={(e) => setBirthdayMonth(e.target.value)}
+                                  className="w-full px-4 py-3 border border-navy/20 rounded-lg text-navy focus:outline-none focus:border-navy transition-colors"
+                                  required
+                                >
+                                  <option value="">Select your birthday month...</option>
+                                  {[
+                                    "January", "February", "March", "April", "May", "June",
+                                    "July", "August", "September", "October", "November", "December",
+                                  ].map((month, i) => (
+                                    <option key={month} value={i + 1}>{month}</option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div>
+                                <label className="block text-sm font-semibold text-navy mb-2 uppercase tracking-wider">
+                                  Referral Code{" "}
+                                  <span className="text-mauve font-normal normal-case">
+                                    (Part of our Refer a Friend{" "}
+                                    <Link
+                                      href="/loyalty"
+                                      className="underline hover:text-navy transition-colors"
+                                    >
+                                      Loyalty Program
+                                    </Link>
+                                    )
+                                  </span>
+                                </label>
+                                <input
+                                  type="text"
+                                  value={referralCode}
+                                  onChange={(e) => setReferralCode(e.target.value)}
+                                  className="w-full px-4 py-3 border border-navy/20 rounded-lg text-navy placeholder:text-mauve focus:outline-none focus:border-navy transition-colors"
+                                  placeholder="e.g. REF-LUNA-A3B2"
+                                />
+                              </div>
+                              <p className="text-xs text-mauve text-center">
+                                Earn 50 Ritual Credits just for creating an account!
+                              </p>
+                            </div>
+                          )}
+                        </>
+                      )}
+
                       <textarea
                         placeholder="Special requests or notes (optional)"
                         value={formData.notes}
@@ -360,6 +531,28 @@ export default function ServicesPage() {
                       </div>
                     )}
 
+                    <div className="mb-6">
+                      <label className="flex items-start gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={ethicsConfirmed}
+                          onChange={(e) => setEthicsConfirmed(e.target.checked)}
+                          className="mt-1 w-4 h-4 accent-navy"
+                        />
+                        <span className="text-sm text-navy/70">
+                          I have read and understand the{" "}
+                          <Link
+                            href="/ethics"
+                            target="_blank"
+                            className="underline hover:text-navy transition-colors"
+                          >
+                            ethics &amp; boundaries
+                          </Link>{" "}
+                          of this practice
+                        </span>
+                      </label>
+                    </div>
+
                     <div className="flex items-center justify-between mb-6 p-3 bg-cream rounded-lg">
                       <span className="text-sm text-navy/70">Subtotal</span>
                       <span className="font-semibold text-navy">{formatPrice(totalPrice)}</span>
@@ -374,7 +567,7 @@ export default function ServicesPage() {
                       </button>
                       <button
                         onClick={() => { setHoldError(""); setBookingStep(3); }}
-                        disabled={!formData.name || !formData.email}
+                        disabled={!formData.name || !accountLastName || !formData.email || !ethicsConfirmed || (createAccount && !isLoggedIn && !accountPassword)}
                         className="flex-1 py-3 bg-navy text-white font-medium rounded-lg text-sm tracking-wider uppercase disabled:bg-mauve/30 disabled:text-mauve disabled:cursor-not-allowed"
                       >
                         Review
@@ -391,7 +584,7 @@ export default function ServicesPage() {
                       <p><span className="font-semibold text-navy">Service:</span> <span className="text-navy/80">{currentService?.name}</span></p>
                       <p><span className="font-semibold text-navy">Date:</span> <span className="text-navy/80">{selectedDate}</span></p>
                       <p><span className="font-semibold text-navy">Time:</span> <span className="text-navy/80">{selectedTime}</span></p>
-                      <p><span className="font-semibold text-navy">Name:</span> <span className="text-navy/80">{formData.name}</span></p>
+                      <p><span className="font-semibold text-navy">Name:</span> <span className="text-navy/80">{formData.name} {accountLastName}</span></p>
                       <p><span className="font-semibold text-navy">Email:</span> <span className="text-navy/80">{formData.email}</span></p>
                       {formData.notes && (
                         <p><span className="font-semibold text-navy">Notes:</span> <span className="text-navy/80">{formData.notes}</span></p>
