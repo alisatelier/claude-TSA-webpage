@@ -47,10 +47,18 @@ interface CartContextType {
   creditDiscount: number;
   applyCredits: (amount: number) => void;
   removeCredits: () => void;
+  discountCode: string | null;
+  discountCodeAmount: number;
+  applyDiscountCode: (code: string) => Promise<{ success: boolean; error?: string }>;
+  removeDiscountCode: () => void;
   checkout: (currency?: string) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
+
+function calculateCreditDiscount(credits: number): number {
+  return credits === 500 ? 10 : credits === 250 ? 5 : 0;
+}
 
 function loadCartFromStorage(): { items: CartItem[]; wishlist: WishlistItem[] } {
   if (typeof window === "undefined") return { items: [], wishlist: [] };
@@ -77,6 +85,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
   const [toast, setToast] = useState<Toast | null>(null);
   const [appliedCredits, setAppliedCredits] = useState(0);
+  const [discountCode, setDiscountCode] = useState<string | null>(null);
+  const [discountCodeAmount, setDiscountCodeAmount] = useState(0);
   const [mounted, setMounted] = useState(false);
   const [dbLoaded, setDbLoaded] = useState(false);
   const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -299,12 +309,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const clearCart = useCallback(() => {
     setItems([]);
     setAppliedCredits(0);
+    setDiscountCode(null);
+    setDiscountCodeAmount(0);
     if (isLoggedIn) {
       fetch("/api/user/cart", { method: "DELETE" }).catch(() => {});
     }
   }, [isLoggedIn]);
 
-  const creditDiscount = appliedCredits === 500 ? 10 : appliedCredits === 250 ? 5 : 0;
+  const creditDiscount = calculateCreditDiscount(appliedCredits);
 
   const applyCredits = useCallback((amount: number) => {
     if (amount !== 250 && amount !== 500) return;
@@ -314,6 +326,31 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const removeCredits = useCallback(() => {
     setAppliedCredits(0);
+  }, []);
+
+  const applyDiscountCode = useCallback(async (code: string): Promise<{ success: boolean; error?: string }> => {
+    const currentCartTotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+    try {
+      const res = await fetch("/api/discounts/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code, subtotal: currentCartTotal }),
+      });
+      const data = await res.json();
+      if (data.valid) {
+        setDiscountCode(data.code);
+        setDiscountCodeAmount(data.discountAmount);
+        return { success: true };
+      }
+      return { success: false, error: data.error || "Invalid code" };
+    } catch {
+      return { success: false, error: "Failed to validate code" };
+    }
+  }, [items]);
+
+  const removeDiscountCode = useCallback(() => {
+    setDiscountCode(null);
+    setDiscountCodeAmount(0);
   }, []);
 
   const checkout = useCallback((currency?: string) => {
@@ -328,12 +365,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    const discount = validCredits === 500 ? 10 : validCredits === 250 ? 5 : 0;
+    const discount = calculateCreditDiscount(validCredits);
     if (discount > cadSubtotal) {
       validCredits = 0;
     }
-    const actualDiscount = validCredits === 500 ? 10 : validCredits === 250 ? 5 : 0;
-    const finalCADTotal = Math.max(0, cadSubtotal - actualDiscount);
+    const actualDiscount = calculateCreditDiscount(validCredits);
+    const finalCADTotal = Math.max(0, cadSubtotal - actualDiscount - discountCodeAmount);
 
     if (validCredits > 0) {
       deductCredits(validCredits, `Redeemed ${validCredits} credits ($${actualDiscount} off)`);
@@ -348,7 +385,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       image: i.image,
     }));
 
-    recordPurchase(productIds, finalCADTotal, currency, purchaseItems);
+    const discountAmountCents = Math.round(discountCodeAmount * 100);
+    recordPurchase(productIds, finalCADTotal, currency, purchaseItems, discountCode ?? undefined, discountAmountCents, validCredits);
 
     // Remove purchased items from wishlist
     setWishlist((prev) =>
@@ -359,10 +397,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     setItems([]);
     setAppliedCredits(0);
+    setDiscountCode(null);
+    setDiscountCodeAmount(0);
     if (isLoggedIn) {
       fetch("/api/user/cart", { method: "DELETE" }).catch(() => {});
     }
-  }, [items, appliedCredits, deductCredits, recordPurchase, user, isLoggedIn]);
+  }, [items, appliedCredits, discountCode, discountCodeAmount, deductCredits, recordPurchase, user, isLoggedIn]);
 
   const cartCount = items.reduce((sum, i) => sum + i.quantity, 0);
   const wishlistCount = wishlist.length;
@@ -388,6 +428,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         creditDiscount,
         applyCredits,
         removeCredits,
+        discountCode,
+        discountCodeAmount,
+        applyDiscountCode,
+        removeDiscountCode,
         checkout,
       }}
     >

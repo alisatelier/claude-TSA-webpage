@@ -106,7 +106,7 @@ export default function HomePage() {
               href="/shop"
               className="px-8 py-4 bg-white text-navy font-medium rounded-lg hover:bg-cream transition-colors text-sm tracking-wider uppercase"
             >
-              Shop Ritual Tools
+              Shop Tools & Wares
             </Link>
             <Link
               href="/services"

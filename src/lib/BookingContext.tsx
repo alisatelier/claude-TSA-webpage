@@ -1,10 +1,8 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
-import { useSession } from "next-auth/react";
 
 const HOLDS_STORAGE_KEY = "spirit-atelier-booking-holds";
-const BOOKINGS_STORAGE_KEY = "spirit-atelier-bookings";
 const HOLD_DURATION_MS = 10 * 60 * 1000; // 10 minutes
 
 export interface BookingHold {
@@ -44,6 +42,8 @@ interface CreateHoldParams {
   userNotes: string;
   addOn: boolean;
   totalPrice: number;
+  discountCode?: string;
+  discountAmount?: number;
 }
 
 interface BookingContextType {
@@ -61,13 +61,11 @@ interface BookingContextType {
 const BookingContext = createContext<BookingContextType | undefined>(undefined);
 
 export function BookingProvider({ children }: { children: React.ReactNode }) {
-  const { data: session } = useSession();
   const [holds, setHolds] = useState<BookingHold[]>([]);
   const [bookings, setBookings] = useState<BookingSession[]>([]);
   const [mounted, setMounted] = useState(false);
   const holdsRef = useRef(holds);
   holdsRef.current = holds;
-  const migrationDone = useRef(false);
 
   // Hydrate holds from local state (holds are always client-managed for UX)
   useEffect(() => {
@@ -81,42 +79,6 @@ export function BookingProvider({ children }: { children: React.ReactNode }) {
     }
     setMounted(true);
   }, []);
-
-  // Migrate localStorage confirmed bookings to DB on first login
-  useEffect(() => {
-    if (!session?.user || migrationDone.current) return;
-    migrationDone.current = true;
-
-    try {
-      const raw = localStorage.getItem(BOOKINGS_STORAGE_KEY);
-      if (!raw) return;
-      const localBookings: BookingSession[] = JSON.parse(raw);
-      if (localBookings.length === 0) return;
-
-      fetch("/api/bookings/migrate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          bookings: localBookings.map((b) => ({
-            serviceId: b.serviceId,
-            selectedDate: b.selectedDate,
-            selectedTime: b.selectedTime,
-            userName: b.userName,
-            userEmail: b.userEmail,
-            userNotes: b.userNotes,
-            addOn: b.addOn,
-            totalPrice: b.totalPrice,
-            createdAt: b.createdAt,
-          })),
-        }),
-      }).then(() => {
-        localStorage.removeItem(BOOKINGS_STORAGE_KEY);
-        setBookings([]);
-      }).catch(() => {});
-    } catch {
-      // ignore
-    }
-  }, [session?.user]);
 
   // Sync holds to localStorage (client-side timer state)
   useEffect(() => {
@@ -141,26 +103,15 @@ export function BookingProvider({ children }: { children: React.ReactNode }) {
   const isSlotTaken = useCallback(
     (serviceId: string, date: string, time: string): boolean => {
       const now = Date.now();
-      // Check local holds
-      const heldSlot = holds.some(
+      return holds.some(
         (h) =>
           h.serviceId === serviceId &&
           h.selectedDate === date &&
           h.selectedTime === time &&
           h.expiresAt > now
       );
-      if (heldSlot) return true;
-
-      // Check local bookings (for guest/cached)
-      const bookedSlot = bookings.some(
-        (b) =>
-          b.serviceId === serviceId &&
-          b.selectedDate === date &&
-          b.selectedTime === time
-      );
-      return bookedSlot;
     },
-    [holds, bookings]
+    [holds]
   );
 
   const getActiveHold = useCallback((): BookingHold | null => {

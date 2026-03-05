@@ -18,6 +18,18 @@ const TEMPLATE_CATEGORY: Record<string, "loyalty" | "newsletters_promotions"> = 
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
+function calculateCreditDiscount(credits: number): number {
+  return credits === 500 ? 10 : credits === 250 ? 5 : 0;
+}
+
+function getFirstName(name?: string | null): string {
+  return name?.split(" ")[0] ?? "there";
+}
+
+function getServiceName(serviceId: string): string {
+  return services.find((s) => s.id === serviceId)?.name ?? serviceId;
+}
+
 async function resolveOverride(templateId: string) {
   const override = await prisma.emailTemplateOverride.findFirst({
     where: { templateId },
@@ -87,7 +99,7 @@ export async function triggerWishlistBackInStockEmail(
   await buildAndSend(
     "wishlist-back-in-stock",
     {
-      firstName: user.name?.split(" ")[0] ?? "there",
+      firstName: getFirstName(user.name),
       productName: resolved.name,
       productImage: resolved.image,
       variation,
@@ -111,7 +123,7 @@ export async function triggerLoyaltyWelcomeEmail(userId: string) {
   await buildAndSend(
     "loyalty-welcome",
     {
-      firstName: user.name?.split(" ")[0] ?? "there",
+      firstName: getFirstName(user.name),
       credits: user.loyalty.currentCredits,
       referralCode: user.loyalty.referralCode,
       tier,
@@ -131,10 +143,15 @@ export async function triggerOrderConfirmationEmail(orderId: string) {
   });
   if (!order?.user?.email) return;
 
+  const itemsSubtotal = order.items.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0) / 100;
+  const discountAmountDollars = order.discountAmount / 100;
+  const creditDiscount = calculateCreditDiscount(order.creditsRedeemed);
+  const hasDeductions = discountAmountDollars > 0 || creditDiscount > 0;
+
   await buildAndSend(
     "order-confirmation",
     {
-      firstName: order.user.name?.split(" ")[0] ?? "there",
+      firstName: getFirstName(order.user.name),
       orderNumber: formatOrderNumber(order.orderNumber),
       items: order.items.map((item) => ({
         name: item.name,
@@ -143,6 +160,13 @@ export async function triggerOrderConfirmationEmail(orderId: string) {
         variation: item.variation ?? undefined,
       })),
       total: order.totalAmount / 100,
+      ...(hasDeductions ? {
+        subtotal: itemsSubtotal,
+        discountCode: order.discountCode ?? undefined,
+        discountAmount: discountAmountDollars || undefined,
+        creditsRedeemed: order.creditsRedeemed || undefined,
+        creditDiscount: creditDiscount || undefined,
+      } : {}),
     },
     order.user.email
   );
@@ -160,7 +184,7 @@ export async function triggerOrderShippedEmail(orderId: string) {
   await buildAndSend(
     "order-shipped",
     {
-      firstName: order.user.name?.split(" ")[0] ?? "there",
+      firstName: getFirstName(order.user.name),
       orderNumber: formatOrderNumber(order.orderNumber),
       trackingNumber: order.trackingNumber,
     },
@@ -174,17 +198,17 @@ export async function triggerServiceBookingConfirmationEmail(bookingId: string) 
   });
   if (!booking) return;
 
-  const service = services.find((s) => s.id === booking.serviceId);
-
   await buildAndSend(
     "service-booking-confirmation",
     {
-      firstName: booking.userName.split(" ")[0] ?? "there",
-      serviceName: service?.name ?? booking.serviceId,
+      firstName: getFirstName(booking.userName),
+      serviceName: getServiceName(booking.serviceId),
       date: booking.selectedDate,
       time: booking.selectedTime,
       totalPrice: booking.totalPrice,
       meetLink: booking.googleMeetLink ?? undefined,
+      discountCode: booking.discountCode ?? undefined,
+      discountAmount: booking.discountAmount || undefined,
     },
     booking.userEmail
   );
@@ -196,13 +220,11 @@ export async function triggerServiceReminderEmail(bookingId: string) {
   });
   if (!booking) return;
 
-  const service = services.find((s) => s.id === booking.serviceId);
-
   await buildAndSend(
     "service-reminder",
     {
-      firstName: booking.userName.split(" ")[0] ?? "there",
-      serviceName: service?.name ?? booking.serviceId,
+      firstName: getFirstName(booking.userName),
+      serviceName: getServiceName(booking.serviceId),
       date: booking.selectedDate,
       time: booking.selectedTime,
       meetLink: booking.googleMeetLink ?? undefined,
@@ -224,7 +246,7 @@ export async function triggerBirthdayMonthEmail(userId: string) {
   await buildAndSend(
     "birthday-month",
     {
-      firstName: user.name?.split(" ")[0] ?? "there",
+      firstName: getFirstName(user.name),
       credits: 150,
     },
     user.email,
@@ -245,7 +267,7 @@ export async function triggerReferralCompletedEmail(
   await buildAndSend(
     "referral-completed",
     {
-      firstName: user.name?.split(" ")[0] ?? "there",
+      firstName: getFirstName(user.name),
       referredName,
       creditsEarned: 200,
       credits: user.loyalty?.currentCredits ?? 0,
@@ -269,7 +291,7 @@ export async function triggerStatusUpgradeEmail(userId: string, newTier: string)
   await buildAndSend(
     "status-upgrade",
     {
-      firstName: user.name?.split(" ")[0] ?? "there",
+      firstName: getFirstName(user.name),
       newTier,
       benefits,
       credits: user.loyalty?.currentCredits ?? 0,
@@ -286,16 +308,16 @@ export async function triggerBookingCancellationEmail(bookingId: string) {
   });
   if (!booking) return;
 
-  const service = services.find((s) => s.id === booking.serviceId);
-
   await buildAndSend(
     "booking-cancellation",
     {
-      firstName: booking.userName.split(" ")[0] ?? "there",
-      serviceName: service?.name ?? booking.serviceId,
+      firstName: getFirstName(booking.userName),
+      serviceName: getServiceName(booking.serviceId),
       date: booking.selectedDate,
       time: booking.selectedTime,
       totalPrice: booking.totalPrice,
+      discountCode: booking.discountCode ?? undefined,
+      discountAmount: booking.discountAmount || undefined,
     },
     booking.userEmail
   );
@@ -311,19 +333,19 @@ export async function triggerBookingRescheduleEmail(
   });
   if (!booking) return;
 
-  const service = services.find((s) => s.id === booking.serviceId);
-
   await buildAndSend(
     "booking-reschedule",
     {
-      firstName: booking.userName.split(" ")[0] ?? "there",
-      serviceName: service?.name ?? booking.serviceId,
+      firstName: getFirstName(booking.userName),
+      serviceName: getServiceName(booking.serviceId),
       oldDate,
       oldTime,
       newDate: booking.selectedDate,
       newTime: booking.selectedTime,
       totalPrice: booking.totalPrice,
       meetLink: booking.googleMeetLink ?? undefined,
+      discountCode: booking.discountCode ?? undefined,
+      discountAmount: booking.discountAmount || undefined,
     },
     booking.userEmail
   );
@@ -341,6 +363,11 @@ export async function triggerAdminNewOrderEmail(orderId: string) {
   });
   if (!order?.user) return;
 
+  const itemsSubtotal = order.items.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0) / 100;
+  const discountAmountDollars = order.discountAmount / 100;
+  const creditDiscount = calculateCreditDiscount(order.creditsRedeemed);
+  const hasDeductions = discountAmountDollars > 0 || creditDiscount > 0;
+
   await buildAndSend(
     "admin-new-order",
     {
@@ -354,6 +381,13 @@ export async function triggerAdminNewOrderEmail(orderId: string) {
         variation: item.variation ?? undefined,
       })),
       total: order.totalAmount / 100,
+      ...(hasDeductions ? {
+        subtotal: itemsSubtotal,
+        discountCode: order.discountCode ?? undefined,
+        discountAmount: discountAmountDollars || undefined,
+        creditsRedeemed: order.creditsRedeemed || undefined,
+        creditDiscount: creditDiscount || undefined,
+      } : {}),
     },
   );
 }
@@ -364,19 +398,19 @@ export async function triggerAdminNewBookingEmail(bookingId: string) {
   });
   if (!booking) return;
 
-  const service = services.find((s) => s.id === booking.serviceId);
-
   await buildAndSend(
     "admin-new-booking",
     {
       customerName: booking.userName,
       customerEmail: booking.userEmail,
-      serviceName: service?.name ?? booking.serviceId,
+      serviceName: getServiceName(booking.serviceId),
       date: booking.selectedDate,
       time: booking.selectedTime,
       totalPrice: booking.totalPrice,
       notes: booking.userNotes || undefined,
       meetLink: booking.googleMeetLink ?? undefined,
+      discountCode: booking.discountCode ?? undefined,
+      discountAmount: booking.discountAmount || undefined,
     },
   );
 }
@@ -387,14 +421,12 @@ export async function triggerAdminBookingReminderEmail(bookingId: string) {
   });
   if (!booking) return;
 
-  const service = services.find((s) => s.id === booking.serviceId);
-
   await buildAndSend(
     "admin-booking-reminder",
     {
       customerName: booking.userName,
       customerEmail: booking.userEmail,
-      serviceName: service?.name ?? booking.serviceId,
+      serviceName: getServiceName(booking.serviceId),
       date: booking.selectedDate,
       time: booking.selectedTime,
       meetLink: booking.googleMeetLink ?? undefined,
@@ -408,17 +440,17 @@ export async function triggerAdminBookingCancellationEmail(bookingId: string) {
   });
   if (!booking) return;
 
-  const service = services.find((s) => s.id === booking.serviceId);
-
   await buildAndSend(
     "admin-booking-cancellation",
     {
       customerName: booking.userName,
       customerEmail: booking.userEmail,
-      serviceName: service?.name ?? booking.serviceId,
+      serviceName: getServiceName(booking.serviceId),
       date: booking.selectedDate,
       time: booking.selectedTime,
       totalPrice: booking.totalPrice,
+      discountCode: booking.discountCode ?? undefined,
+      discountAmount: booking.discountAmount || undefined,
     },
   );
 }
@@ -433,19 +465,19 @@ export async function triggerAdminBookingRescheduleEmail(
   });
   if (!booking) return;
 
-  const service = services.find((s) => s.id === booking.serviceId);
-
   await buildAndSend(
     "admin-booking-reschedule",
     {
       customerName: booking.userName,
       customerEmail: booking.userEmail,
-      serviceName: service?.name ?? booking.serviceId,
+      serviceName: getServiceName(booking.serviceId),
       oldDate,
       oldTime,
       newDate: booking.selectedDate,
       newTime: booking.selectedTime,
       totalPrice: booking.totalPrice,
+      discountCode: booking.discountCode ?? undefined,
+      discountAmount: booking.discountAmount || undefined,
     },
   );
 }

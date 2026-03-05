@@ -17,7 +17,7 @@ export async function POST(request: Request) {
   }
 
   const userId = session.user.id;
-  const { productIds, items, totalSpent, currency } = await request.json();
+  const { productIds, items, totalSpent, currency, discountCode, discountAmountCents, creditsRedeemed } = await request.json();
 
   // Accept either `items` (new format) or `productIds` (legacy)
   if ((!items?.length && !productIds?.length) || totalSpent == null) {
@@ -58,12 +58,23 @@ export async function POST(request: Request) {
 
     const order = await tx.order.create({
       data: {
-        userId,
+        user: { connect: { id: userId } },
         orderNumber: nextNumber,
         totalAmount: Math.round(totalSpent * 100), // Store in cents
+        discountCode: discountCode ?? null,
+        discountAmount: discountAmountCents ?? 0,
+        creditsRedeemed: creditsRedeemed ?? 0,
         items: { create: orderItems },
       },
     });
+
+    // Increment discount code usage
+    if (discountCode) {
+      await tx.discountCode.updateMany({
+        where: { code: discountCode },
+        data: { usedCount: { increment: 1 } },
+      });
+    }
 
     // Decrement stock for each ordered item
     for (const item of orderItems) {
@@ -107,38 +118,50 @@ export async function POST(request: Request) {
     },
   });
 
-  // Award referrer on first purchase
+  // Award referrer on first purchase (one-time reward only)
   if (!loyalty.firstPurchaseCompleted && loyalty.referredBy) {
     const referrerLoyalty = await prisma.loyalty.findUnique({
       where: { referralCode: loyalty.referredBy },
     });
 
     if (referrerLoyalty) {
-      const newReferrerCredits = referrerLoyalty.currentCredits + 200;
-      const newReferrerLifetime = referrerLoyalty.lifetimeCredits + 200;
+      // Always track the referral count
+      const isFirstReferral = referrerLoyalty.referralCount === 0;
 
-      await prisma.loyalty.update({
-        where: { userId: referrerLoyalty.userId },
-        data: {
-          currentCredits: newReferrerCredits,
-          lifetimeCredits: newReferrerLifetime,
-          referralCount: referrerLoyalty.referralCount + 1,
-        },
-      });
+      if (isFirstReferral) {
+        // Only award 200 points for the very first referred friend's purchase
+        const newReferrerCredits = referrerLoyalty.currentCredits + 200;
+        const newReferrerLifetime = referrerLoyalty.lifetimeCredits + 200;
 
-      const purchaser = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { name: true },
-      });
+        await prisma.loyalty.update({
+          where: { userId: referrerLoyalty.userId },
+          data: {
+            currentCredits: newReferrerCredits,
+            lifetimeCredits: newReferrerLifetime,
+            referralCount: 1,
+          },
+        });
 
-      await prisma.transactionLog.create({
-        data: {
-          userId: referrerLoyalty.userId,
-          action: `Referral reward (${purchaser?.name ?? "a friend"} made first purchase)`,
-          credits: 200,
-          runningBalance: newReferrerCredits,
-        },
-      });
+        const purchaser = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { name: true },
+        });
+
+        await prisma.transactionLog.create({
+          data: {
+            userId: referrerLoyalty.userId,
+            action: `Referral reward (${purchaser?.name ?? "a friend"} made first purchase)`,
+            credits: 200,
+            runningBalance: newReferrerCredits,
+          },
+        });
+      } else {
+        // Still increment referral count for tracking, but no points
+        await prisma.loyalty.update({
+          where: { userId: referrerLoyalty.userId },
+          data: { referralCount: referrerLoyalty.referralCount + 1 },
+        });
+      }
     }
   }
 
@@ -146,13 +169,14 @@ export async function POST(request: Request) {
   triggerOrderConfirmationEmail(order.id);
   triggerAdminNewOrderEmail(order.id);
 
-  // Check for referral reward trigger
+  // Send referral reward email only for the first referred friend's purchase
   if (!loyalty.firstPurchaseCompleted && loyalty.referredBy) {
     const referrerLoyalty2 = await prisma.loyalty.findUnique({
       where: { referralCode: loyalty.referredBy },
-      select: { userId: true },
+      select: { userId: true, referralCount: true },
     });
-    if (referrerLoyalty2) {
+    // referralCount was just set to 1 above if this was the first referral
+    if (referrerLoyalty2 && referrerLoyalty2.referralCount === 1) {
       const purchaserUser = await prisma.user.findUnique({
         where: { id: userId },
         select: { name: true },

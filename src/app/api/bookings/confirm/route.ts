@@ -41,6 +41,14 @@ export async function POST(request: Request) {
     },
   });
 
+  // Increment discount code usage if applicable
+  if (confirmed.discountCode) {
+    prisma.discountCode.updateMany({
+      where: { code: confirmed.discountCode },
+      data: { usedCount: { increment: 1 } },
+    }).catch(() => {});
+  }
+
   // Create calendar event, then send confirmation email (so Meet link is available)
   (async () => {
     await createCalendarEvent(confirmed.id);

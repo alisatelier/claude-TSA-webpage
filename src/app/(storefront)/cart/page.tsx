@@ -12,11 +12,13 @@ import { faBagShopping, faXmark, faStar, faCheck, faCalendar, faClock } from "@f
 import BookingTimer from "@/components/BookingTimer";
 
 export default function CartPage() {
-  const { items, updateQuantity, removeFromCart, cartTotal, checkout, appliedCredits, creditDiscount, applyCredits, removeCredits } = useCart();
+  const { items, updateQuantity, removeFromCart, cartTotal, checkout, appliedCredits, creditDiscount, applyCredits, removeCredits, discountCode: appliedDiscountCode, discountCodeAmount, applyDiscountCode, removeDiscountCode } = useCart();
   const { user, isLoggedIn } = useAuth();
   const { getHoldById, confirmBooking, releaseHold, holds } = useBooking();
   const { formatPrice, currency } = useCurrency();
-  const [discountCode, setDiscountCode] = useState("");
+  const [discountInput, setDiscountInput] = useState("");
+  const [discountError, setDiscountError] = useState("");
+  const [applyingDiscount, setApplyingDiscount] = useState(false);
   const [checkingOut, setCheckingOut] = useState(false);
   const [checkoutError, setCheckoutError] = useState("");
   const [expiredHoldIds, setExpiredHoldIds] = useState<Set<string>>(new Set());
@@ -185,7 +187,7 @@ export default function CartPage() {
     );
   }
 
-  const finalTotal = Math.max(0, cartTotal - creditDiscount);
+  const finalTotal = Math.max(0, cartTotal - creditDiscount - discountCodeAmount);
   const creditsEarnable = Math.floor(finalTotal);
 
   const handleCheckout = () => {
@@ -366,11 +368,50 @@ export default function CartPage() {
                       <span className="text-navy font-medium">Calculated at checkout</span>
                     </div>
                   )}
-                  <div className="flex gap-2">
-                    <input type="text" value={discountCode} onChange={(e) => setDiscountCode(e.target.value)} placeholder="Discount code"
-                      className="flex-1 px-3 py-2 border border-navy/20 rounded-lg text-sm text-navy placeholder:text-mauve focus:outline-none focus:border-navy" />
-                    <button className="px-4 py-2 bg-navy/10 text-navy text-sm rounded-lg hover:bg-navy/20 transition-colors">Apply</button>
-                  </div>
+                  {appliedDiscountCode ? (
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="px-3 py-1 bg-navy/10 text-navy text-xs font-medium rounded-full">{appliedDiscountCode}</span>
+                        <span className="text-sm text-green-600 font-medium">-{formatPrice(discountCodeAmount)}</span>
+                      </div>
+                      <button onClick={removeDiscountCode} className="text-mauve hover:text-navy transition-colors p-1" aria-label="Remove discount code">
+                        <FontAwesomeIcon icon={faXmark} className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={discountInput}
+                          onChange={(e) => { setDiscountInput(e.target.value.toUpperCase()); setDiscountError(""); }}
+                          placeholder="Discount code"
+                          className="flex-1 px-3 py-2 border border-navy/20 rounded-lg text-sm text-navy placeholder:text-mauve focus:outline-none focus:border-navy"
+                        />
+                        <button
+                          onClick={async () => {
+                            if (!discountInput.trim()) return;
+                            setApplyingDiscount(true);
+                            setDiscountError("");
+                            const result = await applyDiscountCode(discountInput.trim());
+                            if (!result.success) {
+                              setDiscountError(result.error || "Invalid code");
+                            } else {
+                              setDiscountInput("");
+                            }
+                            setApplyingDiscount(false);
+                          }}
+                          disabled={applyingDiscount || !discountInput.trim()}
+                          className="px-4 py-2 bg-navy/10 text-navy text-sm rounded-lg hover:bg-navy/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {applyingDiscount ? "..." : "Apply"}
+                        </button>
+                      </div>
+                      {discountError && (
+                        <p className="text-xs text-red-500 mt-1">{discountError}</p>
+                      )}
+                    </div>
+                  )}
 
                   {/* Credit Redemption */}
                   {isLoggedIn && user && user.loyalty.currentCredits >= 250 && (

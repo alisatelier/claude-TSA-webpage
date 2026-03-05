@@ -32,6 +32,11 @@ export interface OrderConfirmationData {
   orderNumber: string;
   items: OrderItem[];
   total: number;
+  subtotal?: number;
+  discountCode?: string;
+  discountAmount?: number;
+  creditsRedeemed?: number;
+  creditDiscount?: number;
 }
 
 export interface OrderShippedData {
@@ -47,6 +52,8 @@ export interface ServiceBookingConfirmationData {
   time: string;
   totalPrice: number;
   meetLink?: string;
+  discountCode?: string;
+  discountAmount?: number;
 }
 
 export interface ServiceReminderData {
@@ -84,6 +91,11 @@ export interface AdminNewOrderData {
   orderNumber: string;
   orderItems: OrderItem[];
   total: number;
+  subtotal?: number;
+  discountCode?: string;
+  discountAmount?: number;
+  creditsRedeemed?: number;
+  creditDiscount?: number;
 }
 
 export interface AdminNewBookingData {
@@ -95,6 +107,8 @@ export interface AdminNewBookingData {
   totalPrice: number;
   notes?: string;
   meetLink?: string;
+  discountCode?: string;
+  discountAmount?: number;
 }
 
 export interface AdminBookingReminderData {
@@ -119,6 +133,8 @@ export interface BookingCancellationData {
   date: string;
   time: string;
   totalPrice: number;
+  discountCode?: string;
+  discountAmount?: number;
 }
 
 export interface BookingRescheduleData {
@@ -130,6 +146,8 @@ export interface BookingRescheduleData {
   newTime: string;
   totalPrice: number;
   meetLink?: string;
+  discountCode?: string;
+  discountAmount?: number;
 }
 
 export interface AdminBookingCancellationData {
@@ -139,6 +157,8 @@ export interface AdminBookingCancellationData {
   date: string;
   time: string;
   totalPrice: number;
+  discountCode?: string;
+  discountAmount?: number;
 }
 
 export interface AdminBookingRescheduleData {
@@ -150,6 +170,8 @@ export interface AdminBookingRescheduleData {
   newDate: string;
   newTime: string;
   totalPrice: number;
+  discountCode?: string;
+  discountAmount?: number;
 }
 
 export type TemplateData =
@@ -331,7 +353,15 @@ function renderLoyaltyWelcome(data: LoyaltyWelcomeData): RenderedEmail {
   );
 }
 
-function buildOrderItemsTable(items: OrderItem[], total: number): string {
+interface OrderTableOpts {
+  subtotal?: number;
+  discountCode?: string;
+  discountAmount?: number;
+  creditsRedeemed?: number;
+  creditDiscount?: number;
+}
+
+function buildOrderItemsTable(items: OrderItem[], total: number, opts?: OrderTableOpts): string {
   const rows = items
     .map(
       (item) =>
@@ -352,6 +382,32 @@ function buildOrderItemsTable(items: OrderItem[], total: number): string {
     )
     .join("");
 
+  const hasDeductions = (opts?.discountAmount && opts.discountAmount > 0) || (opts?.creditDiscount && opts.creditDiscount > 0);
+
+  let summaryRows = "";
+  if (hasDeductions && opts?.subtotal) {
+    summaryRows += `<tr>
+           <td colspan="3" style="padding:12px 0 0;font-size:14px;color:#A69FA6;">Subtotal</td>
+           <td style="padding:12px 0 0;font-size:14px;color:#A69FA6;text-align:right;">${fmt(opts.subtotal)}</td>
+         </tr>`;
+  }
+  if (opts?.discountCode && opts?.discountAmount && opts.discountAmount > 0) {
+    summaryRows += `<tr>
+           <td colspan="3" style="padding:4px 0 0;font-size:14px;color:#535B73;">Discount (${opts.discountCode})</td>
+           <td style="padding:4px 0 0;font-size:14px;color:#535B73;text-align:right;">-${fmt(opts.discountAmount)}</td>
+         </tr>`;
+  }
+  if (opts?.creditsRedeemed && opts?.creditDiscount && opts.creditDiscount > 0) {
+    summaryRows += `<tr>
+           <td colspan="3" style="padding:4px 0 0;font-size:14px;color:#535B73;">Ritual Credits (${opts.creditsRedeemed} credits)</td>
+           <td style="padding:4px 0 0;font-size:14px;color:#535B73;text-align:right;">-${fmt(opts.creditDiscount)}</td>
+         </tr>`;
+  }
+  summaryRows += `<tr>
+           <td colspan="3" style="padding:${hasDeductions ? "4" : "12"}px 0 0;font-size:15px;color:#535B73;font-weight:bold;">Total</td>
+           <td style="padding:${hasDeductions ? "4" : "12"}px 0 0;font-size:15px;color:#535B73;font-weight:bold;text-align:right;">${fmt(total)}</td>
+         </tr>`;
+
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px;">
          <tr style="border-bottom:2px solid #FEDDE8;">
            <td style="padding:8px 0;font-size:13px;color:#A69FA6;font-weight:bold;width:48px;"></td>
@@ -360,10 +416,7 @@ function buildOrderItemsTable(items: OrderItem[], total: number): string {
            <td style="padding:8px 0;font-size:13px;color:#A69FA6;font-weight:bold;text-align:right;">Price</td>
          </tr>
          ${rows}
-         <tr>
-           <td colspan="3" style="padding:12px 0 0;font-size:15px;color:#535B73;font-weight:bold;">Total</td>
-           <td style="padding:12px 0 0;font-size:15px;color:#535B73;font-weight:bold;text-align:right;">${fmt(total)}</td>
-         </tr>
+         ${summaryRows}
        </table>`;
 }
 
@@ -371,7 +424,13 @@ function renderOrderConfirmation(data: OrderConfirmationData): RenderedEmail {
   const variables: Record<string, string> = {
     firstName: data.firstName,
     orderNumber: data.orderNumber,
-    orderItems: buildOrderItemsTable(data.items, data.total),
+    orderItems: buildOrderItemsTable(data.items, data.total, {
+      subtotal: data.subtotal,
+      discountCode: data.discountCode,
+      discountAmount: data.discountAmount,
+      creditsRedeemed: data.creditsRedeemed,
+      creditDiscount: data.creditDiscount,
+    }),
   };
 
   const body = `<p style="margin:0 0 16px;">Dear {{firstName}},</p>
@@ -436,6 +495,9 @@ function renderServiceBookingConfirmation(
   const meetRow = data.meetLink
     ? bookingRow("Video Call", `<a href="${data.meetLink}" style="color:#535B73;">Join Google Meet</a>`)
     : "";
+  const discountRow = data.discountCode && data.discountAmount
+    ? bookingRow("Discount", `${data.discountCode} (-${fmt(data.discountAmount)})`)
+    : "";
 
   const variables: Record<string, string> = {
     firstName: data.firstName,
@@ -450,6 +512,7 @@ function renderServiceBookingConfirmation(
         bookingRow("Date", data.date) +
         bookingRow("Time", data.time) +
         meetRow +
+        discountRow +
         bookingRow("Total", fmt(data.totalPrice), true),
     }),
   };
@@ -659,6 +722,10 @@ function renderStatusUpgrade(data: StatusUpgradeData): RenderedEmail {
 function renderBookingCancellation(
   data: BookingCancellationData,
 ): RenderedEmail {
+  const discountRow = data.discountCode && data.discountAmount
+    ? bookingRow("Discount", `${data.discountCode} (-${fmt(data.discountAmount)})`)
+    : "";
+
   const variables: Record<string, string> = {
     firstName: data.firstName,
     serviceName: data.serviceName,
@@ -670,6 +737,7 @@ function renderBookingCancellation(
         bookingRow("Service", data.serviceName, true) +
         bookingRow("Date", data.date) +
         bookingRow("Time", data.time) +
+        discountRow +
         bookingRow("Total", fmt(data.totalPrice), true),
     }),
   };
@@ -693,6 +761,9 @@ function renderBookingReschedule(
   const meetRow = data.meetLink
     ? bookingRow("Video Call", `<a href="${data.meetLink}" style="color:#535B73;">Join Google Meet</a>`)
     : "";
+  const discountRow = data.discountCode && data.discountAmount
+    ? bookingRow("Discount", `${data.discountCode} (-${fmt(data.discountAmount)})`)
+    : "";
 
   const variables: Record<string, string> = {
     firstName: data.firstName,
@@ -709,6 +780,7 @@ function renderBookingReschedule(
         bookingRow("New Date", data.newDate) +
         bookingRow("New Time", data.newTime) +
         meetRow +
+        discountRow +
         bookingRow("Total", fmt(data.totalPrice), true),
     }),
   };
@@ -745,7 +817,13 @@ function renderAdminNewOrder(data: AdminNewOrderData): RenderedEmail {
     customerName: data.customerName,
     customerEmail: data.customerEmail,
     orderNumber: data.orderNumber,
-    orderItems: buildOrderItemsTable(data.orderItems, data.total),
+    orderItems: buildOrderItemsTable(data.orderItems, data.total, {
+      subtotal: data.subtotal,
+      discountCode: data.discountCode,
+      discountAmount: data.discountAmount,
+      creditsRedeemed: data.creditsRedeemed,
+      creditDiscount: data.creditDiscount,
+    }),
     total: fmt(data.total),
   };
 
@@ -775,10 +853,14 @@ function renderAdminNewBooking(data: AdminNewBookingData): RenderedEmail {
     totalPrice: fmt(data.totalPrice),
     notes: data.notes ?? "",
     meetLink: data.meetLink ?? "",
+    discountInfo: data.discountCode && data.discountAmount ? `${data.discountCode} (-${fmt(data.discountAmount)})` : "",
   };
 
   const meetRow = data.meetLink
     ? adminInfoRow("Video Call", `<a href="{{meetLink}}" style="color:#535B73;">Join Google Meet</a>`)
+    : "";
+  const discountRow = data.discountCode && data.discountAmount
+    ? adminInfoRow("Discount", "{{discountInfo}}")
     : "";
 
   const notesBlock = data.notes
@@ -795,6 +877,7 @@ function renderAdminNewBooking(data: AdminNewBookingData): RenderedEmail {
          adminInfoRow("Date", "{{date}}") +
          adminInfoRow("Time", "{{time}}") +
          meetRow +
+         discountRow +
          adminInfoRow("Total", "{{totalPrice}}")
        )}
        ${notesBlock}`;
@@ -872,7 +955,12 @@ function renderAdminBookingCancellation(data: AdminBookingCancellationData): Ren
     date: data.date,
     time: data.time,
     totalPrice: fmt(data.totalPrice),
+    discountInfo: data.discountCode && data.discountAmount ? `${data.discountCode} (-${fmt(data.discountAmount)})` : "",
   };
+
+  const discountRow = data.discountCode && data.discountAmount
+    ? adminInfoRow("Discount", "{{discountInfo}}")
+    : "";
 
   const body = `<p style="margin:0 0 16px;font-size:15px;font-weight:bold;color:#535B73;">Booking Cancelled</p>
        <p style="margin:0 0 16px;color:#535B73;font-size:14px;">A customer has cancelled their booking:</p>
@@ -882,6 +970,7 @@ function renderAdminBookingCancellation(data: AdminBookingCancellationData): Ren
          adminInfoRow("Service", "{{serviceName}}") +
          adminInfoRow("Date", "{{date}}") +
          adminInfoRow("Time", "{{time}}") +
+         discountRow +
          adminInfoRow("Total", "{{totalPrice}}")
        )}`;
 
@@ -903,7 +992,12 @@ function renderAdminBookingReschedule(data: AdminBookingRescheduleData): Rendere
     newDate: data.newDate,
     newTime: data.newTime,
     totalPrice: fmt(data.totalPrice),
+    discountInfo: data.discountCode && data.discountAmount ? `${data.discountCode} (-${fmt(data.discountAmount)})` : "",
   };
+
+  const discountRow = data.discountCode && data.discountAmount
+    ? adminInfoRow("Discount", "{{discountInfo}}")
+    : "";
 
   const body = `<p style="margin:0 0 16px;font-size:15px;font-weight:bold;color:#535B73;">Booking Rescheduled</p>
        <p style="margin:0 0 16px;color:#535B73;font-size:14px;">A customer has rescheduled their booking:</p>
@@ -915,6 +1009,7 @@ function renderAdminBookingReschedule(data: AdminBookingRescheduleData): Rendere
          adminInfoRow("Old Time", "{{oldTime}}") +
          adminInfoRow("New Date", "{{newDate}}") +
          adminInfoRow("New Time", "{{newTime}}") +
+         discountRow +
          adminInfoRow("Total", "{{totalPrice}}")
        )}`;
 

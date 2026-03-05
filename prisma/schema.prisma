@@ -26,6 +26,24 @@ enum BookingStatus {
   CANCELLED
 }
 
+enum DiscountType {
+  PERCENTAGE
+  FIXED
+}
+
+model DiscountCode {
+  id        String       @id @default(cuid())
+  code      String       @unique
+  type      DiscountType
+  value     Float
+  maxUses           Int?
+  maxUsesPerCustomer Int?
+  usedCount         Int          @default(0)
+  active    Boolean      @default(true)
+  expiresAt DateTime?
+  createdAt DateTime     @default(now())
+}
+
 model User {
   id                    String   @id @default(cuid())
   name                  String?
@@ -155,6 +173,9 @@ model Order {
   totalAmount           Int
   trackingNumber        String?
   refundAmount          Int         @default(0)
+  discountCode          String?
+  discountAmount        Int         @default(0)
+  creditsRedeemed       Int         @default(0)
   createdAt             DateTime    @default(now())
 
   items                 OrderItem[]
@@ -198,6 +219,8 @@ model ServiceBooking {
   userNotes             String        @default("")
   addOn                 Boolean       @default(false)
   totalPrice            Float
+  discountCode          String?
+  discountAmount        Float         @default(0)
   expiresAt             DateTime?
   googleCalendarEventId String?
   googleMeetLink        String?

@@ -8,7 +8,7 @@ export async function POST(request: Request) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
 
-  const { serviceId, selectedDate, selectedTime, userName, userEmail, userNotes, addOn, totalPrice } =
+  const { serviceId, selectedDate, selectedTime, userName, userEmail, userNotes, addOn, totalPrice, discountCode, discountAmount } =
     await request.json();
 
   if (!serviceId || !selectedDate || !selectedTime || !userName || !userEmail) {
@@ -49,6 +49,8 @@ export async function POST(request: Request) {
   weekEnd.setDate(weekEnd.getDate() + 6);
   const weekEndStr = weekEnd.toISOString().slice(0, 10);
 
+  const now = new Date();
+
   const weekBookingCount = await prisma.serviceBooking.count({
     where: {
       selectedDate: { gte: weekStartStr, lte: weekEndStr },
@@ -68,7 +70,6 @@ export async function POST(request: Request) {
   }
 
   // Check one-hold-per-user: find any active hold for this user/session
-  const now = new Date();
   const activeHold = await prisma.serviceBooking.findFirst({
     where: {
       status: "HELD",
@@ -122,7 +123,7 @@ export async function POST(request: Request) {
 
   const booking = await prisma.serviceBooking.create({
     data: {
-      userId,
+      ...(userId ? { user: { connect: { id: userId } } } : {}),
       serviceId,
       selectedDate,
       selectedTime,
@@ -132,6 +133,8 @@ export async function POST(request: Request) {
       userNotes: userNotes || "",
       addOn: addOn ?? false,
       totalPrice,
+      discountCode: discountCode ?? null,
+      discountAmount: discountAmount ?? 0,
       expiresAt,
     },
   });

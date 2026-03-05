@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { calculateTier, type Tier } from "./loyalty-utils";
 
@@ -56,7 +56,7 @@ interface AuthContextType {
   logout: () => void;
   addCredits: (amount: number, action: string) => void;
   deductCredits: (amount: number, action: string) => Promise<boolean>;
-  recordPurchase: (productIds: string[], totalSpent: number, currency?: string, items?: { productId: string; name: string; unitPrice: number; quantity: number; variation?: string; image: string }[]) => void;
+  recordPurchase: (productIds: string[], totalSpent: number, currency?: string, items?: { productId: string; name: string; unitPrice: number; quantity: number; variation?: string; image: string }[], discountCode?: string, discountAmountCents?: number, creditsRedeemed?: number) => void;
   submitReview: (productId: string, rating: number, text: string) => Promise<boolean>;
   setBirthdayMonth: (month: number) => Promise<void>;
   claimBirthdayCredits: () => Promise<boolean>;
@@ -87,7 +87,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
   const [loyaltyData, setLoyaltyData] = useState<LoyaltyState>(defaultLoyalty);
   const [loyaltyLoaded, setLoyaltyLoaded] = useState(false);
-  const migrationDone = useRef(false);
 
   const isLoggedIn = status === "authenticated" && !!session?.user;
   const sessionUser = session?.user;
@@ -132,65 +131,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Lazy migration from localStorage
-  const migrateLocalStorage = useCallback(async () => {
-    if (migrationDone.current) return;
-    migrationDone.current = true;
-
-    try {
-      const usersRaw = localStorage.getItem("spirit-atelier-users");
-      const reviewsRaw = localStorage.getItem("spirit-atelier-reviews");
-
-      if (!usersRaw && !reviewsRaw) return;
-
-      const users = usersRaw ? JSON.parse(usersRaw) : {};
-      const email = sessionUser?.email;
-      if (!email) return;
-
-      const localUser = users[email];
-      if (!localUser) return;
-
-      const allReviews: UserReview[] = reviewsRaw ? JSON.parse(reviewsRaw) : [];
-      const userReviews = allReviews.filter((r) => r.userEmail === email);
-
-      await fetch("/api/user/migrate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          loyalty: localUser.loyalty,
-          reviews: userReviews.map((r) => ({
-            productId: r.productId,
-            rating: r.rating,
-            text: r.text,
-            createdAt: r.createdAt,
-          })),
-        }),
-      });
-
-      // Clear localStorage keys
-      localStorage.removeItem("spirit-atelier-users");
-      localStorage.removeItem("spirit-atelier-reviews");
-      localStorage.removeItem("spirit-atelier-auth");
-
-      // Refresh loyalty data after migration
-      await fetchLoyalty();
-    } catch {
-      // silently fail migration
-    }
-  }, [sessionUser?.email, fetchLoyalty]);
-
   // Load loyalty data when session becomes authenticated
   useEffect(() => {
     if (isLoggedIn) {
-      fetchLoyalty().then(() => {
-        migrateLocalStorage();
-      });
+      fetchLoyalty();
     } else {
       setLoyaltyData(defaultLoyalty);
       setLoyaltyLoaded(false);
-      migrationDone.current = false;
     }
-  }, [isLoggedIn, fetchLoyalty, migrateLocalStorage]);
+  }, [isLoggedIn, fetchLoyalty]);
 
   const login = useCallback(async (email: string, password: string): Promise<boolean> => {
     const result = await signIn("credentials", {
@@ -286,7 +235,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [loyaltyData.currentCredits]);
 
-  const recordPurchase = useCallback((productIds: string[], totalSpent: number, currency?: string, items?: { productId: string; name: string; unitPrice: number; quantity: number; variation?: string; image: string }[]) => {
+  const recordPurchase = useCallback((productIds: string[], totalSpent: number, currency?: string, items?: { productId: string; name: string; unitPrice: number; quantity: number; variation?: string; image: string }[], discountCode?: string, discountAmountCents?: number, creditsRedeemed?: number) => {
     const creditsEarned = Math.floor(totalSpent);
 
     // Optimistic update
@@ -319,7 +268,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     fetch("/api/user/purchase", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ items, productIds, totalSpent, currency }),
+      body: JSON.stringify({ items, productIds, totalSpent, currency, discountCode, discountAmountCents, creditsRedeemed }),
     }).catch(() => {});
   }, []);
 
