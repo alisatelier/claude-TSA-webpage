@@ -25,6 +25,7 @@ export default function AccountPage() {
     birthdayMonth: "",
   });
   const [error, setError] = useState("");
+  const [birthdayOpen, setBirthdayOpen] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -271,37 +272,49 @@ export default function AccountPage() {
                   <label className="block text-sm font-semibold text-navy mb-2 uppercase tracking-wider">
                     Birthday Month
                   </label>
-                  <select
-                    value={formData.birthdayMonth}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        birthdayMonth: Number(e.target.value),
-                      })
-                    }
-                    className="w-full px-4 py-3 border border-navy/20 rounded-lg text-navy focus:outline-none focus:border-navy transition-colors"
-                    required
-                  >
-                    <option value="">Select your birthday month...</option>
-                    {[
-                      "January",
-                      "February",
-                      "March",
-                      "April",
-                      "May",
-                      "June",
-                      "July",
-                      "August",
-                      "September",
-                      "October",
-                      "November",
-                      "December",
-                    ].map((month, i) => (
-                      <option key={month} value={i + 1}>
-                        {month}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setBirthdayOpen(!birthdayOpen)}
+                      className="w-full px-4 py-3 bg-white border border-navy/20 rounded-lg text-sm text-navy flex justify-between items-center hover:border-blush focus:outline-none focus:border-navy transition-colors"
+                    >
+                      <span className={formData.birthdayMonth ? "text-navy" : "text-mauve"}>
+                        {formData.birthdayMonth
+                          ? ["January","February","March","April","May","June","July","August","September","October","November","December"][Number(formData.birthdayMonth) - 1]
+                          : "Select your birthday month..."}
+                      </span>
+                      <svg
+                        className={`w-4 h-4 text-mauve transition-transform ${birthdayOpen ? "rotate-180" : ""}`}
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={1.5}
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    {birthdayOpen && (
+                      <div className="absolute z-20 mt-2 w-full bg-white border border-cream rounded-xl shadow-[0_8px_30px_rgba(83,91,115,0.12)] max-h-60 overflow-y-auto animate-fade-in">
+                        {["January","February","March","April","May","June","July","August","September","October","November","December"].map((month, i) => (
+                          <button
+                            key={month}
+                            type="button"
+                            onClick={() => {
+                              setFormData({ ...formData, birthdayMonth: String(i + 1) });
+                              setBirthdayOpen(false);
+                            }}
+                            className={`w-full px-4 py-3 text-left text-sm transition-colors ${
+                              formData.birthdayMonth === String(i + 1)
+                                ? "bg-cream text-navy font-medium"
+                                : "text-navy hover:bg-cream"
+                            }`}
+                          >
+                            {month}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
               {!isLogin && (

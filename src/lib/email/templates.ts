@@ -1,4 +1,5 @@
 import { emailLayout, fillPlaceholders } from "./layout";
+import { hardcodedOverrides } from "./hardcoded-overrides";
 import { getTrackingUrl } from "@/lib/tracking-utils";
 
 // ── Types ──────────────────────────────────────────────────────────
@@ -150,6 +151,15 @@ export interface BookingRescheduleData {
   discountAmount?: number;
 }
 
+export interface AdminNewReviewData {
+  customerName: string;
+  customerEmail: string;
+  productName: string;
+  productId: string;
+  rating: number;
+  reviewText: string;
+}
+
 export interface AdminBookingCancellationData {
   customerName: string;
   customerEmail: string;
@@ -190,6 +200,7 @@ export type TemplateData =
   | AdminInstagramHandleData
   | BookingCancellationData
   | BookingRescheduleData
+  | AdminNewReviewData
   | AdminBookingCancellationData
   | AdminBookingRescheduleData;
 
@@ -201,18 +212,6 @@ export interface RenderedEmail {
 }
 
 // ── Helpers ────────────────────────────────────────────────────────
-
-function btn(text: string, href = "#"): string {
-  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0;">
-    <tr>
-      <td align="center" style="background-color:#535B73;border-radius:4px;">
-        <a href="${href}" style="display:inline-block;padding:12px 28px;color:#FFFFFF;font-family:Georgia,serif;font-size:14px;text-decoration:none;letter-spacing:1px;">
-          ${text}
-        </a>
-      </td>
-    </tr>
-  </table>`;
-}
 
 function fmt(amount: number): string {
   return `$${amount.toFixed(2)}`;
@@ -314,14 +313,8 @@ function renderWishlistBackInStock(
     productUrl: data.productUrl,
   };
 
-  const body = `<p style="margin:0 0 16px;">Dear {{firstName}},</p>
-       <p style="margin:0 0 16px;">Great news — an item on your wishlist is back in stock.</p>
-       {{productCard}}
-       <p style="margin:0 0 16px;font-size:14px;color:#A69FA6;text-align:center;">It may not last long — claim yours before it's gone.</p>
-       ${btn("View Product", "{{productUrl}}")}`;
-
   return render(
-    body,
+    "",
     variables,
     "{{productName}} Is Back in Stock",
     "{{productName}} is available again",
@@ -336,17 +329,8 @@ function renderLoyaltyWelcome(data: LoyaltyWelcomeData): RenderedEmail {
     tier: data.tier,
   };
 
-  const body = `<p style="margin:0 0 16px;">Dear {{firstName}},</p>
-       <p style="margin:0 0 16px;">Welcome to our Ritual Rewards programme. You've been gifted <strong>{{credits}} credits</strong> as a welcome bonus.</p>
-       <p style="margin:0 0 16px;">Your current tier: <strong>{{tier}}</strong></p>
-       <p style="margin:0 0 16px;">Share your referral code with friends and earn even more credits:</p>
-       <div style="background-color:#F2E9E9;padding:16px;text-align:center;border-radius:4px;margin:0 0 16px;">
-         <span style="font-size:18px;letter-spacing:2px;color:#535B73;font-weight:bold;">{{referralCode}}</span>
-       </div>
-       ${btn("Explore Rewards")}`;
-
   return render(
-    body,
+    "",
     variables,
     "Your Ritual Credits Await",
     "You have {{credits}} credits waiting",
@@ -433,14 +417,8 @@ function renderOrderConfirmation(data: OrderConfirmationData): RenderedEmail {
     }),
   };
 
-  const body = `<p style="margin:0 0 16px;">Dear {{firstName}},</p>
-       <p style="margin:0 0 16px;">Thank you for your order. Here's your confirmation:</p>
-       <p style="margin:0 0 16px;font-size:14px;color:#A69FA6;">Order #{{orderNumber}}</p>
-       {{orderItems}}
-       ${btn("View Order")}`;
-
   return render(
-    body,
+    "",
     variables,
     "Order {{orderNumber}} Confirmed",
     "Order {{orderNumber}} confirmed",
@@ -456,16 +434,8 @@ function renderOrderShipped(data: OrderShippedData): RenderedEmail {
     trackingUrl,
   };
 
-  const body = `<p style="margin:0 0 16px;">Dear {{firstName}},</p>
-       <p style="margin:0 0 16px;">Your order <strong>#{{orderNumber}}</strong> is on its way.</p>
-       <p style="margin:0 0 8px;font-size:14px;color:#A69FA6;">Tracking Number:</p>
-       <div style="background-color:#F2E9E9;padding:16px;text-align:center;border-radius:4px;margin:0 0 16px;">
-         <a href="{{trackingUrl}}" style="font-size:16px;letter-spacing:1px;color:#535B73;font-weight:bold;text-decoration:none;">{{trackingNumber}}</a>
-       </div>
-       ${btn("Track Your Order", "{{trackingUrl}}")}`;
-
   return render(
-    body,
+    "",
     variables,
     "Your Order Has Shipped",
     "Order #{{orderNumber}} has shipped",
@@ -517,13 +487,8 @@ function renderServiceBookingConfirmation(
     }),
   };
 
-  const body = `<p style="margin:0 0 16px;">Dear {{firstName}},</p>
-       <p style="margin:0 0 16px;">Your booking has been confirmed. Here are the details:</p>
-       {{bookingCard}}
-       <p style="margin:0;color:#A69FA6;font-size:13px;">We look forward to seeing you.</p>`;
-
   return render(
-    body,
+    "",
     variables,
     "Your Booking Is Confirmed",
     "{{serviceName}} — {{date}} at {{time}}",
@@ -551,18 +516,8 @@ function renderServiceReminder(data: ServiceReminderData): RenderedEmail {
     }),
   };
 
-  const prepBlock = `<div style="background-color:#F2E9E9;padding:16px;border-radius:4px;margin:0 0 16px;">
-         <p style="margin:0;color:#535B73;font-size:14px;"><strong>To prepare:</strong> {{preparationNote}}</p>
-       </div>`;
-
-  const body = `<p style="margin:0 0 16px;">Dear {{firstName}},</p>
-       <p style="margin:0 0 16px;">This is a gentle reminder that your <strong>{{serviceName}}</strong> session is tomorrow.</p>
-       {{bookingCard}}
-       ${data.preparationNote ? prepBlock : ""}
-       <p style="margin:0;color:#A69FA6;font-size:13px;">See you soon.</p>`;
-
   return render(
-    body,
+    "",
     variables,
     "Your Session Is Tomorrow",
     "{{serviceName}} — tomorrow at {{time}}",
@@ -575,17 +530,8 @@ function renderBirthdayMonth(data: BirthdayMonthData): RenderedEmail {
     credits: String(data.credits),
   };
 
-  const body = `<p style="margin:0 0 16px;">Dear {{firstName}},</p>
-       <p style="margin:0 0 16px;">Happy birthday month! We'd love to celebrate with you.</p>
-       <div style="background-color:#F2E9E9;padding:24px;text-align:center;border-radius:4px;margin:0 0 16px;">
-         <p style="margin:0 0 4px;color:#A69FA6;font-size:13px;">Your birthday gift</p>
-         <p style="margin:0;color:#535B73;font-size:28px;font-weight:bold;">{{credits}} Credits</p>
-       </div>
-       <p style="margin:0 0 16px;">Use them on anything in the shop or toward a service booking this month.</p>
-       ${btn("Claim Your Gift")}`;
-
   return render(
-    body,
+    "",
     variables,
     "A Birthday Gift Awaits You",
     "{{credits}} birthday credits are waiting for you",
@@ -600,17 +546,8 @@ function renderReferralCompleted(data: ReferralCompletedData): RenderedEmail {
     credits: String(data.credits),
   };
 
-  const body = `<p style="margin:0 0 16px;">Dear {{firstName}},</p>
-       <p style="margin:0 0 16px;">Great news — your friend <strong>{{referredName}}</strong> just made their first purchase using your referral.</p>
-       <div style="background-color:#F2E9E9;padding:24px;text-align:center;border-radius:4px;margin:0 0 16px;">
-         <p style="margin:0 0 4px;color:#A69FA6;font-size:13px;">Credits earned</p>
-         <p style="margin:0;color:#535B73;font-size:28px;font-weight:bold;">+{{creditsEarned}}</p>
-       </div>
-       <p style="margin:0 0 16px;">Keep sharing your referral code to earn more rewards.</p>
-       ${btn("View Your Credits")}`;
-
   return render(
-    body,
+    "",
     variables,
     "You Earned {{creditsEarned}} Ritual Credits",
     "+{{creditsEarned}} credits from your referral",
@@ -705,14 +642,8 @@ function renderStatusUpgrade(data: StatusUpgradeData): RenderedEmail {
     rewardsUrl,
   };
 
-  const body = `<p style="margin:0 0 16px;">Dear {{firstName}},</p>
-       <p style="margin:0 0 16px;">Congratulations — you've been upgraded to <strong>{{newTier}}</strong> status!</p>
-       {{benefits}}
-       ${btn("Explore Your Rewards", "{{rewardsUrl}}")}
-       <p style="margin:0;color:#A69FA6;font-size:13px;">Thank you for being part of our community.</p>`;
-
   return render(
-    body,
+    "",
     variables,
     "You've Reached {{newTier}} Status",
     "You're now a {{newTier}} member",
@@ -742,13 +673,8 @@ function renderBookingCancellation(
     }),
   };
 
-  const body = `<p style="margin:0 0 16px;">Dear {{firstName}},</p>
-       <p style="margin:0 0 16px;">Your booking has been cancelled as requested. Here are the details of the cancelled session:</p>
-       {{bookingCard}}
-       <p style="margin:0;color:#A69FA6;font-size:13px;">If you'd like to rebook, you can do so from your account at any time.</p>`;
-
   return render(
-    body,
+    "",
     variables,
     "Your Booking Has Been Cancelled",
     "{{serviceName}} — {{date}} at {{time}} has been cancelled",
@@ -785,14 +711,8 @@ function renderBookingReschedule(
     }),
   };
 
-  const body = `<p style="margin:0 0 16px;">Dear {{firstName}},</p>
-       <p style="margin:0 0 16px;">Your booking has been rescheduled. Here are your updated details:</p>
-       {{bookingCard}}
-       <p style="margin:0 0 16px;color:#A69FA6;font-size:13px;">Previously: {{oldDate}} at {{oldTime}}</p>
-       <p style="margin:0;color:#A69FA6;font-size:13px;">We look forward to seeing you.</p>`;
-
   return render(
-    body,
+    "",
     variables,
     "Your Booking Has Been Rescheduled",
     "{{serviceName}} — now {{newDate}} at {{newTime}}",
@@ -800,17 +720,6 @@ function renderBookingReschedule(
 }
 
 // ── Admin Template Render Functions ────────────────────────────────
-
-function adminInfoRow(label: string, value: string): string {
-  return `<tr>
-    <td style="padding:6px 12px 6px 0;color:#A69FA6;font-size:13px;white-space:nowrap;">${label}</td>
-    <td style="padding:6px 0;color:#535B73;font-size:14px;">${value}</td>
-  </tr>`;
-}
-
-function adminInfoTable(rows: string): string {
-  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 16px;width:100%;">${rows}</table>`;
-}
 
 function renderAdminNewOrder(data: AdminNewOrderData): RenderedEmail {
   const variables: Record<string, string> = {
@@ -827,16 +736,8 @@ function renderAdminNewOrder(data: AdminNewOrderData): RenderedEmail {
     total: fmt(data.total),
   };
 
-  const body = `<p style="margin:0 0 16px;font-size:15px;font-weight:bold;color:#535B73;">New Order Received</p>
-       ${adminInfoTable(
-         adminInfoRow("Customer", "{{customerName}}") +
-         adminInfoRow("Email", "{{customerEmail}}") +
-         adminInfoRow("Order #", "{{orderNumber}}")
-       )}
-       {{orderItems}}`;
-
   return render(
-    body,
+    "",
     variables,
     "New Order #{{orderNumber}} — {{customerName}}",
     "New order from {{customerName}}",
@@ -856,34 +757,8 @@ function renderAdminNewBooking(data: AdminNewBookingData): RenderedEmail {
     discountInfo: data.discountCode && data.discountAmount ? `${data.discountCode} (-${fmt(data.discountAmount)})` : "",
   };
 
-  const meetRow = data.meetLink
-    ? adminInfoRow("Video Call", `<a href="{{meetLink}}" style="color:#535B73;">Join Google Meet</a>`)
-    : "";
-  const discountRow = data.discountCode && data.discountAmount
-    ? adminInfoRow("Discount", "{{discountInfo}}")
-    : "";
-
-  const notesBlock = data.notes
-    ? `<div style="background-color:#F2E9E9;padding:12px;border-radius:4px;margin:0 0 16px;">
-         <p style="margin:0;color:#535B73;font-size:13px;"><strong>Notes:</strong> {{notes}}</p>
-       </div>`
-    : "";
-
-  const body = `<p style="margin:0 0 16px;font-size:15px;font-weight:bold;color:#535B73;">New Booking Confirmed</p>
-       ${adminInfoTable(
-         adminInfoRow("Customer", "{{customerName}}") +
-         adminInfoRow("Email", "{{customerEmail}}") +
-         adminInfoRow("Service", "{{serviceName}}") +
-         adminInfoRow("Date", "{{date}}") +
-         adminInfoRow("Time", "{{time}}") +
-         meetRow +
-         discountRow +
-         adminInfoRow("Total", "{{totalPrice}}")
-       )}
-       ${notesBlock}`;
-
   return render(
-    body,
+    "",
     variables,
     "New Booking — {{serviceName}} — {{customerName}}",
     "{{customerName}} booked {{serviceName}}",
@@ -900,23 +775,8 @@ function renderAdminBookingReminder(data: AdminBookingReminderData): RenderedEma
     meetLink: data.meetLink ?? "",
   };
 
-  const meetRow = data.meetLink
-    ? adminInfoRow("Video Call", `<a href="{{meetLink}}" style="color:#535B73;">Join Google Meet</a>`)
-    : "";
-
-  const body = `<p style="margin:0 0 16px;font-size:15px;font-weight:bold;color:#535B73;">Booking Tomorrow</p>
-       <p style="margin:0 0 16px;color:#535B73;font-size:14px;">A session is scheduled for tomorrow:</p>
-       ${adminInfoTable(
-         adminInfoRow("Customer", "{{customerName}}") +
-         adminInfoRow("Email", "{{customerEmail}}") +
-         adminInfoRow("Service", "{{serviceName}}") +
-         adminInfoRow("Date", "{{date}}") +
-         adminInfoRow("Time", "{{time}}") +
-         meetRow
-       )}`;
-
   return render(
-    body,
+    "",
     variables,
     "Reminder: {{serviceName}} Tomorrow — {{customerName}}",
     "{{serviceName}} session tomorrow with {{customerName}}",
@@ -931,16 +791,8 @@ function renderAdminInstagramHandle(data: AdminInstagramHandleData): RenderedEma
     instagramHandle: data.instagramHandle,
   };
 
-  const body = `<p style="margin:0 0 16px;font-size:15px;font-weight:bold;color:#535B73;">Instagram Handle Submitted</p>
-       ${adminInfoTable(
-         adminInfoRow("Customer", "{{customerName}}") +
-         adminInfoRow("Email", "{{customerEmail}}") +
-         adminInfoRow("Tier", "{{tier}}") +
-         adminInfoRow("Instagram", "@{{instagramHandle}}")
-       )}`;
-
   return render(
-    body,
+    "",
     variables,
     "Instagram Handle — {{customerName}} (@{{instagramHandle}})",
     "{{customerName}} submitted @{{instagramHandle}}",
@@ -958,24 +810,8 @@ function renderAdminBookingCancellation(data: AdminBookingCancellationData): Ren
     discountInfo: data.discountCode && data.discountAmount ? `${data.discountCode} (-${fmt(data.discountAmount)})` : "",
   };
 
-  const discountRow = data.discountCode && data.discountAmount
-    ? adminInfoRow("Discount", "{{discountInfo}}")
-    : "";
-
-  const body = `<p style="margin:0 0 16px;font-size:15px;font-weight:bold;color:#535B73;">Booking Cancelled</p>
-       <p style="margin:0 0 16px;color:#535B73;font-size:14px;">A customer has cancelled their booking:</p>
-       ${adminInfoTable(
-         adminInfoRow("Customer", "{{customerName}}") +
-         adminInfoRow("Email", "{{customerEmail}}") +
-         adminInfoRow("Service", "{{serviceName}}") +
-         adminInfoRow("Date", "{{date}}") +
-         adminInfoRow("Time", "{{time}}") +
-         discountRow +
-         adminInfoRow("Total", "{{totalPrice}}")
-       )}`;
-
   return render(
-    body,
+    "",
     variables,
     "Booking Cancelled — {{serviceName}} — {{customerName}}",
     "{{customerName}} cancelled {{serviceName}}",
@@ -995,29 +831,30 @@ function renderAdminBookingReschedule(data: AdminBookingRescheduleData): Rendere
     discountInfo: data.discountCode && data.discountAmount ? `${data.discountCode} (-${fmt(data.discountAmount)})` : "",
   };
 
-  const discountRow = data.discountCode && data.discountAmount
-    ? adminInfoRow("Discount", "{{discountInfo}}")
-    : "";
-
-  const body = `<p style="margin:0 0 16px;font-size:15px;font-weight:bold;color:#535B73;">Booking Rescheduled</p>
-       <p style="margin:0 0 16px;color:#535B73;font-size:14px;">A customer has rescheduled their booking:</p>
-       ${adminInfoTable(
-         adminInfoRow("Customer", "{{customerName}}") +
-         adminInfoRow("Email", "{{customerEmail}}") +
-         adminInfoRow("Service", "{{serviceName}}") +
-         adminInfoRow("Old Date", "{{oldDate}}") +
-         adminInfoRow("Old Time", "{{oldTime}}") +
-         adminInfoRow("New Date", "{{newDate}}") +
-         adminInfoRow("New Time", "{{newTime}}") +
-         discountRow +
-         adminInfoRow("Total", "{{totalPrice}}")
-       )}`;
-
   return render(
-    body,
+    "",
     variables,
     "Booking Rescheduled — {{serviceName}} — {{customerName}}",
     "{{customerName}} rescheduled {{serviceName}}",
+  );
+}
+
+function renderAdminNewReview(data: AdminNewReviewData): RenderedEmail {
+  const stars = "★".repeat(data.rating) + "☆".repeat(5 - data.rating);
+  const variables: Record<string, string> = {
+    customerName: data.customerName,
+    customerEmail: data.customerEmail,
+    productName: data.productName,
+    rating: stars,
+    reviewText: data.reviewText,
+    reviewUrl: "https://www.thespiritatelier.ca/admin/reviews",
+  };
+
+  return render(
+    "",
+    variables,
+    "New Review — {{productName}} — {{customerName}}",
+    "{{customerName}} reviewed {{productName}}",
   );
 }
 
@@ -1131,6 +968,13 @@ export const TEMPLATES: TemplateMeta[] = [
     audience: "admin",
   },
   {
+    id: "admin-new-review",
+    name: "Admin: New Review",
+    description: "Notification sent to admin when a customer submits a review.",
+    trigger: "Review submitted",
+    audience: "admin",
+  },
+  {
     id: "admin-booking-cancellation",
     name: "Admin: Booking Cancellation",
     description: "Notification sent to admin when a customer cancels a booking.",
@@ -1164,6 +1008,7 @@ export const DEFAULT_SUBJECTS: Record<string, string> = {
   "admin-instagram-handle": "Instagram Handle — {{customerName}} (@{{instagramHandle}})",
   "booking-cancellation": "Your Booking Has Been Cancelled",
   "booking-reschedule": "Your Booking Has Been Rescheduled",
+  "admin-new-review": "New Review — {{productName}} — {{customerName}}",
   "admin-booking-cancellation": "Booking Cancelled — {{serviceName}} — {{customerName}}",
   "admin-booking-reschedule": "Booking Rescheduled — {{serviceName}} — {{customerName}}",
 };
@@ -1202,6 +1047,9 @@ const renderers: Record<string, (data: never) => RenderedEmail> = {
   "booking-reschedule": renderBookingReschedule as (
     data: never,
   ) => RenderedEmail,
+  "admin-new-review": renderAdminNewReview as (
+    data: never,
+  ) => RenderedEmail,
   "admin-booking-cancellation": renderAdminBookingCancellation as (
     data: never,
   ) => RenderedEmail,
@@ -1216,5 +1064,7 @@ export function renderTemplate(
 ): RenderedEmail {
   const renderer = renderers[templateId];
   if (!renderer) throw new Error(`Unknown template: ${templateId}`);
-  return renderer(data as never);
+  const result = renderer(data as never);
+  const hardcoded = hardcodedOverrides[templateId];
+  return hardcoded?.body ? { ...result, body: hardcoded.body } : result;
 }

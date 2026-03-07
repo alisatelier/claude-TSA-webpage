@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { triggerAdminNewReviewEmail } from "@/lib/email/trigger";
 
 export async function POST(request: Request) {
   const session = await auth();
@@ -61,6 +62,9 @@ export async function POST(request: Request) {
       },
     });
   }
+
+  // Notify admin
+  triggerAdminNewReviewEmail(userId, productId, rating, text).catch(() => {});
 
   return NextResponse.json({ success: true });
 }

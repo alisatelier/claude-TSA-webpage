@@ -12,6 +12,7 @@ import type {
   AdminNewBookingData,
   AdminBookingReminderData,
   AdminInstagramHandleData,
+  AdminNewReviewData,
   BookingCancellationData,
   BookingRescheduleData,
   AdminBookingCancellationData,
@@ -128,6 +129,15 @@ const adminInstagramHandle: AdminInstagramHandleData = {
   instagramHandle: "sophia.spirit",
 };
 
+const adminNewReview: AdminNewReviewData = {
+  customerName: "Sophia",
+  customerEmail: "sophia@test.com",
+  productName: "Whims & Whispers Tarot Deck",
+  productId: "whims-whispers-tarot",
+  rating: 5,
+  reviewText: "Absolutely stunning deck! The artwork is breathtaking and the guidebook is incredibly detailed. Each card feels like a piece of art. I use it daily for my morning readings and it has quickly become my favourite deck in my collection.",
+};
+
 const bookingCancellation: BookingCancellationData = {
   firstName: "Sophia",
   serviceName: "Intuitive Energy Reading",
@@ -180,6 +190,7 @@ export const sampleData: Record<string, TemplateData> = {
   "admin-new-booking": adminNewBooking,
   "admin-booking-reminder": adminBookingReminder,
   "admin-instagram-handle": adminInstagramHandle,
+  "admin-new-review": adminNewReview,
   "booking-cancellation": bookingCancellation,
   "booking-reschedule": bookingReschedule,
   "admin-booking-cancellation": adminBookingCancellation,

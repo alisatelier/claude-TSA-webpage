@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+function formatReviewerName(name: string | null): string {
+  if (!name) return "Anonymous";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length < 2) return parts[0];
+  return `${parts[0]} ${parts[parts.length - 1][0]}.`;
+}
+
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const productId = url.searchParams.get("productId");
@@ -20,7 +27,7 @@ export async function GET(request: Request) {
   return NextResponse.json({
     reviews: reviews.map((r) => ({
       id: r.id,
-      userName: r.user.name || "Anonymous",
+      userName: formatReviewerName(r.user.name),
       userEmail: r.user.email,
       productId: r.productId,
       rating: r.rating,

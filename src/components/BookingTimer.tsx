@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 interface BookingTimerProps {
   expiresAt: number;
   onExpire: () => void;
+  onCancel?: () => void;
   variant: "banner" | "inline";
 }
 
@@ -14,7 +15,7 @@ function formatTime(totalSeconds: number): string {
   return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
 }
 
-export default function BookingTimer({ expiresAt, onExpire, variant }: BookingTimerProps) {
+export default function BookingTimer({ expiresAt, onExpire, onCancel, variant }: BookingTimerProps) {
   const [remaining, setRemaining] = useState(() => {
     return Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
   });
@@ -46,22 +47,30 @@ export default function BookingTimer({ expiresAt, onExpire, variant }: BookingTi
 
   return (
     <div
-      className={`rounded-lg px-4 py-3 text-sm text-center transition-colors ${
+      className={`rounded-lg px-4 py-3 text-sm transition-colors flex items-center justify-between gap-4 ${
         isWarning
           ? "bg-amber-50 border border-amber-200 text-amber-800"
           : "bg-cream border border-navy/10 text-navy/80"
       }`}
     >
       {isWarning ? (
-        <p>
+        <p className="text-center flex-1">
           Your held time expires soon — complete checkout to secure your booking.{" "}
           <span className="font-semibold">{formatTime(remaining)}</span>
         </p>
       ) : (
-        <p>
+        <p className="text-center flex-1">
           Your chosen time is gently held for you.{" "}
           <span className="font-semibold">{formatTime(remaining)}</span>
         </p>
+      )}
+      {onCancel && (
+        <button
+          onClick={onCancel}
+          className="flex-shrink-0 text-xs font-medium uppercase tracking-wider px-3 py-1.5 rounded border border-current opacity-70 hover:opacity-100 transition-opacity"
+        >
+          Cancel
+        </button>
       )}
     </div>
   );

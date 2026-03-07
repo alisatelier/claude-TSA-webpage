@@ -105,7 +105,6 @@ export async function POST(request: Request) {
   const updated = await prisma.$transaction(async (tx) => {
     const conflict = await tx.serviceBooking.findFirst({
       where: {
-        serviceId: booking.serviceId,
         selectedDate: newDate,
         selectedTime: newTime,
         id: { not: bookingId },

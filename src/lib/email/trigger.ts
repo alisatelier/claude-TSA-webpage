@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { renderTemplate, DEFAULT_SUBJECTS, type TemplateData } from "./templates";
 import { sendEmail } from "./send";
 import { emailLayout, fillPlaceholders } from "./layout";
+import { hardcodedOverrides } from "./hardcoded-overrides";
 import { calculateTier, getTierBenefits } from "@/lib/loyalty-utils";
 import { formatOrderNumber, resolveProduct } from "@/lib/order-utils";
 import { services, products } from "@/lib/data";
@@ -36,9 +37,10 @@ async function resolveOverride(templateId: string) {
     orderBy: { createdAt: "desc" },
     select: { body: true, subject: true },
   });
+  const hardcoded = hardcodedOverrides[templateId];
   return {
-    bodyOverride: override?.body ?? null,
-    subjectOverride: override?.subject ?? null,
+    bodyOverride: override?.body ?? hardcoded?.body ?? null,
+    subjectOverride: override?.subject ?? hardcoded?.subject ?? null,
   };
 }
 
@@ -109,6 +111,30 @@ export async function triggerWishlistBackInStockEmail(
     user.email,
     userId
   );
+}
+
+export async function triggerAdminNewReviewEmail(
+  userId: string,
+  productId: string,
+  rating: number,
+  reviewText: string
+) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { email: true, name: true },
+  });
+  if (!user) return;
+
+  const product = products.find((p) => p.id === productId);
+
+  await buildAndSend("admin-new-review", {
+    customerName: user.name ?? "Unknown",
+    customerEmail: user.email ?? "N/A",
+    productName: product?.name ?? productId,
+    productId,
+    rating,
+    reviewText,
+  });
 }
 
 export async function triggerLoyaltyWelcomeEmail(userId: string) {

@@ -53,6 +53,7 @@ export default function RewardsPage() {
   const [igEditing, setIgEditing] = useState(false);
   const [igSubmitting, setIgSubmitting] = useState(false);
   const [igSaved, setIgSaved] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   if (!isLoggedIn || !user) {
     return (
@@ -118,8 +119,6 @@ export default function RewardsPage() {
       setTimeout(() => setReviewSubmitted(false), 3000);
     }
   };
-
-  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const selectedProductName =
     reviewableProducts.find((p) => p.id === reviewProduct)?.name || "";

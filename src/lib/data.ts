@@ -418,6 +418,15 @@ questions: [
         q: "Can I reschedule my session?",
         a: "Sessions may be rescheduled with at least 24 hours’ notice. Please use the booking confirmation link provided in your email or contact us directly for assistance.",
       },
+       {
+        q: "Can I cancel my session?",
+        a: "Yes, you may cancel and recieve a full refund up to 24 hours prior to your session.",
+      },
+      {
+        q: "What if I am late for my session?",
+        a: "Please let us know as soon as possible. If 15 minutes have passed since the booking commenced and there has been no form of contact to inform us that you still plan to attend, we will assume you have cancelled your reading.",
+      },
+
     ],
   },
   {
@@ -439,6 +448,10 @@ questions: [
       {
         q: "How do Ritual Credits work?",
         a: "Earn Ritual Credits with every purchase ($1 = 1 Credit), plus bonus credits for creating an account (50), writing a review (100), referrals (200 + 200), and celebrating your birthday (150). Redeem 250 Credits for $5 off or 500 Credits for $10 off your order.",
+      },
+       {
+        q: "How does the Refer a Friend reward work?",
+        a: "You may share your code with anyone who you think would enjoy The Spirit Atelier's products, services, or community. You may share the code as many times as you wish, and each friend you share it with will automatically be rewarded with 200 Ritual Credits. Once a friend completes a purchase, you will also recieve 200 Ritual Credits. This reward is only applied to your account once.",
       },
       {
         q: "Do my Ritual Credits expire?",

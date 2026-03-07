@@ -38,7 +38,6 @@ export async function GET(request: Request) {
 
   const existing = await prisma.serviceBooking.findFirst({
     where: {
-      serviceId,
       selectedDate: date,
       selectedTime: time,
       OR: [

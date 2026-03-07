@@ -30,6 +30,8 @@ export default function CartPage() {
     newTier: string;
     previousTier: string;
     confirmedBookings: Array<{ serviceName: string; date: string; time: string }>;
+    hadProducts: boolean;
+    hadServices: boolean;
   } | null>(null);
 
   const serviceItems = items.filter((i) => i.isService);
@@ -90,11 +92,25 @@ export default function CartPage() {
   });
 
   if (orderComplete) {
+    const confirmationHeading = orderComplete.hadProducts && orderComplete.hadServices
+      ? "Order & Booking Confirmed"
+      : orderComplete.hadServices
+        ? "Booking Confirmed"
+        : "Order Confirmed";
+    const confirmationSubheading = orderComplete.hadProducts && orderComplete.hadServices
+      ? "Thank you for your purchase!"
+      : orderComplete.hadServices
+        ? "Your booking has been confirmed."
+        : "Thank you for your purchase!";
+    const confirmationBody = orderComplete.hadProducts
+      ? "Your order is being lovingly prepared."
+      : null;
+
     return (
       <>
         <section className="bg-navy py-16 px-4">
           <div className="max-w-7xl mx-auto text-center">
-            <h1 className="font-heading text-5xl md:text-6xl text-white mb-3">Order Confirmed</h1>
+            <h1 className="font-heading text-5xl md:text-6xl text-white mb-3">{confirmationHeading}</h1>
           </div>
         </section>
         <section className="py-20 px-4">
@@ -102,8 +118,8 @@ export default function CartPage() {
             <div className="w-20 h-20 bg-cream rounded-full mx-auto mb-6 flex items-center justify-center">
               <FontAwesomeIcon icon={faCheck} className="w-8 h-8 text-green-600" />
             </div>
-            <h2 className="font-heading text-3xl text-navy mb-4">Thank you for your purchase!</h2>
-            <p className="text-mauve mb-6 font-accent italic">Your order is being lovingly prepared.</p>
+            <h2 className="font-heading text-3xl text-navy mb-4">{confirmationSubheading}</h2>
+            {confirmationBody && <p className="text-mauve mb-6 font-accent italic">{confirmationBody}</p>}
 
             {/* Confirmed booking details */}
             {orderComplete.confirmedBookings.length > 0 && (
@@ -187,8 +203,12 @@ export default function CartPage() {
     );
   }
 
-  const finalTotal = Math.max(0, cartTotal - creditDiscount - discountCodeAmount);
-  const creditsEarnable = Math.floor(finalTotal);
+  const productSubtotal = productItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  const serviceSubtotal = serviceItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  const subtotalBeforeDiscounts = productSubtotal + serviceSubtotal;
+  const totalAfterDiscountCode = Math.max(0, subtotalBeforeDiscounts - discountCodeAmount);
+  const finalTotal = Math.max(0, totalAfterDiscountCode - creditDiscount);
+  const creditsEarnable = Math.floor(Math.max(0, finalTotal));
 
   const handleCheckout = () => {
     if (checkingOut) return;
@@ -205,14 +225,14 @@ export default function CartPage() {
       }
     }
 
-    // Validate credit balance before processing
+    // Validate credit balance before processing (credits apply to products only)
     if (appliedCredits > 0 && user) {
       if (user.loyalty.currentCredits < appliedCredits) {
         setCheckoutError("Your credit balance has changed. Please re-apply your credits.");
         removeCredits();
         return;
       }
-      if (cartTotal < creditDiscount) {
+      if (totalAfterDiscountCode < creditDiscount) {
         setCheckoutError("Cart total is less than the discount. Please adjust your credits.");
         removeCredits();
         return;
@@ -227,6 +247,8 @@ export default function CartPage() {
     const newBalance = user ? user.loyalty.currentCredits - creditsRedeemed + creditsEarned : 0;
     const newLifetime = user ? user.loyalty.lifetimeCredits + creditsEarned : 0;
     const newTier = calculateTier(newLifetime);
+    const hadProducts = productItems.length > 0;
+    const hadServices = serviceItems.length > 0;
 
     // Collect service hold IDs before checkout clears the cart
     const serviceHoldIds = serviceItems
@@ -245,7 +267,7 @@ export default function CartPage() {
 
       checkout(currency);
       setCheckingOut(false);
-      setOrderComplete({ creditsEarned, newBalance, creditsRedeemed, discountApplied, newTier, previousTier, confirmedBookings });
+      setOrderComplete({ creditsEarned, newBalance, creditsRedeemed, discountApplied, newTier, previousTier, confirmedBookings, hadProducts, hadServices });
     }, 1500);
   };
 
@@ -352,10 +374,23 @@ export default function CartPage() {
               <div className="bg-cream rounded-xl p-6 sticky top-24">
                 <h3 className="font-heading text-xl text-navy mb-4">Order Summary</h3>
                 <div className="space-y-3 mb-6">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-navy/70">Subtotal</span>
-                    <span className="text-navy font-medium">{formatPrice(cartTotal)}</span>
-                  </div>
+                  {productItems.length > 0 && serviceItems.length > 0 ? (
+                    <>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-navy/70">Products</span>
+                        <span className="text-navy font-medium">{formatPrice(productSubtotal)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-navy/70">Services</span>
+                        <span className="text-navy font-medium">{formatPrice(serviceSubtotal)}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-navy/70">Subtotal</span>
+                      <span className="text-navy font-medium">{formatPrice(cartTotal)}</span>
+                    </div>
+                  )}
                   {creditDiscount > 0 && (
                     <div className="flex justify-between text-sm">
                       <span className="text-teal-400">Ritual Credits ({appliedCredits} credits)</span>
@@ -413,8 +448,8 @@ export default function CartPage() {
                     </div>
                   )}
 
-                  {/* Credit Redemption */}
-                  {isLoggedIn && user && user.loyalty.currentCredits >= 250 && (
+                  {/* Credit Redemption — only for product purchases */}
+                  {productItems.length > 0 && isLoggedIn && user && user.loyalty.currentCredits >= 250 && (
                     <div className="pt-3 border-t border-navy/10">
                       <div className="flex items-center gap-2 mb-2">
                         <FontAwesomeIcon icon={faStar} className="w-4 h-4 text-blush" />
@@ -447,7 +482,7 @@ export default function CartPage() {
                     <span className="font-semibold text-navy text-lg">{formatPrice(finalTotal)}</span>
                   </div>
 
-                  {isLoggedIn && (
+                  {isLoggedIn && creditsEarnable > 0 && (
                     <p className="text-xs text-mauve">
                       You&apos;ll earn {creditsEarnable} Ritual Credits with this purchase
                     </p>

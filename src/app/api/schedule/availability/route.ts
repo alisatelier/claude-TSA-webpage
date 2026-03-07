@@ -78,6 +78,23 @@ export async function GET(request: Request) {
     return NextResponse.json({ availableSlots: [], blockedSlots: ALL_SLOTS, weekFull: true });
   }
 
+  // Filter out slots that already have a confirmed, completed, or active held booking
+  const bookedSlots = await prisma.serviceBooking.findMany({
+    where: {
+      selectedDate: date,
+      OR: [
+        { status: "CONFIRMED" },
+        { status: "COMPLETED" },
+        { status: "HELD", expiresAt: { gt: now } },
+      ],
+    },
+    select: { selectedTime: true },
+  });
+
+  for (const b of bookedSlots) {
+    blockedSlots.add(b.selectedTime);
+  }
+
   const availableSlots = ALL_SLOTS.filter((s) => !blockedSlots.has(s));
 
   return NextResponse.json({

@@ -7,6 +7,7 @@ import type { TemplateData } from "@/lib/email/templates";
 import { sampleData } from "@/lib/email/sample-data";
 import { sendEmail } from "@/lib/email/send";
 import { emailLayout, fillPlaceholders } from "@/lib/email/layout";
+import { hardcodedOverrides } from "@/lib/email/hardcoded-overrides";
 import { calculateTier, getTierBenefits } from "@/lib/loyalty-utils";
 import { formatOrderNumber, resolveProduct } from "@/lib/order-utils";
 import { services, products } from "@/lib/data";
@@ -275,6 +276,23 @@ async function buildTemplateDataForUser(
       };
     }
 
+    case "admin-new-review": {
+      const review = await prisma.review.findFirst({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+      });
+      if (!review) return null;
+      const reviewProduct = products.find((p) => p.id === review.productId);
+      return {
+        customerName: user.name ?? "Unknown",
+        customerEmail: user.email ?? "N/A",
+        productName: reviewProduct?.name ?? review.productId,
+        productId: review.productId,
+        rating: review.rating,
+        reviewText: review.text,
+      };
+    }
+
     case "admin-booking-cancellation": {
       const booking = await prisma.serviceBooking.findFirst({
         where: { userId },
@@ -339,7 +357,8 @@ export async function getPreviewHtml(
   }
   if (!data) return { error: "Unknown template" };
 
-  const { body: defaultBody, variables } = renderTemplate(templateId, data);
+  const rendered = renderTemplate(templateId, data);
+  const hardcoded = hardcodedOverrides[templateId];
 
   const latest = await prisma.emailTemplateOverride.findFirst({
     where: { templateId },
@@ -348,11 +367,11 @@ export async function getPreviewHtml(
   });
 
   return {
-    defaultBody,
+    defaultBody: hardcoded?.body ?? rendered.body,
     savedBody: latest?.body ?? undefined,
-    defaultSubject: DEFAULT_SUBJECTS[templateId],
+    defaultSubject: hardcoded?.subject ?? DEFAULT_SUBJECTS[templateId],
     savedSubject: latest?.subject ?? undefined,
-    variables,
+    variables: rendered.variables,
   };
 }
 
@@ -372,7 +391,8 @@ export async function sendTestEmail(
   }
   if (!data) return { success: false, error: "Unknown template" };
 
-  const { subject: defaultSubject, body: defaultBody, variables } = renderTemplate(templateId, data);
+  const rendered = renderTemplate(templateId, data);
+  const hardcoded = hardcodedOverrides[templateId];
 
   const latest = await prisma.emailTemplateOverride.findFirst({
     where: { templateId },
@@ -380,10 +400,10 @@ export async function sendTestEmail(
     select: { body: true, subject: true },
   });
 
-  const bodyToSend = latest?.body ?? defaultBody;
-  const subjectToSend = latest?.subject ?? defaultSubject;
-  const filledBody = fillPlaceholders(bodyToSend, variables);
-  const filledSubject = fillPlaceholders(subjectToSend, variables);
+  const bodyToSend = latest?.body ?? hardcoded?.body ?? rendered.body;
+  const subjectToSend = latest?.subject ?? hardcoded?.subject ?? rendered.subject;
+  const filledBody = fillPlaceholders(bodyToSend, rendered.variables);
+  const filledSubject = fillPlaceholders(subjectToSend, rendered.variables);
   const html = emailLayout(filledBody);
   const result = await sendEmail({ subject: `[TEST] ${filledSubject}`, html });
   if (!result.success) {

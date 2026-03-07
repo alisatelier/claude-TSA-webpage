@@ -117,6 +117,7 @@ model Loyalty {
   referralCount         Int      @default(0)
   birthdayMonth         Int?
   birthdayClaimed       Int?
+  birthdayEmailSentYear Int?
   firstPurchaseCompleted Boolean @default(false)
   referredBy            String?
   lockedCurrency        String?
@@ -158,6 +159,7 @@ model Wishlist {
 
   productId             String
   variation             String   @default("")
+  notifiedAt            DateTime?
   createdAt             DateTime @default(now())
 
   @@unique([userId, productId, variation])
@@ -224,6 +226,7 @@ model ServiceBooking {
   expiresAt             DateTime?
   googleCalendarEventId String?
   googleMeetLink        String?
+  reminderSent          Boolean       @default(false)
   createdAt             DateTime      @default(now())
 
   @@index([serviceId, selectedDate, selectedTime])

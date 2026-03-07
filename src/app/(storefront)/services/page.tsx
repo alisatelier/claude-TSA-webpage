@@ -52,12 +52,6 @@ export default function ServicesPage() {
   const [birthdayMonth, setBirthdayMonth] = useState("");
   const [referralCode, setReferralCode] = useState("");
 
-  const [bookingDiscountInput, setBookingDiscountInput] = useState("");
-  const [bookingDiscountCode, setBookingDiscountCode] = useState<string | null>(null);
-  const [bookingDiscountAmount, setBookingDiscountAmount] = useState(0);
-  const [bookingDiscountError, setBookingDiscountError] = useState("");
-  const [applyingBookingDiscount, setApplyingBookingDiscount] = useState(false);
-
   const [dateMin, setDateMin] = useState("");
   const [dateMax, setDateMax] = useState("");
 
@@ -89,7 +83,6 @@ export default function ServicesPage() {
   const cadBasePrice = currentService?.startingPrices.CAD ?? 0;
   const cadAddOnPrice = addOnSelected && currentService?.addOn ? currentService.addOn.prices.CAD : 0;
   const cadTotalPrice = cadBasePrice + cadAddOnPrice;
-  const discountedTotalPrice = Math.max(0, totalPrice - bookingDiscountAmount);
 
   const resetModal = useCallback(() => {
     setBookingService(null);
@@ -106,10 +99,6 @@ export default function ServicesPage() {
     setAccountLastName("");
     setBirthdayMonth("");
     setReferralCode("");
-    setBookingDiscountInput("");
-    setBookingDiscountCode(null);
-    setBookingDiscountAmount(0);
-    setBookingDiscountError("");
   }, []);
 
   const handleAddToCart = async () => {
@@ -146,9 +135,7 @@ export default function ServicesPage() {
       userEmail: formData.email,
       userNotes: formData.notes,
       addOn: addOnSelected,
-      totalPrice: discountedTotalPrice,
-      discountCode: bookingDiscountCode ?? undefined,
-      discountAmount: bookingDiscountAmount || undefined,
+      totalPrice,
     });
 
     if (!holdId) {
@@ -159,8 +146,8 @@ export default function ServicesPage() {
     addToCart({
       productId: `service-${currentService.id}-${holdId}`,
       name: currentService.name,
-      price: discountedTotalPrice,
-      cadPrice: Math.max(0, cadTotalPrice - bookingDiscountAmount),
+      price: totalPrice,
+      cadPrice: cadTotalPrice,
       quantity: 1,
       image: "",
       isService: true,
@@ -177,6 +164,12 @@ export default function ServicesPage() {
     setBookingStep(1);
     setHoldError("");
     setAddedToCart(false);
+    if (isLoggedIn && user) {
+      const firstName = user.name.split(" ")[0] ?? "";
+      const lastName = user.name.split(" ").slice(1).join(" ");
+      setFormData({ name: firstName, email: user.email, notes: "" });
+      setAccountLastName(lastName);
+    }
   };
 
   const handleHoldExpire = useCallback(() => {
@@ -216,6 +209,7 @@ export default function ServicesPage() {
             <BookingTimer
               expiresAt={activeHold.expiresAt}
               onExpire={handleHoldExpire}
+              onCancel={handleHoldExpire}
               variant="banner"
             />
           </div>
@@ -308,12 +302,12 @@ export default function ServicesPage() {
                   >
                     Continue Browsing
                   </button>
-                  <a
+                  <Link
                     href="/cart"
                     className="flex-1 py-3 bg-navy text-white font-medium rounded-lg text-sm tracking-wider uppercase text-center"
                   >
                     Go to Cart
-                  </a>
+                  </Link>
                 </div>
               </div>
             ) : (
@@ -611,67 +605,10 @@ export default function ServicesPage() {
                       </p>
                     </div>
 
-                    {/* Discount Code */}
-                    <div className="mb-4">
-                      {bookingDiscountCode ? (
-                        <div className="flex items-center justify-between p-3 bg-cream rounded-lg">
-                          <div className="flex items-center gap-2">
-                            <span className="px-3 py-1 bg-navy/10 text-navy text-xs font-medium rounded-full">{bookingDiscountCode}</span>
-                            <span className="text-sm text-green-600 font-medium">-{formatPrice(bookingDiscountAmount)}</span>
-                          </div>
-                          <button onClick={() => { setBookingDiscountCode(null); setBookingDiscountAmount(0); }} className="text-mauve hover:text-navy transition-colors p-1">
-                            <FontAwesomeIcon icon={faXmark} className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ) : (
-                        <div>
-                          <div className="flex gap-2">
-                            <input
-                              type="text"
-                              value={bookingDiscountInput}
-                              onChange={(e) => { setBookingDiscountInput(e.target.value.toUpperCase()); setBookingDiscountError(""); }}
-                              placeholder="Discount code"
-                              className="flex-1 px-3 py-2 border border-navy/20 rounded-lg text-sm text-navy placeholder:text-mauve focus:outline-none focus:border-navy"
-                            />
-                            <button
-                              onClick={async () => {
-                                if (!bookingDiscountInput.trim()) return;
-                                setApplyingBookingDiscount(true);
-                                setBookingDiscountError("");
-                                try {
-                                  const res = await fetch("/api/discounts/validate", {
-                                    method: "POST",
-                                    headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify({ code: bookingDiscountInput.trim(), subtotal: totalPrice }),
-                                  });
-                                  const data = await res.json();
-                                  if (data.valid) {
-                                    setBookingDiscountCode(data.code);
-                                    setBookingDiscountAmount(data.discountAmount);
-                                    setBookingDiscountInput("");
-                                  } else {
-                                    setBookingDiscountError(data.error || "Invalid code");
-                                  }
-                                } catch {
-                                  setBookingDiscountError("Failed to validate code");
-                                }
-                                setApplyingBookingDiscount(false);
-                              }}
-                              disabled={applyingBookingDiscount || !bookingDiscountInput.trim()}
-                              className="px-4 py-2 bg-navy/10 text-navy text-sm rounded-lg hover:bg-navy/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              {applyingBookingDiscount ? "..." : "Apply"}
-                            </button>
-                          </div>
-                          {bookingDiscountError && <p className="text-xs text-red-500 mt-1">{bookingDiscountError}</p>}
-                        </div>
-                      )}
-                    </div>
-
                     {/* Total */}
                     <div className="flex items-center justify-between mb-6 p-3 bg-cream rounded-lg">
                       <span className="font-semibold text-navy">Total</span>
-                      <span className="font-semibold text-navy">{formatPrice(discountedTotalPrice)}</span>
+                      <span className="font-semibold text-navy">{formatPrice(totalPrice)}</span>
                     </div>
 
                     <div className="flex gap-3">

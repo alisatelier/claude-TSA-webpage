@@ -101,10 +101,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Slot unavailable" }, { status: 409 });
   }
 
-  // Check slot availability
+  // Check slot availability (any service blocks the slot — single practitioner)
   const slotTaken = await prisma.serviceBooking.findFirst({
     where: {
-      serviceId,
       selectedDate,
       selectedTime,
       OR: [

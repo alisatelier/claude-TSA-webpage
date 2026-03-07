@@ -355,8 +355,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const checkout = useCallback((currency?: string) => {
     if (items.length === 0) return;
-    const productIds = items.map((i) => i.productId);
-    const cadSubtotal = items.reduce((sum, i) => sum + (i.cadPrice ?? i.price) * i.quantity, 0);
+    const productOnlyItems = items.filter((i) => !i.isService);
+    const serviceOnlyItems = items.filter((i) => i.isService);
+    const productIds = productOnlyItems.map((i) => i.productId);
+    const cadProductSubtotal = productOnlyItems.reduce((sum, i) => sum + (i.cadPrice ?? i.price) * i.quantity, 0);
+    const cadServiceSubtotal = serviceOnlyItems.reduce((sum, i) => sum + (i.cadPrice ?? i.price) * i.quantity, 0);
+    const cadCartSubtotal = cadProductSubtotal + cadServiceSubtotal;
 
     let validCredits = appliedCredits;
     if (validCredits > 0) {
@@ -366,32 +370,39 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
 
     const discount = calculateCreditDiscount(validCredits);
-    if (discount > cadSubtotal) {
+    if (discount > Math.max(0, cadCartSubtotal - discountCodeAmount)) {
       validCredits = 0;
     }
     const actualDiscount = calculateCreditDiscount(validCredits);
-    const finalCADTotal = Math.max(0, cadSubtotal - actualDiscount - discountCodeAmount);
 
     if (validCredits > 0) {
       deductCredits(validCredits, `Redeemed ${validCredits} credits ($${actualDiscount} off)`);
     }
 
-    const purchaseItems = items.map((i) => ({
-      productId: i.productId,
-      name: i.name,
-      unitPrice: Math.round((i.cadPrice ?? i.price) * 100),
-      quantity: i.quantity,
-      variation: i.variation,
-      image: i.image,
-    }));
+    const finalCADTotal = Math.max(0, cadCartSubtotal - actualDiscount - discountCodeAmount);
 
-    const discountAmountCents = Math.round(discountCodeAmount * 100);
-    recordPurchase(productIds, finalCADTotal, currency, purchaseItems, discountCode ?? undefined, discountAmountCents, validCredits);
+    // Only create an order if there are product items
+    if (productOnlyItems.length > 0) {
+      const purchaseItems = productOnlyItems.map((i) => ({
+        productId: i.productId,
+        name: i.name,
+        unitPrice: Math.round((i.cadPrice ?? i.price) * 100),
+        quantity: i.quantity,
+        variation: i.variation,
+        image: i.image,
+      }));
 
-    // Remove purchased items from wishlist
+      const discountAmountCents = Math.round(discountCodeAmount * 100);
+      recordPurchase(productIds, finalCADTotal, currency, purchaseItems, discountCode ?? undefined, discountAmountCents, validCredits);
+    } else if (serviceOnlyItems.length > 0) {
+      // Earn credits for service-only checkouts
+      recordPurchase([], finalCADTotal, currency);
+    }
+
+    // Remove purchased product items from wishlist
     setWishlist((prev) =>
       prev.filter(
-        (w) => !items.some((i) => i.productId === w.productId && (i.variation || "") === (w.variation || ""))
+        (w) => !productOnlyItems.some((i) => i.productId === w.productId && (i.variation || "") === (w.variation || ""))
       )
     );
 
